@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<settings version="1">
+  <section id="emby" label="32010">
+    <category id="access" label="32011">
+      <group id="1">
+        <setting id="emby.user" type="string" label="32012">
+          <level>0</level>
+          <default>manual</default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+          <control type="list" format="string" />
+        </setting>
+        <setting id="emby.username" type="string" label="32013">
+          <level>0</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+          <dependencies>
+            <dependency type="visible" setting="emby.user" operator="is">manual</dependency>
+          </dependencies>
+          <control type="edit" format="string" />
+        </setting>
+        <setting id="emby.password" type="string" label="32014">
+          <level>0</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+          <dependencies>
+            <dependency type="enable">
+              <or>
+                <condition on="setting" setting="emby.user" operator="!is">manual</condition>
+                <condition on="setting" setting="emby.username" operator="!is"></condition>
+              </or>
+            </dependency>
+          </dependencies>
+          <control type="edit" format="string">
+            <hidden>true</hidden>
+          </control>
+        </setting>
+        <setting id="emby.testauthentication" type="action" label="32016">
+          <level>0</level>
+          <dependencies>
+            <dependency type="enable">
+              <or>
+                <condition on="setting" setting="emby.user" operator="!is">manual</condition>
+                <condition on="setting" setting="emby.username" operator="!is"></condition>
+              </or>
+            </dependency>
+          </dependencies>
+          <control type="button" format="action" />
+        </setting>
+        <setting id="emby.deviceid" type="string">
+          <visible>false</visible>
+          <level>4</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+        </setting>
+      </group>
+    </category>
+  </section>
+</settings>
