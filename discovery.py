@@ -17,11 +17,8 @@ import xbmcmediaimport
 import emby
 from emby.server import Server
 
+from lib.monitor import Monitor
 from lib.utils import log
-
-class Monitor(xbmc.Monitor):
-    def __init__(self):
-        xbmc.Monitor.__init__(self)
 
 class EmbyServer():
     def __init__(self):

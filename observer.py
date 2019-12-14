@@ -11,11 +11,8 @@ import xbmcmediaimport
 
 from emby.provider_observer import ProviderObserver
 
+from lib.monitor import Monitor
 from lib.utils import log, mediaImport2str, mediaProvider2str
-
-class Monitor(xbmc.Monitor):
-    def __init__(self):
-        xbmc.Monitor.__init__(self)
 
 class EmbyObserverService(xbmcmediaimport.Observer):
     def __init__(self):
