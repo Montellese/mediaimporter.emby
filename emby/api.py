@@ -233,12 +233,6 @@ class Api:
             else:
                 info['premiered'] = date
 
-        # handle resume point
-        resumePoint = {
-            'totaltime': info['duration'],
-            'resumetime': Api.ticksToSeconds(userdata.get(PROPERTY_ITEM_USER_DATA_PLAYBACK_POSITION_TICKS))
-        }
-
         # handle taglines
         tagline = ''
         embyTaglines = itemObj.get(PROPERTY_ITEM_TAGLINES)
@@ -290,14 +284,20 @@ class Api:
                 elif type == PROPERTY_ITEM_PEOPLE_TYPE_DIRECTOR:
                     info['director'].append(name)
 
+        item.setInfo('video', info)
+        item.setCast(cast)
+
         # handle unique / provider IDs
         uniqueIds = itemObj.get(PROPERTY_ITEM_PROVIDER_IDS) or {}
         # add the item's ID as a unique ID belonging to Emby
         uniqueIds[EMBY_PROTOCOL] = itemId
-
-        item.setInfo('video', info)
         item.setUniqueIDs(uniqueIds)
-        item.setCast(cast)
+
+        # handle resume point
+        resumePoint = {
+            'totaltime': info['duration'],
+            'resumetime': Api.ticksToSeconds(userdata.get(PROPERTY_ITEM_USER_DATA_PLAYBACK_POSITION_TICKS))
+        }
         item.setProperties(resumePoint)
 
         # stream details
