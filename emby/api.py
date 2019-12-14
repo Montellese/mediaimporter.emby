@@ -291,7 +291,7 @@ class Api:
         uniqueIds = itemObj.get(PROPERTY_ITEM_PROVIDER_IDS) or {}
         # add the item's ID as a unique ID belonging to Emby
         uniqueIds[EMBY_PROTOCOL] = itemId
-        item.setUniqueIDs(uniqueIds)
+        item.getVideoInfoTag().setUniqueIDs(uniqueIds, EMBY_PROTOCOL)
 
         # handle resume point
         resumePoint = {
