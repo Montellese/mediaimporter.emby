@@ -170,6 +170,18 @@ class Server:
 
         return url
 
+    def BuildSessionsPlayingUrl(self):
+        url = self._url
+        return Url.append(url, constants.URL_SESSIONS, constants.URL_SESSIONS_PLAYING)
+
+    def BuildSessionsPlayingProgressUrl(self):
+        url = self.BuildSessionsPlayingUrl()
+        return Url.append(url, constants.URL_SESSIONS_PLAYING_PROGRESS)
+
+    def BuildSessionsPlayingStoppedUrl(self):
+        url = self.BuildSessionsPlayingUrl()
+        return Url.append(url, constants.URL_SESSIONS_PLAYING_STOPPED)
+
     @staticmethod
     def BuildProviderId(serverId):
         if not serverId:

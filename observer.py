@@ -9,6 +9,7 @@
 import xbmc
 import xbmcmediaimport
 
+from emby.player import Player
 from emby.provider_observer import ProviderObserver
 from emby.server import Server
 
@@ -20,6 +21,7 @@ class EmbyObserverService(xbmcmediaimport.Observer):
         super(xbmcmediaimport.Observer, self).__init__(self)
 
         self._monitor = Monitor()
+        self._player = Player()
         self._observers = {}
 
         self._run()
@@ -28,6 +30,9 @@ class EmbyObserverService(xbmcmediaimport.Observer):
         log('Observing Emby servers...')
 
         while not self._monitor.abortRequested():
+            # process the player
+            self._player.Process()
+
             # process all observers
             for observer in self._observers.values():
                 observer.Process()
@@ -43,6 +48,8 @@ class EmbyObserverService(xbmcmediaimport.Observer):
         if not mediaProvider:
             raise ValueError('cannot add invalid media provider')
 
+        self._player.AddProvider(mediaProvider)
+
         # check if we already know about the media provider
         mediaProviderId = mediaProvider.getIdentifier()
         if mediaProviderId in self._observers:
@@ -54,6 +61,8 @@ class EmbyObserverService(xbmcmediaimport.Observer):
     def _removeObserver(self, mediaProvider):
         if not mediaProvider:
             raise ValueError('cannot remove invalid media provider')
+
+        self._player.RemoveProvider(mediaProvider)
 
         mediaProviderId = mediaProvider.getIdentifier()
         if mediaProviderId not in self._observers:
