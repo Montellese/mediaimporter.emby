@@ -105,12 +105,17 @@ def requestUrl(url, authToken='', deviceId='', userId=''):
     headers = Request.PrepareApiCallHeaders(authToken=authToken, deviceId=deviceId, userId=userId)
     return Request.GetAsJson(url, headers=headers)
 
-def markAsWatched(embyServer, itemId, lastPlayed):
+def preprocessLastPlayed(lastPlayed):
     lastPlayedDate = None
     if lastPlayed:
         lastPlayedDate = parser.parse(lastPlayed)
     if not lastPlayedDate or lastPlayedDate.year < 1900:
         lastPlayedDate = datetime.now()
+
+    return lastPlayedDate
+
+def markAsWatched(embyServer, itemId, lastPlayed):
+    lastPlayedDate = preprocessLastPlayed(lastPlayed)
 
     url = embyServer.BuildUserPlayedItemUrl(itemId)
     url = Url.addOptions(url, { 'DatePlayed': lastPlayedDate.strftime('%Y%m%d%H%M%S') })
