@@ -139,12 +139,14 @@ def updateResumePoint(embyServer, itemId, positionInTicks):
     return True
 
 def updateUserData(embyServer, itemId, playcount, watched, lastPlayed, playbackPositionInTicks):
+    lastPlayedDate = preprocessLastPlayed(lastPlayed)
+
     url = embyServer.BuildUserItemUserDataUrl(itemId)
     body = {
         'ItemId': itemId,
         'PlayCount': playcount,
         'Played': watched,
-        'LastPlayedDate': lastPlayed,
+        'LastPlayedDate': lastPlayedDate.strftime('%Y-%m-%dT%H:%M:%S.%f%Z'),
         'PlaybackPositionTicks': playbackPositionInTicks
     }
 
