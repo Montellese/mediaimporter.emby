@@ -10,6 +10,7 @@ import xbmc
 import xbmcmediaimport
 
 from emby.provider_observer import ProviderObserver
+from emby.server import Server
 
 from lib.monitor import Monitor
 from lib.utils import log, mediaImport2str, mediaProvider2str
@@ -42,18 +43,13 @@ class EmbyObserverService(xbmcmediaimport.Observer):
         if not mediaProvider:
             raise ValueError('cannot add invalid media provider')
 
+        # check if we already know about the media provider
         mediaProviderId = mediaProvider.getIdentifier()
         if mediaProviderId in self._observers:
-            return True
+            return
 
-        try:
-            self._observers[mediaProviderId] = ProviderObserver(mediaProvider)
-        except:
-            log('failed to observe provider {}'.format(mediaProvider2str(mediaProvider)), xbmc.LOGWARNING)
-            return False
-
-        log('observing media provider {}'.format(mediaProvider2str(mediaProvider)))
-        return True
+        # create the observer
+        self._observers[mediaProviderId] = ProviderObserver()
 
     def _removeObserver(self, mediaProvider):
         if not mediaProvider:
@@ -64,17 +60,16 @@ class EmbyObserverService(xbmcmediaimport.Observer):
             return
 
         del self._observers[mediaProviderId]
-        log('stopped observing media provider {}'.format(mediaProvider2str(mediaProvider)))
 
     def _startObserver(self, mediaProvider):
         if not mediaProvider:
             raise ValueError('cannot start invalid media provider')
 
-        mediaProviderId = mediaProvider.getIdentifier()
-        if not self._addObserver(mediaProvider):
-            return
+        # make sure the media provider has been added
+        self._addObserver(mediaProvider)
 
-        self._observers[mediaProviderId].Start()
+        # start observing the media provider
+        self._observers[mediaProvider.getIdentifier()].Start(mediaProvider)
 
     def _stopObserver(self, mediaProvider):
         if not mediaProvider:
@@ -119,6 +114,12 @@ class EmbyObserverService(xbmcmediaimport.Observer):
 
     def onProviderUpdated(self, mediaProvider):
         self._addObserver(mediaProvider)
+
+        # make sure the media provider is being observed
+        if mediaProvider.isActive():
+            self._startObserver(mediaProvider)
+        else:
+            self._stopObserver(mediaProvider)
 
     def onProviderRemoved(self, mediaProvider):
         self._removeObserver(mediaProvider)

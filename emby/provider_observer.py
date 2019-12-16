@@ -24,23 +24,13 @@ class ProviderObserver:
         Start = 0
         Stop = 1
 
-    def __init__(self, mediaProvider):
-        if not mediaProvider:
-            raise ValueError('invalid media provider')
-
+    def __init__(self):
         # default values
         self._actions = []
         self._connected = False
         self._imports = []
-
-        self._mediaProvider = mediaProvider
-
-        settings = self._mediaProvider.prepareSettings()
-        if not settings:
-            raise RuntimeError('cannot prepare media provider settings')
-
-        # create emby server instance
-        self._server = Server(self._mediaProvider)
+        self._mediaProvider = None
+        self._server = None
 
         # create the websocket
         self._websocket = lib.websocket.WebSocket()
@@ -60,9 +50,9 @@ class ProviderObserver:
             self._imports[matchingImportIndices[0]] = mediaImport
             log('media import {} updated'.format(mediaImport2str(mediaImport)))
         else:
-            # other add the import to the list
+            # otherwise add the import to the list
             self._imports.append(mediaImport)
-            log('media import{} added'.format(mediaImport2str(mediaImport)))
+            log('media import {} added'.format(mediaImport2str(mediaImport)))
 
     def RemoveImport(self, mediaImport):
         if not mediaImport:
@@ -77,11 +67,14 @@ class ProviderObserver:
         del self._imports[matchingImportIndices[0]]
         log('media import {} removed'.format(mediaImport2str(mediaImport)))
 
-    def Start(self):
-        self._actions.append(ProviderObserver.Action.Start)
+    def Start(self, mediaProvider):
+        if not mediaProvider:
+            raise ValueError('invalid mediaProvider')
+
+        self._actions.append((ProviderObserver.Action.Start, mediaProvider))
 
     def Stop(self):
-        self._actions.append(ProviderObserver.Action.Stop)
+        self._actions.append((ProviderObserver.Action.Stop, None))
 
     def Process(self):
         # process any open actions
@@ -96,9 +89,9 @@ class ProviderObserver:
         return [ i for i, x in enumerate(self._imports) if x.getPath() == mediaImport.getPath() and x.getMediaTypes() == mediaImport.getMediaTypes() ]
 
     def _ProcessActions(self):
-        for action in self._actions:
+        for (action, data) in self._actions:
             if action == ProviderObserver.Action.Start:
-                self._StartAction()
+                self._StartAction(data)
             elif action == ProviderObserver.Action.Stop:
                 self._StopAction()
             else:
@@ -279,13 +272,35 @@ class ProviderObserver:
 
         return matchingImports[0]
 
-    def _StartAction(self):
+    def _StartAction(self, mediaProvider):
+        if not mediaProvider:
+            raise RuntimeError('invalid mediaProvider')
+
+        # if we are already connected check if something important changed in the media provider
         if self._connected:
-            return True
+            if Api.compareMediaProviders(self._mediaProvider, mediaProvider):
+                return True
+
+        self._StopAction(restart=True)
+
+        self._mediaProvider = mediaProvider
+
+        settings = self._mediaProvider.prepareSettings()
+        if not settings:
+            raise RuntimeError('cannot prepare media provider settings')
+
+        # create emby server instance
+        self._server = Server(self._mediaProvider)
 
         # first authenticate with the Emby server
-        if not self._server.Authenticate():
+        try:
+            authenticated = self._server.Authenticate()
+        except:
+            authenticated = False
+
+        if not authenticated:
             log('failed to authenticate with {}'.format(mediaProvider2str(self._mediaProvider)), xbmc.LOGERROR)
+            self._Reset()
             return False
 
         # prepare the URL
@@ -301,16 +316,24 @@ class ProviderObserver:
             self._websocket.connect(url)
         except:
             log('failed to connect to {} using a websocket'.format(url), xbmc.LOGERROR)
+            self._Reset()
             return False
 
         log('successfully connected to {} to observe media imports'.format(mediaProvider2str(self._mediaProvider)))
         self._connected = True
         return True
 
-    def _StopAction(self):
+    def _StopAction(self, restart=False):
         if not self._connected:
             return
 
-        self._connected = False
         self._websocket.close()
-        log('stopped observing media imports from {}'.format(mediaProvider2str(self._mediaProvider)))
+        self._Reset()
+
+        if not restart:
+            log('stopped observing media imports from {}'.format(mediaProvider2str(self._mediaProvider)))
+
+    def _Reset(self):
+        self._connected = False
+        self._server = None
+        self._mediaProvider = None
