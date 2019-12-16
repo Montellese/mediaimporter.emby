@@ -54,13 +54,8 @@ class Authenticator:
         authUrl = self._url
         authUrl = Url.append(authUrl, constants.URL_USERS)
 
-        # prepare the password
-        passwordHash = hashlib.sha1()
-        passwordHash.update(self._password)
-        passwordSha1 = passwordHash.hexdigest()
-
         body = {
-            constants.PROPERTY_USER_AUTHENTICATION_PASSWORD: passwordSha1
+            constants.PROPERTY_USER_AUTHENTICATION_PASSWORD: self._password
         }
         if self._authMethod == Authenticator.AuthenticationMethod.UserId:
             authUrl = Url.append(authUrl, self._userId, constants.URL_AUTHENTICATE)
