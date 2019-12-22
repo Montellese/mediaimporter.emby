@@ -329,9 +329,11 @@ def lookupProvider(handle, options):
     basePath = mediaProvider.getBasePath()
 
     providerFound = False
-    result = Server.GetServerInfo(basePath)
-    if result:
-        providerFound = True
+    try:
+        if Server.GetServerInfo(basePath):
+            providerFound = True
+    except:
+        pass
 
     xbmcmediaimport.setProviderFound(handle, providerFound)
 
