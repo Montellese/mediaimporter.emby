@@ -29,6 +29,44 @@ EMBY_MEDIATYPES = [
 
 class Api:
     @staticmethod
+    def compareMediaProviders(lhs, rhs):
+        if not lhs or not rhs:
+            return False
+
+        if lhs.getIdentifier() != rhs.getIdentifier():
+            return False
+
+        if lhs.getBasePath() != rhs.getBasePath():
+            return False
+
+        if lhs.getFriendlyName() != rhs.getFriendlyName():
+            return False
+
+        lhsSettings = lhs.prepareSettings()
+        if not lhsSettings:
+            return False
+
+        rhsSettings = rhs.prepareSettings()
+        if not rhsSettings:
+            return False
+
+        if lhsSettings.getString(SETTING_PROVIDER_DEVICEID) != rhsSettings.getString(SETTING_PROVIDER_DEVICEID):
+            return False
+
+        lhsSettingsUser = lhsSettings.getString(SETTING_PROVIDER_USER)
+        if lhsSettingsUser != rhsSettings.getString(SETTING_PROVIDER_USER):
+            return False
+
+        if lhsSettingsUser == SETTING_PROVIDER_USER_OPTION_MANUAL:
+            if lhsSettings.getString(SETTING_PROVIDER_USERNAME) != rhsSettings.getString(SETTING_PROVIDER_USERNAME):
+                return False
+
+        if lhsSettings.getString(SETTING_PROVIDER_PASSWORD) != rhsSettings.getString(SETTING_PROVIDER_PASSWORD):
+            return False
+
+        return True
+
+    @staticmethod
     def getEmbyMediaType(mediaType):
         if not mediaType:
             raise ValueError('invalid mediaType')
