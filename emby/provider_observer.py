@@ -290,7 +290,7 @@ class ProviderObserver:
 
         # prepare the URL
         urlParts = urlparse.urlparse(self._mediaProvider.getBasePath())
-        url = urlparse.urlunparse(urlParts._replace(scheme='ws', path='emby'))
+        url = urlparse.urlunparse(urlParts._replace(scheme='ws', path='embywebsocket'))
         url = Url.addOptions(url, {
             'api_key': self._server.AccessToken(),
             'deviceId': self._server.DeviceId()
