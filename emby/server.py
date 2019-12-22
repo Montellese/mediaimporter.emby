@@ -122,7 +122,10 @@ class Server:
         url = self.BuildUrl(embyMediaType)
         url = Url.append(url, itemId, 'stream')
         if container:
-            url = '{}.{}'.format(url, container)
+            containers = container.split(',')
+            # TODO(Montellese): for now pick the first container but maybe we
+            # need some sanity checking / priorization
+            url = '{}.{}'.format(url, containers[0])
 
         url = Url.addOptions(url, {
             'static': 'true'
