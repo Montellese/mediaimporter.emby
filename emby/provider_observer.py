@@ -289,11 +289,11 @@ class ProviderObserver:
         if not settings:
             raise RuntimeError('cannot prepare media provider settings')
 
-        # create emby server instance
-        self._server = Server(self._mediaProvider)
-
-        # first authenticate with the Emby server
         try:
+            # create emby server instance
+            self._server = Server(self._mediaProvider)
+
+            # authenticate with the Emby server
             authenticated = self._server.Authenticate()
         except:
             authenticated = False
