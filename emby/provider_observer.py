@@ -327,11 +327,11 @@ class ProviderObserver:
         if not self._connected:
             return
 
-        self._websocket.close()
-        self._Reset()
-
         if not restart:
             log('stopped observing media imports from {}'.format(mediaProvider2str(self._mediaProvider)))
+
+        self._websocket.close()
+        self._Reset()
 
     def _Reset(self):
         self._connected = False
