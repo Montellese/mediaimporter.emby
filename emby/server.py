@@ -16,6 +16,47 @@ import lib.semantic_version as semantic_version
 from lib.utils import log, Url
 
 class Server:
+    class Info:
+        EMBY_SERVER = 'Emby Server'
+        JELLYFIN_SERVER = 'Jellyfin Server'
+
+        def __init__(self, id, name, version, product=None):
+            if not id:
+                raise ValueError('invalid id')
+
+            self.id = id
+            self.name = name
+            self.version = version
+            self.product = product or Server.Info.EMBY_SERVER
+
+        def isEmbyServer(self):
+            return self.product == Server.Info.EMBY_SERVER
+
+        def isJellyfinServer(self):
+            return self.product == Server.Info.JELLYFIN_SERVER
+
+        def isUnknown(self):
+            return not self.isEmbyServer() and not self.isJellyfinServer()
+
+        @staticmethod
+        def fromPublicInfo(response):
+            if not response or \
+               not constants.PROPERTY_SYSTEM_INFO_ID in response or \
+               not constants.PROPERTY_SYSTEM_INFO_SERVER_NAME in response or \
+               not constants.PROPERTY_SYSTEM_INFO_VERSION in response:
+                return None
+
+            versions = response[constants.PROPERTY_SYSTEM_INFO_VERSION].split('.')
+            productName = None
+            if constants.PROPERTY_SYSTEM_INFO_PRODUCT_NAME in response:
+                productName = response[constants.PROPERTY_SYSTEM_INFO_PRODUCT_NAME]
+
+            return Server.Info(
+                response[constants.PROPERTY_SYSTEM_INFO_ID],
+                response[constants.PROPERTY_SYSTEM_INFO_SERVER_NAME],
+                semantic_version.Version('.'.join(versions[0:3])),
+                product=productName)
+
     def __init__(self, provider):
         if not provider:
             raise ValueError('Invalid provider')
