@@ -249,20 +249,8 @@ class Server:
         publicInfoUrl = Server.BuildPublicInfoUrl(baseUrl)
         headers = Request.PrepareApiCallHeaders()
         resultObj = Request.GetAsJson(publicInfoUrl, headers=headers)
-        if not resultObj or \
-           not constants.PROPERTY_SYSTEM_INFO_ID in resultObj or \
-           not constants.PROPERTY_SYSTEM_INFO_SERVER_NAME in resultObj or \
-           not constants.PROPERTY_SYSTEM_INFO_VERSION in resultObj:
-            log('failed to retrieve public system information for Emby server at "{}"'.format(publicInfoUrl), xbmc.LOGWARNING)
-            return None
 
-        versions = resultObj[constants.PROPERTY_SYSTEM_INFO_VERSION].split('.')
-
-        return (
-            resultObj[constants.PROPERTY_SYSTEM_INFO_ID],
-            resultObj[constants.PROPERTY_SYSTEM_INFO_SERVER_NAME],
-            semantic_version.Version('.'.join(versions[0:3]))
-        )
+        return Server.Info.fromPublicInfo(resultObj)
 
     def _get(self, url):
         headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)

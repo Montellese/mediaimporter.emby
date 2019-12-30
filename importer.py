@@ -307,17 +307,16 @@ def discoverProvider(handle, options):
         return
 
     try:
-        result = Server.GetServerInfo(baseUrl)
-        if not result:
+        serverInfo = Server.GetServerInfo(baseUrl)
+        if not serverInfo:
             return
     except:
         return
 
-    (serverId, providerName, _) = result
-    providerId = Server.BuildProviderId(serverId)
+    providerId = Server.BuildProviderId(serverInfo.id)
     providerIconUrl = Server.BuildIconUrl(baseUrl)
 
-    xbmcmediaimport.setDiscoveredProvider(handle, True, xbmcmediaimport.MediaProvider(providerId, baseUrl, providerName, providerIconUrl, emby.constants.SUPPORTED_MEDIA_TYPES))
+    xbmcmediaimport.setDiscoveredProvider(handle, True, xbmcmediaimport.MediaProvider(providerId, baseUrl, serverInfo.name, providerIconUrl, emby.constants.SUPPORTED_MEDIA_TYPES))
 
 def lookupProvider(handle, options):
     # retrieve the media provider
@@ -640,10 +639,10 @@ def updateOnProvider(handle, options):
 
     # retrieve the version of the Emby server
     useUserDataCall = False
-    embyServerInfo = Server.GetServerInfo(embyServer.Url())
-    if embyServerInfo:
-        (_, _, embyServerVersion) = embyServerInfo
-        if embyServerVersion.major >= 4 and embyServerVersion.minor >= 3:
+    serverInfo = Server.GetServerInfo(embyServer.Url())
+    if serverInfo:
+        # only Emby 4.3+ servers support the UserData update call
+        if serverInfo.version.major >= 4 and serverInfo.version.minor >= 3:
             useUserDataCall = True
 
     # get the URL to retrieve all details of the item from the Emby server
