@@ -642,7 +642,8 @@ def updateOnProvider(handle, options):
     serverInfo = Server.GetServerInfo(embyServer.Url())
     if serverInfo:
         # only Emby 4.3+ servers support the UserData update call
-        if serverInfo.version.major >= 4 and serverInfo.version.minor >= 3:
+        if serverInfo.isEmbyServer() and \
+           serverInfo.version.major >= 4 and serverInfo.version.minor >= 3:
             useUserDataCall = True
 
     # get the URL to retrieve all details of the item from the Emby server
