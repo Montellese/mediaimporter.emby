@@ -135,7 +135,6 @@ class Request:
 
         return result.content
 
-
     @staticmethod
     def _handleRequestAsJson(result, requestType):
         if not result:
@@ -144,6 +143,9 @@ class Request:
             raise ValueError('invalid requestType')
 
         if not Request._handleRequest(result, requestType):
+            return None
+
+        if not result.content:
             return None
 
         try:
