@@ -660,7 +660,7 @@ def updateOnProvider(handle, options):
         return
 
     updateItemPlayed = False
-    updateResumePoint = False
+    updatePlaybackPosition = False
     # retrieve playback states from the updated item
     playcount = itemVideoInfoTag.getPlayCount()
     watched = playcount > 0
@@ -685,7 +685,7 @@ def updateOnProvider(handle, options):
         itemPlaybackPositionInTicks = userDataObj[emby.constants.PROPERTY_ITEM_USER_DATA_PLAYBACK_POSITION_TICKS]
 
         if playbackPositionInTicks != itemPlaybackPositionInTicks:
-            updateResumePoint = True
+            updatePlaybackPosition = True
 
     if useUserDataCall:
         updateUserData(embyServer, itemId, playcount, watched, lastPlayed, playbackPositionInTicks)
@@ -698,7 +698,7 @@ def updateOnProvider(handle, options):
                 if not markAsUnwatched(embyServer, itemId):
                     log('failed to mark item "{}" as unwatched'.format(item.getLabel()), xbmc.LOGWARNING)
 
-        if updateResumePoint:
+        if updatePlaybackPosition:
             if not updateResumePoint(embyServer, itemId, playbackPositionInTicks):
                     log('failed to update resume point for item "{}"'.format(item.getLabel()), xbmc.LOGWARNING)
 
