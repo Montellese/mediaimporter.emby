@@ -6,6 +6,7 @@
 #  See LICENSES/README.md for more information.
 #
 
+import sys
 import urllib
 import urlparse
 
@@ -15,13 +16,20 @@ import xbmcaddon
 __addon__ = xbmcaddon.Addon()
 __addonid__ = __addon__.getAddonInfo('id')
 
+PY3 = sys.version_info.major >= 3
+
 def log(message, level=xbmc.LOGINFO):
-    xbmc.log('[{}] {}'.format(__addonid__, message.encode('utf-8')), level)
+    if not PY3:
+        try:
+            message = message.encode('utf-8')
+        except UnicodeDecodeError:
+            message = message.decode('utf-8').encode('utf-8', 'ignore')
+    xbmc.log('[{}] {}'.format(__addonid__, message), level)
 
 # fixes unicode problems
 def string2Unicode(text, encoding='utf-8'):
     try:
-        if sys.version_info[0] >= 3:
+        if PY3:
             text = str(text)
         else:
             text = unicode(text, encoding)
