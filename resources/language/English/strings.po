@@ -92,6 +92,10 @@ msgctxt "#32023"
 msgid "Choose media libraries"
 msgstr ""
 
+msgctxt "#32024"
+msgid "Library"
+msgstr ""
+
 #. Titel of the dialog to enter the base URI of the Emby server to lookup
 msgctxt "#32050"
 msgid "Emby server base URI"
