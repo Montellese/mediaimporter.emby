@@ -41,7 +41,12 @@ class EmbyServer():
         if data is None:
             return None
 
-        obj = json.loads(str(data))
+        if isinstance(data, bytes):
+            data = data.decode('utf-8')
+        elif not isinstance(data, str):
+            data = str(data)
+
+        obj = json.loads(data)
         if not ServerPropertyId in obj or not ServerPropertyName in obj or not ServerPropertyAddress in obj:
             log('invalid discovery message received: {}'.format(str(data)))
             return None
