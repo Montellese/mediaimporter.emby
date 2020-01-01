@@ -7,7 +7,7 @@
 #
 
 import json
-import urlparse
+from six.moves.urllib.parse import urlparse, urlunparse
 
 import xbmc
 import xbmcmediaimport
@@ -304,8 +304,8 @@ class ProviderObserver:
             return False
 
         # prepare the URL
-        urlParts = urlparse.urlparse(self._mediaProvider.getBasePath())
-        url = urlparse.urlunparse(urlParts._replace(scheme='ws', path='embywebsocket'))
+        urlParts = urlparse(self._mediaProvider.getBasePath())
+        url = urlunparse(urlParts._replace(scheme='ws', path='embywebsocket'))
         url = Url.addOptions(url, {
             'api_key': self._server.AccessToken(),
             'deviceId': self._server.DeviceId()

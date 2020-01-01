@@ -11,8 +11,7 @@ from dateutil import parser
 import json
 import posixpath
 import sys
-import urllib
-import urlparse
+from six.moves.urllib.parse import parse_qs, unquote, urlparse
 import uuid
 
 import xbmc
@@ -71,7 +70,7 @@ def getServerId(path):
     if not path:
         return False
 
-    url = urlparse.urlparse(path)
+    url = urlparse(path)
     if url.scheme != emby.constants.EMBY_PROTOCOL or not url.netloc:
         return False
 
@@ -81,7 +80,7 @@ def getItemId(path):
     if not path:
         return False
 
-    url = urlparse.urlparse(path)
+    url = urlparse(path)
     urlPath = url.path
     if not urlPath:
         return False
@@ -341,7 +340,7 @@ def canImport(handle, options):
         log('cannot execute "canimport" without path')
         return
 
-    path = urllib.unquote(options['path'][0]).decode('utf8')
+    path = unquote(options['path'][0]).decode('utf8')
 
     # try to get the emby server's identifier from the path
     id = getServerId(path)
@@ -737,11 +736,11 @@ if __name__ == '__main__':
         # get the options but remove the leading ?
         params = sys.argv[2][1:]
         if params:
-            options = urlparse.parse_qs(params)
+            options = parse_qs(params)
 
     log('path = {}, handle = {}, options = {}'.format(path, handle, params), xbmc.LOGDEBUG)
 
-    url = urlparse.urlparse(path)
+    url = urlparse(path)
     action = url.path
     if action[0] == '/':
         action = action[1:]

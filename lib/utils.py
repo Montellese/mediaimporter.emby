@@ -7,8 +7,7 @@
 #
 
 import sys
-import urllib
-import urlparse
+from six.moves.urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import xbmc
 import xbmcaddon
@@ -84,8 +83,8 @@ class Url:
         if not url:
             return ''
 
-        urlParts = list(urlparse.urlparse(url))
-        urlQuery = dict(urlparse.parse_qsl(urlParts[4]))
+        urlParts = list(urlparse(url))
+        urlQuery = dict(parse_qsl(urlParts[4]))
         urlQuery.update(options)
-        urlParts[4] = urllib.urlencode(urlQuery)
-        return urlparse.urlunparse(urlParts)
+        urlParts[4] = urlencode(urlQuery)
+        return urlunparse(urlParts)

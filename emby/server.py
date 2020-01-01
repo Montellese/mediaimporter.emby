@@ -61,8 +61,8 @@ class Server:
         if not provider:
             raise ValueError('Invalid provider')
 
-        self._url = provider.getBasePath()
-        self._url = Url.append(self._url, constants.EMBY_PROTOCOL)
+        self._baseUrl = provider.getBasePath()
+        self._url = Url.append(self._baseUrl, constants.EMBY_PROTOCOL)
         self._id = provider.getIdentifier()
 
         settings = provider.getSettings()
@@ -83,7 +83,7 @@ class Server:
         return self._authenticator.IsAuthenticated() or self._authenticator.Authenticate()
 
     def Url(self):
-        return self._url
+        return self._baseUrl
 
     def DeviceId(self):
         return self._devideId
