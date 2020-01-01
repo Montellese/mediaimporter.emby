@@ -60,7 +60,7 @@ class EmbyServer():
 class DiscoveryService:
     DiscoveryAddress = '255.255.255.255'
     DiscoveryPort = 7359
-    DiscoveryMessage = 'who is EmbyServer?'
+    DiscoveryMessage = b'who is EmbyServer?'
     DiscoveryTimeoutS = 1.0
 
     def __init__(self):
