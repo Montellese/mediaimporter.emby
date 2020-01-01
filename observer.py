@@ -18,7 +18,7 @@ from lib.utils import log, mediaImport2str, mediaProvider2str
 
 class EmbyObserverService(xbmcmediaimport.Observer):
     def __init__(self):
-        super(xbmcmediaimport.Observer, self).__init__(self)
+        super(xbmcmediaimport.Observer, self).__init__()
 
         self._monitor = Monitor()
         self._player = Player()

@@ -22,7 +22,7 @@ from lib.utils import log, mediaProvider2str
 
 class Player(xbmc.Player):
     def __init__(self, progressInterval=None):
-        super(xbmc.Player, self).__init__(self)
+        super(xbmc.Player, self).__init__()
 
         self._progressInterval = progressInterval or 10
         self._lastProgressReport = None
