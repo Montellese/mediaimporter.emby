@@ -8,6 +8,7 @@
 
 import time
 import json
+from six import iteritems
 import socket
 
 import xbmc
@@ -120,7 +121,7 @@ class DiscoveryService:
             log('failed to add and/or activate Emby server "{}" ({})'.format(server.name, server.id))
 
     def _expireServers(self):
-        for serverId, server in self._servers.iteritems():
+        for serverId, server in iteritems(self._servers):
             if not server.isExpired(10):
                 continue
 
