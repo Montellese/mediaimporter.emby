@@ -24,6 +24,7 @@ def log(message, level=xbmc.LOGINFO):
             message = message.decode('utf-8').encode('utf-8', 'ignore')
     xbmc.log('[{}] {}'.format(__addonid__, message), level)
 
+
 # fixes unicode problems
 def string2Unicode(text, encoding='utf-8'):
     try:
@@ -36,6 +37,7 @@ def string2Unicode(text, encoding='utf-8'):
 
     return text
 
+
 def normalizeString(text):
     try:
         text = unicodedata.normalize('NFKD', string2Unicode(text)).encode('ascii', 'ignore')
@@ -44,8 +46,10 @@ def normalizeString(text):
 
     return text
 
+
 def localise(id):
     return normalizeString(__addon__.getLocalizedString(id))
+
 
 def mediaProvider2str(mediaProvider):
     if not mediaProvider:
@@ -53,11 +57,13 @@ def mediaProvider2str(mediaProvider):
 
     return '"{}" ({})'.format(mediaProvider.getFriendlyName(), mediaProvider.getIdentifier())
 
+
 def mediaImport2str(mediaImport):
     if not mediaImport:
         raise ValueError('invalid mediaImport')
 
     return '{} ({})'.format(mediaImport.getPath(), mediaImport.getMediaTypes())
+
 
 class Url:
     @staticmethod
