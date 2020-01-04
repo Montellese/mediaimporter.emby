@@ -13,9 +13,9 @@
         <importsettings>importsettings.xml</importsettings>
     </extension>
     <extension point="xbmc.addon.metadata">
-        <summary lang="en">Import and play media items from an Emby Media Server or Jellyfin</summary>
-        <description lang="en">Emby Media Importer allows you to import and play media libraries, for movies, tv shows and music videos, from Emby Media Server or Jellyfin. Thus using Emby / Jellyfin as a metadata manager (server) and Kodi as player (client). In addition playback data can be synced across multiple clients, for each user on Emby / Jellyfin.</description>
-        <disclaimer lang="en"></disclaimer>
+        <summary lang="en_GB">Import and play media items from an Emby Media Server or Jellyfin</summary>
+        <description lang="en_GB">Emby Media Importer allows you to import and play media libraries, for movies, tv shows and music videos, from Emby Media Server or Jellyfin. Thus using Emby / Jellyfin as a metadata manager (server) and Kodi as player (client). In addition playback data can be synced across multiple clients, for each user on Emby / Jellyfin.</description>
+        <disclaimer lang="en_GB"></disclaimer>
         <platform>all</platform>
         <license>GPL-2.0-or-later</license>
         <forum></forum>
