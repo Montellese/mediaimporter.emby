@@ -34,6 +34,8 @@ except ImportError:
     HAVE_SSL = False
 
 from six.moves.urllib.parse import urlparse
+from six.moves import range
+from six import ensure_binary, ensure_text, iteritems, PY3
 import os
 import array
 import struct
@@ -331,14 +333,14 @@ class ABNF(object):
             frame_header += struct.pack("!Q", length)
 
         if not self.mask:
-            return frame_header + self.data
+            return ensure_binary(frame_header) + self.data
         else:
             mask_key = self.get_mask_key(4)
-            return frame_header + self._get_masked(mask_key)
+            return ensure_binary(frame_header) + self._get_masked(mask_key)
 
     def _get_masked(self, mask_key):
         s = ABNF.mask(mask_key, self.data)
-        return mask_key + "".join(s)
+        return mask_key + s if PY3 else mask_key + "".join(s)
 
     @staticmethod
     def mask(mask_key, data):
@@ -351,7 +353,7 @@ class ABNF(object):
         """
         _m = array.array("B", mask_key)
         _d = array.array("B", data)
-        for i in xrange(len(_d)):
+        for i in range(len(_d)):
             _d[i] ^= _m[i % 4]
         return _d.tostring()
 
@@ -490,7 +492,7 @@ class WebSocket(object):
             headers.append("Origin: http://%s" % hostport)
 
         key = _create_sec_websocket_key()
-        headers.append("Sec-WebSocket-Key: %s" % key)
+        headers.append("Sec-WebSocket-Key: %s" % ensure_text(key))
         headers.append("Sec-WebSocket-Version: %s" % VERSION)
         if "header" in options:
             headers.extend(options["header"])
@@ -518,7 +520,7 @@ class WebSocket(object):
         self.connected = True
 
     def _validate_header(self, headers, key):
-        for k, v in _HEADERS_TO_CHECK.iteritems():
+        for k, v in iteritems(_HEADERS_TO_CHECK):
             r = headers.get(k, None)
             if not r:
                 return False
@@ -531,9 +533,9 @@ class WebSocket(object):
             return False
         result = result.lower()
 
-        value = key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+        value = key + ensure_binary("258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
         hashed = base64.encodestring(hashlib.sha1(value).digest()).strip().lower()
-        return hashed == result
+        return hashed == ensure_binary(result)
 
     def _read_headers(self):
         status = None
@@ -543,19 +545,19 @@ class WebSocket(object):
 
         while True:
             line = self._recv_line()
-            if line == "\r\n":
+            if line == ensure_binary("\r\n"):
                 break
             line = line.strip()
             if traceEnabled:
                 logger.debug(line)
             if not status:
-                status_info = line.split(" ", 2)
+                status_info = line.split(ensure_binary(" "), 2)
                 status = int(status_info[1])
             else:
-                kv = line.split(":", 1)
+                kv = line.split(ensure_binary(":"), 1)
                 if len(kv) == 2:
                     key, value = kv
-                    headers[key.lower()] = value.strip().lower()
+                    headers[ensure_text(key.lower())] = ensure_text(value.strip().lower())
                 else:
                     raise WebSocketException("Invalid header")
 
@@ -633,7 +635,7 @@ class WebSocket(object):
                     self._cont_data[1] += frame.data
                 else:
                     self._cont_data = [frame.opcode, frame.data]
-                
+
                 if frame.fin:
                     data = self._cont_data
                     self._cont_data = None
@@ -653,13 +655,13 @@ class WebSocket(object):
         # Header
         if self._frame_header is None:
             self._frame_header = self._recv_strict(2)
-        b1 = ord(self._frame_header[0])
+        b1 = self._frame_header[0] if PY3 else ord(self._frame_header[0])
         fin = b1 >> 7 & 1
         rsv1 = b1 >> 6 & 1
         rsv2 = b1 >> 5 & 1
         rsv3 = b1 >> 4 & 1
         opcode = b1 & 0xf
-        b2 = ord(self._frame_header[1])
+        b2 = self._frame_header[1] if PY3 else ord(self._frame_header[1])
         has_mask = b2 >> 7 & 1
         # Frame length
         if self._frame_length is None:
@@ -696,7 +698,7 @@ class WebSocket(object):
         """
         if status < 0 or status >= ABNF.LENGTH_16:
             raise ValueError("code is invalid range")
-        self.send(struct.pack('!H', status) + reason, ABNF.OPCODE_CLOSE)
+        self.send(struct.pack('!H', status) + ensure_binary(reason), ABNF.OPCODE_CLOSE)
 
     def close(self, status=STATUS_NORMAL, reason=""):
         """
@@ -706,12 +708,12 @@ class WebSocket(object):
 
         reason: the reason to close. This must be string.
         """
-        
+
         try:
             self.sock.shutdown(socket.SHUT_RDWR)
         except:
             pass
-            
+
         '''
         if self.connected:
             if status < 0 or status >= ABNF.LENGTH_16:
@@ -742,7 +744,7 @@ class WebSocket(object):
 
     def _send(self, data):
         try:
-            return self.sock.send(data)
+            return self.sock.send(ensure_binary(data))
         except socket.timeout as e:
             raise WebSocketTimeoutException(e.args[0])
         except Exception as e:
@@ -772,7 +774,7 @@ class WebSocket(object):
             bytes = self._recv(shortage)
             self._recv_buffer.append(bytes)
             shortage -= len(bytes)
-        unified = "".join(self._recv_buffer)
+        unified = ensure_binary("").join(self._recv_buffer)
         if shortage == 0:
             self._recv_buffer = []
             return unified
@@ -786,9 +788,9 @@ class WebSocket(object):
         while True:
             c = self._recv(1)
             line.append(c)
-            if c == "\n":
+            if c == ensure_binary("\n"):
                 break
-        return "".join(line)
+        return ensure_binary("").join(line)
 
 
 class WebSocketApp(object):
@@ -844,7 +846,7 @@ class WebSocketApp(object):
         """
         self.keep_running = False
         if(self.sock != None):
-            self.sock.close()        
+            self.sock.close()
 
     def _send_ping(self, interval):
         while True:
@@ -885,14 +887,14 @@ class WebSocketApp(object):
                 thread.start()
 
             while self.keep_running:
-            
+
                 try:
                     data = self.sock.recv()
-                    
+
                     if data is None or self.keep_running == False:
                         break
-                    self._callback(self.on_message, data)                    
-                    
+                    self._callback(self.on_message, data)
+
                 except Exception as e:
                     #print str(e.args[0])
                     if "timed out" not in e.args[0]:
@@ -918,13 +920,3 @@ class WebSocketApp(object):
                     traceback.print_tb(tb)
 
 
-if __name__ == "__main__":
-    enableTrace(True)
-    ws = create_connection("ws://echo.websocket.org/")
-    print("Sending 'Hello, World'...")
-    ws.send("Hello, World")
-    print("Sent")
-    print("Receiving...")
-    result = ws.recv()
-    print("Received '%s'" % result)
-    ws.close()
