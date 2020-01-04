@@ -7,6 +7,7 @@
 #
 
 import sys
+from six import PY3
 from six.moves.urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import xbmc
@@ -14,8 +15,6 @@ import xbmcaddon
 
 __addon__ = xbmcaddon.Addon()
 __addonid__ = __addon__.getAddonInfo('id')
-
-PY3 = sys.version_info.major >= 3
 
 def log(message, level=xbmc.LOGINFO):
     if not PY3:
