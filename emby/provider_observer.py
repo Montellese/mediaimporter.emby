@@ -8,6 +8,7 @@
 
 import json
 from six.moves.urllib.parse import urlparse, urlunparse
+import websocket
 
 import xbmc
 import xbmcmediaimport
@@ -16,7 +17,6 @@ from emby.api import Api
 from emby.constants import *
 from emby.server import Server
 
-import lib.websocket
 from lib.utils import log, mediaImport2str, mediaProvider2str, Url
 
 class ProviderObserver:
@@ -33,7 +33,7 @@ class ProviderObserver:
         self._server = None
 
         # create the websocket
-        self._websocket = lib.websocket.WebSocket()
+        self._websocket = websocket.WebSocket()
         self._websocket.settimeout(0.1)
 
     def __del__(self):
@@ -117,7 +117,7 @@ class ProviderObserver:
 
                 self._ProcessMessage(messageObj)
 
-            except lib.websocket.WebSocketTimeoutException:
+            except websocket.WebSocketTimeoutException:
                 break
             except Exception as error:
                 log('unknown exception when receiving data from {}: {}'.format(mediaProvider2str(self._mediaProvider), error.args[0]), xbmc.LOGWARNING)

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="mediaimporter.emby" name="Emby Media Importer" version="0.0.1" provider-name="Montellese">
+<addon id="mediaimporter.emby" name="Emby Media Importer" version="0.0.2" provider-name="Montellese">
     <requires>
         <import addon="xbmc.python" version="2.26.0"/>
         <import addon="script.module.dateutil" />
         <import addon="script.module.requests" />
         <import addon="script.module.six" />
         <!-- <import addon="script.module.web-pdb" /> -->
+        <import addon="script.module.websocket_client" version="0.57.0"/>
     </requires>
     <extension point="kodi.mediaimporter" protocol="Emby" discovery="discovery.py" library="importer.py" observer="observer.py">
         <canlookupprovider>true</canlookupprovider>
