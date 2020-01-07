@@ -7,6 +7,7 @@
 #
 
 import json
+from six import string_types
 from six.moves.urllib.parse import urlparse, urlunparse
 import websocket
 
@@ -199,7 +200,7 @@ class ProviderObserver:
         if not isinstance(items, list):
             return []
 
-        return [(changesetType, item) for item in items if isinstance(item, basestring) and item]
+        return [(changesetType, item) for item in items if isinstance(item, string_types) and item]
 
     def _ProcessMessageUserDataChanged(self, data):
         userDataList = data[WS_USER_DATA_CHANGED_USER_DATA_LIST]
@@ -210,7 +211,7 @@ class ProviderObserver:
                 continue
 
             itemId = userDataItem[WS_USER_DATA_CHANGED_USER_DATA_ITEM_ID]
-            if not itemId or not isinstance(itemId, basestring):
+            if not itemId or not isinstance(itemId, string_types):
                 continue
 
             item = self._GetItemDetails(itemId)
