@@ -154,14 +154,14 @@ class Server:
 
         embyMediaType = None
         if mediaType == 'Video':
-            embyMediaType = 'Videos'
+            embyMediaType = constants.URL_PLAYBACK_MEDIA_TYPE_VIDEO
         elif mediaType == 'Audio':
-            embyMediaType = 'Audio'
+            embyMediaType = constants.URL_PLAYBACK_MEDIA_TYPE_AUDIO
         else:
             raise ValueError('Invalid mediaType "{}"'.format(mediaType))
 
         url = self.BuildUrl(embyMediaType)
-        url = Url.append(url, itemId, 'stream')
+        url = Url.append(url, itemId, constants.URL_PLAYBACK_STREAM)
         if container:
             containers = container.split(',')
             # TODO(Montellese): for now pick the first container but maybe we
@@ -169,7 +169,7 @@ class Server:
             url = '{}.{}'.format(url, containers[0])
 
         url = Url.addOptions(url, {
-            'static': 'true'
+            constants.URL_PLAYBACK_OPTION_STATIC: constants.URL_PLAYBACK_OPTION_STATIC_TRUE
         })
 
         return url
