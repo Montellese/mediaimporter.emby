@@ -6,6 +6,9 @@
 #  See LICENSES/README.md for more information.
 #
 
+import os.path
+from six.moves.urllib.parse import urlparse
+
 import xbmc
 
 from emby import constants
@@ -148,7 +151,7 @@ class Server:
         url = self.BuildUserUrl(constants.URL_ITEMS)
         return Url.append(url, itemId)
 
-    def BuildPlayableItemUrl(self, mediaType, itemId, container):
+    def BuildDirectStreamUrl(self, mediaType, itemId, container):
         if not itemId:
             raise ValueError('Invalid itemId')
 
@@ -173,6 +176,38 @@ class Server:
         })
 
         return url
+
+    @staticmethod
+    def IsDirectStreamUrl(mediaProvider, url):
+        if not mediaProvider:
+            raise ValueError('Invalid mediaProvider')
+        if not url:
+            return False
+
+        parsedBaseUrl = urlparse(mediaProvider.getBasePath())
+        parsedUrl = urlparse(url)
+        # compare the protocol, hostname and port against the media provider's base URL
+        if parsedBaseUrl.scheme != parsedUrl.scheme or \
+           parsedBaseUrl.hostname != parsedUrl.hostname or \
+           parsedBaseUrl.port != parsedUrl.port:
+            return False
+
+        urlPaths = os.path.split(parsedUrl.path)
+        # the first part of the path must be emby
+        if urlPaths[0] != constants.EMBY_PROTOCOL:
+            return False
+        # the second part must either be "Videos" or "Audio"
+        if urlPaths[1] not in [ constants.URL_PLAYBACK_MEDIA_TYPE_VIDEO, constants.URL_PLAYBACK_MEDIA_TYPE_AUDIO ]:
+            return False
+        # the fourth part must start with "stream"
+        if urlPaths[3].startsWith(constants.URL_PLAYBACK_STREAM):
+            return False
+
+        # the query must be "static=true"
+        if parsedUrl.query != '{}={}'.format(constants.URL_PLAYBACK_OPTION_STATIC, constants.URL_PLAYBACK_OPTION_STATIC_TRUE):
+            return False
+
+        return True
 
     def BuildUserPlayingItemUrl(self, itemId):
         if not itemId:

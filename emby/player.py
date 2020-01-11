@@ -14,7 +14,7 @@ import xbmcmediaimport
 
 from emby.api import Api
 from emby.constants import EMBY_PROTOCOL, \
-    PLAYING_PLAY_METHOD_DIRECT_STREAM, \
+    PLAYING_PLAY_METHOD_DIRECT_PLAY, PLAYING_PLAY_METHOD_DIRECT_STREAM, \
     PLAYING_PROGRESS_EVENT_TIME_UPDATE, PLAYING_PROGRESS_EVENT_PAUSE, PLAYING_PROGRESS_EVENT_UNPAUSE
 from emby.server import Server
 
@@ -35,6 +35,7 @@ class Player(xbmc.Player):
         self._mediaProvider = None
         self._playSessionId = None
         self._paused = False
+        self._playMethod = None
 
     def AddProvider(self, mediaProvider):
         if not mediaProvider:
@@ -95,6 +96,7 @@ class Player(xbmc.Player):
         self._mediaProvider = None
         self._playSessionId = None
         self._paused = False
+        self._playMethod = None
 
     def _startPlayback(self):
         if not self._file:
@@ -131,6 +133,12 @@ class Player(xbmc.Player):
 
         # generate a session identifier
         self._playSessionId = str(uuid4()).replace("-", "")
+
+        # determine the play method
+        if Server.IsDirectStreamUrl(self._mediaProvider, self._file):
+            self._playMethod = PLAYING_PLAY_METHOD_DIRECT_STREAM
+        else:
+            self._playMethod = PLAYING_PLAY_METHOD_DIRECT_PLAY
 
         # prepare the data of the API call
         data = self._preparePlayingData(stopped=False)
@@ -186,7 +194,7 @@ class Player(xbmc.Player):
             data.update({
                 'QueueableMediaTypes': 'Audio,Video',
                 'CanSeek': True,
-                'PlayMethod': PLAYING_PLAY_METHOD_DIRECT_STREAM,
+                'PlayMethod': self._playMethod,
                 'IsPaused': self._paused,
             })
 

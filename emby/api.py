@@ -13,6 +13,7 @@ import json
 import xbmc
 from xbmcgui import ListItem
 import xbmcmediaimport
+import xbmcvfs
 
 from emby.constants import *
 
@@ -152,7 +153,13 @@ class Api:
         if isFolder:
             itemPath = embyServer.BuildItemUrl(itemId)
         else:
-            itemPath = embyServer.BuildPlayableItemUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId, itemObj.get(PROPERTY_ITEM_CONTAINER))
+            # get the direct path
+            path = itemObj.get(PROPERTY_ITEM_PATH)
+            # if we can access the direct path we can use DirectPlay otherwise we use DirectStream
+            if path and xbmcvfs.exists(path):
+                itemPath = path
+            else:
+                itemPath = embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId, itemObj.get(PROPERTY_ITEM_CONTAINER))
 
         item = ListItem(
             path = itemPath,
