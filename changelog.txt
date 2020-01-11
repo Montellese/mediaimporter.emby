@@ -1,0 +1,8 @@
+[B]Version 0.0.3[/B]
+- Support DirectPlay for files which are directly accessible over Kodi's VFS
+
+[B]Version 0.0.2[/B]
+- Support for Python 2 and 3
+
+[B]Version 0.0.1[/B]
+- Initial version
