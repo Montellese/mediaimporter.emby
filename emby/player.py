@@ -6,6 +6,7 @@
 #  See LICENSES/README.md for more information.
 #
 
+import threading
 import time
 from uuid import uuid4
 
@@ -24,6 +25,8 @@ class Player(xbmc.Player):
     def __init__(self, progressInterval=None):
         super(xbmc.Player, self).__init__()
 
+        self._lock = threading.Lock()
+
         self._progressInterval = progressInterval or 10
         self._lastProgressReport = None
 
@@ -41,53 +44,65 @@ class Player(xbmc.Player):
         if not mediaProvider:
             raise ValueError('invalid mediaProvider')
 
-        self._providers[mediaProvider.getIdentifier()] = mediaProvider
+        with self._lock:
+            self._providers[mediaProvider.getIdentifier()] = mediaProvider
 
     def RemoveProvider(self, mediaProvider):
         if not mediaProvider:
             raise ValueError('invalid mediaProvider')
 
-        del self._providers[mediaProvider.getIdentifier()]
+        with self._lock:
+            del self._providers[mediaProvider.getIdentifier()]
 
     def Process(self):
-        if not self._lastProgressReport:
-            return
+        with self._lock:
+            if not self._lastProgressReport:
+                return
 
-        # adhere to the configured progress interval
-        if (time.time() - self._lastProgressReport) < self._progressInterval:
-            return
+            # adhere to the configured progress interval
+            if (time.time() - self._lastProgressReport) < self._progressInterval:
+                return
 
-        self._reportPlaybackProgress()
+            self._reportPlaybackProgress()
 
     def onPlayBackStarted(self):
-        self._reset()
-        self._file = self.getPlayingFile()
+        with self._lock:
+            self._reset()
+            self._file = self.getPlayingFile()
 
     def onAVStarted(self):
-        self._startPlayback()
+        with self._lock:
+            self._startPlayback()
 
     def onPlayBackSeek(self, time, seekOffset):
-        self._reportPlaybackProgress()
+        with self._lock:
+            self._reportPlaybackProgress()
 
     def onPlayBackSeekChapter(self, chapter):
-        self._reportPlaybackProgress()
+        with self._lock:
+            self._reportPlaybackProgress()
 
     def onPlayBackPaused(self):
-        self._paused = True
-        self._reportPlaybackProgress(event=PLAYING_PROGRESS_EVENT_PAUSE)
+        with self._lock:
+            self._paused = True
+            self._reportPlaybackProgress(event=PLAYING_PROGRESS_EVENT_PAUSE)
 
     def onPlayBackResumed(self):
-        self._paused = False
-        self._reportPlaybackProgress(event=PLAYING_PROGRESS_EVENT_UNPAUSE)
+        with self._lock:
+            self._paused = False
+            self._reportPlaybackProgress(event=PLAYING_PROGRESS_EVENT_UNPAUSE)
 
     def onPlayBackStopped(self):
-        self._stopPlayback()
+        with self._lock:
+            self._stopPlayback()
 
     def onPlayBackEnded(self):
-        self._stopPlayback()
+        with self._lock:
+            self._stopPlayback()
 
     def onPlayBackError(self):
-        self._stopPlayback(failed=True)
+        with self._lock:
+            self._stopPlayback(failed=True)
 
     def _reset(self):
         self._file = None
