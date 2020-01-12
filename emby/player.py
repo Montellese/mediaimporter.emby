@@ -47,12 +47,16 @@ class Player(xbmc.Player):
         with self._lock:
             self._providers[mediaProvider.getIdentifier()] = mediaProvider
 
+        Player.log('{} added'.format(mediaProvider2str(mediaProvider)))
+
     def RemoveProvider(self, mediaProvider):
         if not mediaProvider:
             raise ValueError('invalid mediaProvider')
 
         with self._lock:
             del self._providers[mediaProvider.getIdentifier()]
+
+        Player.log('{} removed'.format(mediaProvider2str(mediaProvider)))
 
     def Process(self):
         with self._lock:
@@ -78,19 +82,27 @@ class Player(xbmc.Player):
         with self._lock:
             self._reportPlaybackProgress()
 
+        Player.log('playback seek for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
+
     def onPlayBackSeekChapter(self, chapter):
         with self._lock:
             self._reportPlaybackProgress()
+
+        Player.log('playback seek chapter for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
 
     def onPlayBackPaused(self):
         with self._lock:
             self._paused = True
             self._reportPlaybackProgress(event=PLAYING_PROGRESS_EVENT_PAUSE)
 
+        Player.log('playback paused for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
+
     def onPlayBackResumed(self):
         with self._lock:
             self._paused = False
             self._reportPlaybackProgress(event=PLAYING_PROGRESS_EVENT_UNPAUSE)
+
+        Player.log('playback resumed for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
 
     def onPlayBackStopped(self):
         with self._lock:
@@ -136,7 +148,7 @@ class Player(xbmc.Player):
                 continue
 
             if len(matchingItems) > 1:
-                log('multiple items imported from {} match the imported Emby item {} playing from {}' \
+                Player.log('multiple items imported from {} match the imported Emby item {} playing from {}' \
                     .format(mediaProvider2str(mediaProvider), self._itemId, self._file), xbmc.LOGWARNING)
 
             self._item = matchingItems[0]
@@ -165,6 +177,8 @@ class Player(xbmc.Player):
 
         self._lastProgressReport = time.time()
 
+        Player.log('playback start for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
+
     def _reportPlaybackProgress(self, event=PLAYING_PROGRESS_EVENT_TIME_UPDATE):
         if not self._item:
             return
@@ -190,6 +204,8 @@ class Player(xbmc.Player):
         server = Server(self._mediaProvider)
         url = server.BuildSessionsPlayingStoppedUrl()
         server.ApiPost(url, data)
+
+        Player.log('playback stopped for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
 
         self._reset()
 
@@ -227,3 +243,7 @@ class Player(xbmc.Player):
                 })
 
         return data
+
+    @staticmethod
+    def log(message, level=xbmc.LOGINFO):
+        log('[player] {}'.format(message), level)

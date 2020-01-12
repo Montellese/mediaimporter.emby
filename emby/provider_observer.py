@@ -49,11 +49,11 @@ class ProviderObserver:
         # if a matching import has been found update it
         if matchingImportIndices:
             self._imports[matchingImportIndices[0]] = mediaImport
-            log('media import {} updated'.format(mediaImport2str(mediaImport)))
+            ProviderObserver.log('media import {} updated'.format(mediaImport2str(mediaImport)))
         else:
             # otherwise add the import to the list
             self._imports.append(mediaImport)
-            log('media import {} added'.format(mediaImport2str(mediaImport)))
+            ProviderObserver.log('media import {} added'.format(mediaImport2str(mediaImport)))
 
     def RemoveImport(self, mediaImport):
         if not mediaImport:
@@ -66,7 +66,7 @@ class ProviderObserver:
 
         # remove the media import from the list
         del self._imports[matchingImportIndices[0]]
-        log('media import {} removed'.format(mediaImport2str(mediaImport)))
+        ProviderObserver.log('media import {} removed'.format(mediaImport2str(mediaImport)))
 
     def Start(self, mediaProvider):
         if not mediaProvider:
@@ -96,7 +96,7 @@ class ProviderObserver:
             elif action == ProviderObserver.Action.Stop:
                 self._StopAction()
             else:
-                log('unknown action {} to process'.format(action), xbmc.LOGWARNING)
+                ProviderObserver.log('unknown action {} to process'.format(action), xbmc.LOGWARNING)
 
         self._actions = []
 
@@ -113,7 +113,7 @@ class ProviderObserver:
 
                 messageObj = json.loads(message)
                 if not messageObj:
-                    log('invalid JSON message ({}) from {} received: {}'.format(len(message), mediaProvider2str(self._mediaProvider), message), xbmc.LOGWARNING)
+                    ProviderObserver.log('invalid JSON message ({}) from {} received: {}'.format(len(message), mediaProvider2str(self._mediaProvider), message), xbmc.LOGWARNING)
                     continue
 
                 self._ProcessMessage(messageObj)
@@ -121,7 +121,7 @@ class ProviderObserver:
             except websocket.WebSocketTimeoutException:
                 break
             except Exception as error:
-                log('unknown exception when receiving data from {}: {}'.format(mediaProvider2str(self._mediaProvider), error.args[0]), xbmc.LOGWARNING)
+                ProviderObserver.log('unknown exception when receiving data from {}: {}'.format(mediaProvider2str(self._mediaProvider), error.args[0]), xbmc.LOGWARNING)
                 break
 
     def _ProcessMessage(self, messageObj):
@@ -129,10 +129,10 @@ class ProviderObserver:
             return
 
         if not WS_MESSAGE_TYPE in messageObj:
-            log('message without "{}" received from {}'.format(WS_MESSAGE_TYPE, mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
+            ProviderObserver.log('message without "{}" received from {}'.format(WS_MESSAGE_TYPE, mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
             return
         if not WS_DATA in messageObj:
-            log('message without "{}" received from {}'.format(WS_DATA, mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
+            ProviderObserver.log('message without "{}" received from {}'.format(WS_DATA, mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
             return
 
         messageType = messageObj[WS_MESSAGE_TYPE]
@@ -143,9 +143,11 @@ class ProviderObserver:
         elif messageType == WS_MESSAGE_TYPE_USER_DATA_CHANGED:
             self._ProcessMessageUserDataChanged(data)
         else:
-            log('ignoring "{}" message from {}'.format(messageType, mediaProvider2str(self._mediaProvider)), xbmc.LOGDEBUG)
+            ProviderObserver.log('ignoring "{}" message from {}'.format(messageType, mediaProvider2str(self._mediaProvider)), xbmc.LOGDEBUG)
 
     def _ProcessMessageLibraryChanged(self, data):
+        ProviderObserver.log('processing library changed message...')
+
         itemsAdded = data[WS_LIBRARY_CHANGED_ITEMS_ADDED]
         itemsUpdated = data[WS_LIBRARY_CHANGED_ITEMS_UPDATED]
         itemsRemoved = data[WS_LIBRARY_CHANGED_ITEMS_REMOVED]
@@ -173,22 +175,22 @@ class ProviderObserver:
                 # get all details for the added / changed item
                 item = self._GetItemDetails(itemId)
                 if not item:
-                    log('failed to get details for changed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
+                    ProviderObserver.log('failed to get details for changed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
                     continue
             else:
                 # find the removed item in the list of imported items
                 importedItems = xbmcmediaimport.getImportedItemsByProvider(self._mediaProvider)
                 matchingItems = [ importedItem for importedItem in importedItems if importedItem.getUniqueID(EMBY_PROTOCOL) == itemId ]
                 if not matchingItems:
-                    log('failed to find removed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
+                    ProviderObserver.log('failed to find removed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
                     continue
                 if len(matchingItems) > 1:
-                    log('multiple imported items for item with id "{}" found => only removing the first one'.format(itemId), xbmc.LOGWARNING)
+                    ProviderObserver.log('multiple imported items for item with id "{}" found => only removing the first one'.format(itemId), xbmc.LOGWARNING)
 
                 item = matchingItems[0]
 
             if not item:
-                log('failed to process changed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
+                ProviderObserver.log('failed to process changed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
                 continue
 
             changedItems.append((changesetType, item, itemId))
@@ -203,6 +205,8 @@ class ProviderObserver:
         return [(changesetType, item) for item in items if isinstance(item, string_types) and item]
 
     def _ProcessMessageUserDataChanged(self, data):
+        ProviderObserver.log('processing userdata changed message...')
+
         userDataList = data[WS_USER_DATA_CHANGED_USER_DATA_LIST]
 
         changedItems = []
@@ -216,7 +220,7 @@ class ProviderObserver:
 
             item = self._GetItemDetails(itemId)
             if not item:
-                log('failed to get details for changed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
+                ProviderObserver.log('failed to get details for changed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
                 continue
 
             changedItems.append((xbmcmediaimport.MediaImportChangesetTypeChanged, item, itemId))
@@ -233,7 +237,7 @@ class ProviderObserver:
             # find a matching import for the changed item
             mediaImport = self._FindImportForItem(item)
             if not mediaImport:
-                log('failed to determine media import for changed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
+                ProviderObserver.log('failed to determine media import for changed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
                 continue
 
             if mediaImport not in changedItemsMap:
@@ -244,9 +248,9 @@ class ProviderObserver:
         # finally pass the changed items grouped by their media import to Kodi
         for (mediaImport, changedItems) in changedItemsMap.items():
             if xbmcmediaimport.changeImportedItems(mediaImport, changedItems):
-                log('changed {} imported items for media import {}'.format(len(changedItems), mediaImport2str(mediaImport)))
+                ProviderObserver.log('changed {} imported items for media import {}'.format(len(changedItems), mediaImport2str(mediaImport)))
             else:
-                log('failed to change {} imported items for media import {}'.format(len(changedItems), mediaImport2str(mediaImport)), xbmc.LOGWARNING)
+                ProviderObserver.log('failed to change {} imported items for media import {}'.format(len(changedItems), mediaImport2str(mediaImport)), xbmc.LOGWARNING)
 
     def _GetItemDetails(self, itemId):
         # get the URL to retrieve all details of the item from the Emby server
@@ -255,7 +259,7 @@ class ProviderObserver:
         # retrieve all details of the item
         itemObj = self._server.ApiGet(getItemUrl)
         if not itemObj:
-            log('cannot retrieve details of updated item with id "{}"'.format(itemId), xbmc.LOGERROR)
+            ProviderObserver.log('cannot retrieve details of updated item with id "{}"'.format(itemId), xbmc.LOGERROR)
             return None
 
         return Api.toFileItem(self._server, itemObj)
@@ -300,7 +304,7 @@ class ProviderObserver:
             authenticated = False
 
         if not authenticated:
-            log('failed to authenticate with {}'.format(mediaProvider2str(self._mediaProvider)), xbmc.LOGERROR)
+            ProviderObserver.log('failed to authenticate with {}'.format(mediaProvider2str(self._mediaProvider)), xbmc.LOGERROR)
             self._Reset()
             return False
 
@@ -316,11 +320,11 @@ class ProviderObserver:
         try:
             self._websocket.connect(url)
         except:
-            log('failed to connect to {} using a websocket'.format(url), xbmc.LOGERROR)
+            ProviderObserver.log('failed to connect to {} using a websocket'.format(url), xbmc.LOGERROR)
             self._Reset()
             return False
 
-        log('successfully connected to {} to observe media imports'.format(mediaProvider2str(self._mediaProvider)))
+        ProviderObserver.log('successfully connected to {} to observe media imports'.format(mediaProvider2str(self._mediaProvider)))
         self._connected = True
         return True
 
@@ -329,7 +333,7 @@ class ProviderObserver:
             return
 
         if not restart:
-            log('stopped observing media imports from {}'.format(mediaProvider2str(self._mediaProvider)))
+           ProviderObserver.log('stopped observing media imports from {}'.format(mediaProvider2str(self._mediaProvider)))
 
         self._websocket.close()
         self._Reset()
@@ -338,3 +342,7 @@ class ProviderObserver:
         self._connected = False
         self._server = None
         self._mediaProvider = None
+
+    @staticmethod
+    def log(message, level=xbmc.LOGINFO):
+       log('[observer] {}'.format(message), level)

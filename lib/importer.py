@@ -216,6 +216,7 @@ def testAuthentication(handle, options):
         log('cannot retrieve media provider', xbmc.LOGERROR)
         return
 
+    log('testing authentication with {}...'.format(mediaProvider2str(mediaProvider)))
     success = False
     try:
         success = Server(mediaProvider).Authenticate()
@@ -305,6 +306,7 @@ def discoverProvider(handle, options):
     if not baseUrl:
         return
 
+    log('trying to discover an Emby server at {}...'.format(baseUrl))
     try:
         serverInfo = Server.GetServerInfo(baseUrl)
         if not serverInfo:
@@ -314,8 +316,11 @@ def discoverProvider(handle, options):
 
     providerId = Server.BuildProviderId(serverInfo.id)
     providerIconUrl = Server.BuildIconUrl(baseUrl)
+    mediaProvider = xbmcmediaimport.MediaProvider(providerId, baseUrl, serverInfo.name, providerIconUrl, emby.constants.SUPPORTED_MEDIA_TYPES)
 
-    xbmcmediaimport.setDiscoveredProvider(handle, True, xbmcmediaimport.MediaProvider(providerId, baseUrl, serverInfo.name, providerIconUrl, emby.constants.SUPPORTED_MEDIA_TYPES))
+    log('Emby server {} successfully discovered at {}'.format(mediaProvider2str(mediaProvider), baseUrl))
+
+    xbmcmediaimport.setDiscoveredProvider(handle, True, mediaProvider)
 
 def lookupProvider(handle, options):
     # retrieve the media provider
@@ -490,6 +495,8 @@ def execImport(handle, options):
         log('cannot retrieve media provider', xbmc.LOGERROR)
         return
 
+    log('importing {} items from {}...'.format(mediaTypes, mediaProvider2str(mediaProvider)))
+
     # prepare the media provider settings
     if not mediaProvider.prepareSettings():
         log('cannot prepare media provider settings', xbmc.LOGERROR)
@@ -522,6 +529,7 @@ def execImport(handle, options):
     progress = 0
     progressTotal = len(mediaTypes)
     for mediaType in mediaTypes:
+        log('importing {} items from {}...'.format(mediaType, mediaProvider2str(mediaProvider)))
         if xbmcmediaimport.shouldCancel(handle, progress, progressTotal):
             return
 
@@ -538,12 +546,12 @@ def execImport(handle, options):
         }
         url = Url.addOptions(baseUrl, urlOptions)
 
-        log('importing {} items from {}'.format(mediaType, url))
-
         items = []
 
         # handle library views
         for view in views:
+            log('importing {} items from "{}" view from {}...'.format(mediaType, view['name'], mediaProvider2str(mediaProvider)))
+
             viewUrl = url
             viewUrl = Url.addOptions(viewUrl, { 'ParentId': view['id'] })
 
@@ -583,7 +591,7 @@ def execImport(handle, options):
                 if startIndex >= totalCount:
                     break
 
-        log('{} {} items imported'.format(len(items), mediaType))
+        log('{} {} items imported from {}'.format(len(items), mediaType, mediaProvider2str(mediaProvider)))
         xbmcmediaimport.addImportItems(handle, items, mediaType)
 
         progress += 1
@@ -613,6 +621,8 @@ def updateOnProvider(handle, options):
     if not item:
         log('cannot retrieve updated item', xbmc.LOGERROR)
         return
+
+    log('updating "{}" ({}) on {}...'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
 
     itemVideoInfoTag = item.getVideoInfoTag()
     if not itemVideoInfoTag:
@@ -686,20 +696,28 @@ def updateOnProvider(handle, options):
         if playbackPositionInTicks != itemPlaybackPositionInTicks:
             updatePlaybackPosition = True
 
+    # nothing to do if no playback related properties have been changed
+    if not updateItemPlayed and not updatePlaybackPosition:
+        return
+
     if useUserDataCall:
+        log('updating playback related properties of "{}" ({}) on {}...'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
         updateUserData(embyServer, itemId, playcount, watched, lastPlayed, playbackPositionInTicks)
     else:
         if updateItemPlayed:
             if watched:
+                log('marking "{}" ({}) as watched on {}...'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
                 if not markAsWatched(embyServer, itemId, lastPlayed):
-                    log('failed to mark item "{}" as watched'.format(item.getLabel()), xbmc.LOGWARNING)
+                    log('failed to mark item "{}" ({}) as watched'.format(item.getLabel(), item.getPath()), xbmc.LOGWARNING)
             else:
+                log('marking "{}" ({}) as unwatched on {}...'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
                 if not markAsUnwatched(embyServer, itemId):
-                    log('failed to mark item "{}" as unwatched'.format(item.getLabel()), xbmc.LOGWARNING)
+                    log('failed to mark item "{}" ({}) as unwatched'.format(item.getLabel(), item.getPath()), xbmc.LOGWARNING)
 
         if updatePlaybackPosition:
+            log('updating resume point of "{}" ({}) on {}...'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
             if not updateResumePoint(embyServer, itemId, playbackPositionInTicks):
-                    log('failed to update resume point for item "{}"'.format(item.getLabel()), xbmc.LOGWARNING)
+                    log('failed to update resume point for item "{}" ({})'.format(item.getLabel(), item.getPath()), xbmc.LOGWARNING)
 
     xbmcmediaimport.finishUpdateOnProvider(handle)
 
