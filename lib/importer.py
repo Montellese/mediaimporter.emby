@@ -11,6 +11,7 @@ from dateutil import parser
 import json
 import posixpath
 import sys
+from six import iteritems
 from six.moves.urllib.parse import parse_qs, unquote, urlparse
 import uuid
 
@@ -21,7 +22,7 @@ from xbmcgui import ListItem
 import xbmcmediaimport
 
 import emby
-from emby.api import Api
+from emby.api import Api, EMBY_BOXSET
 from emby.request import Request
 from emby.server import Server
 
@@ -301,6 +302,54 @@ def settingOptionsFillerViews(handle, options):
     # pass the list of views back to Kodi
     settings.setStringOptions(emby.constants.SETTING_IMPORT_VIEWS_SPECIFIC, views)
 
+def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, viewName=None, raw=False):
+    items = []
+
+    viewUrl = url
+    viewUrl = Url.addOptions(viewUrl, { 'ParentId': viewId })
+
+    # retrieve all items matching the current media type
+    totalCount = 0
+    startIndex = 0
+    while True:
+        if xbmcmediaimport.shouldCancel(handle, startIndex, max(totalCount, 1)):
+            return
+
+        # put together a paged URL
+        pagedUrlOptions = {
+            'StartIndex': startIndex
+        }
+        pagedUrl = Url.addOptions(viewUrl, pagedUrlOptions)
+        resultObj = embyServer.ApiGet(pagedUrl)
+        if not resultObj or not emby.constants.PROPERTY_ITEM_ITEMS in resultObj or not emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT in resultObj:
+            log('invalid response for items of media type "{}" from {}'.format(mediaType, pagedUrl), xbmc.LOGERROR)
+            return
+
+        # retrieve the total number of items
+        totalCount = int(resultObj[emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT])
+
+        # parse all items
+        itemsObj = resultObj[emby.constants.PROPERTY_ITEM_ITEMS]
+        for itemObj in itemsObj:
+            startIndex = startIndex + 1
+            if xbmcmediaimport.shouldCancel(handle, startIndex, totalCount):
+                return
+
+            if raw:
+                items.append(itemObj)
+            else:
+                item = Api.toFileItem(embyServer, itemObj, mediaType, embyMediaType, viewName)
+                if not item:
+                    continue
+
+                items.append(item)
+
+        # check if we have retrieved all available items
+        if startIndex >= totalCount:
+            break
+
+    return items
+
 def discoverProvider(handle, options):
     baseUrl = xbmcgui.Dialog().input(localise(32050), 'http://')
     if not baseUrl:
@@ -546,50 +595,41 @@ def execImport(handle, options):
         }
         url = Url.addOptions(baseUrl, urlOptions)
 
+        boxsetUrlOptions = {
+            'IncludeItemTypes': EMBY_BOXSET
+        }
+        boxsetUrl = Url.addOptions(baseUrl, boxsetUrlOptions)
+
         items = []
+        boxsets = {}
 
         # handle library views
         for view in views:
             log('importing {} items from "{}" view from {}...'.format(mediaType, view['name'], mediaProvider2str(mediaProvider)))
+            items.extend(importItems(handle, embyServer, url, mediaType, view['id'], embyMediaType=embyMediaType, viewName=view['name']))
 
-            viewUrl = url
-            viewUrl = Url.addOptions(viewUrl, { 'ParentId': view['id'] })
-
-            totalCount = 0
-            startIndex = 0
-            while True:
-                if xbmcmediaimport.shouldCancel(handle, startIndex, max(totalCount, 1)):
-                    return
-
-                # put together a paged URL
-                pagedUrlOptions = {
-                    'StartIndex': startIndex
-                }
-                pagedUrl = Url.addOptions(viewUrl, pagedUrlOptions)
-                resultObj = embyServer.ApiGet(pagedUrl)
-                if not resultObj or not emby.constants.PROPERTY_ITEM_ITEMS in resultObj or not emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT in resultObj:
-                    log('invalid response for items of media type "{}" from {}'.format(mediaType, pagedUrl), xbmc.LOGERROR)
-                    return
-
-                # retrieve the total number of items
-                totalCount = int(resultObj[emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT])
-
-                # parse all items
-                itemsObj = resultObj[emby.constants.PROPERTY_ITEM_ITEMS]
-                for itemObj in itemsObj:
-                    startIndex = startIndex + 1
-                    if xbmcmediaimport.shouldCancel(handle, startIndex, totalCount):
-                        return
-
-                    item = Api.toFileItem(embyServer, itemObj, mediaType, embyMediaType, view['name'])
-                    if not item:
+            if mediaType == xbmcmediaimport.MediaTypeMovie:
+                # retrieve all BoxSets / collections matching the current media type
+                boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view['id'], raw=True)
+                for boxsetObj in boxsetObjs:
+                    if not emby.constants.PROPERTY_ITEM_ID in boxsetObj or not emby.constants.PROPERTY_ITEM_NAME in boxsetObj:
                         continue
 
-                    items.append(item)
+                    boxsetId = boxsetObj[emby.constants.PROPERTY_ITEM_ID]
+                    boxsetName = boxsetObj[emby.constants.PROPERTY_ITEM_NAME]
+                    boxsets[boxsetId] = boxsetName
 
-                # check if we have retrieved all available items
-                if startIndex >= totalCount:
-                    break
+        # handle BoxSets / collections
+        for (boxsetId, boxsetName) in iteritems(boxsets):
+            # get all items belonging to the BoxSet
+            boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId, embyMediaType=embyMediaType, viewName=boxsetName)
+            for boxsetItem in boxsetItems:
+                # find the matching retrieved item
+                for (index, item) in enumerate(items):
+                    if boxsetItem.getPath() == item.getPath():
+                        # set the BoxSet / collection
+                        Api.setCollection(item, boxsetName)
+                        items[index] = item
 
         log('{} {} items imported from {}'.format(len(items), mediaType, mediaProvider2str(mediaProvider)))
         xbmcmediaimport.addImportItems(handle, items, mediaType)

@@ -28,6 +28,8 @@ EMBY_MEDIATYPES = [
     (xbmcmediaimport.MediaTypeMusicVideo, 'MusicVideo', 32006)
 ]
 
+EMBY_BOXSET = 'BoxSet'
+
 class Api:
     @staticmethod
     def compareMediaProviders(lhs, rhs):
@@ -330,3 +332,14 @@ class Api:
                     item.addStreamInfo('subtitle', {
                         'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE)
                         })
+
+    @staticmethod
+    def setCollection(item, collectionName):
+        if not item:
+            raise ValueError('invalid item')
+        if not collectionName:
+            raise ValueError('invalid collectionName')
+
+        item.setInfo('video', {
+            'set': collectionName
+        })
