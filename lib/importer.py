@@ -738,6 +738,7 @@ def updateOnProvider(handle, options):
 
     # nothing to do if no playback related properties have been changed
     if not updateItemPlayed and not updatePlaybackPosition:
+        log('no playback related properties of "{}" ({}) have changed => nothing to update on {}'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
         return
 
     if useUserDataCall:
