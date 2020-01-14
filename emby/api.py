@@ -336,14 +336,16 @@ class Api:
         artwork = {}
         images = itemObj.get(PROPERTY_ITEM_IMAGE_TAGS)
         if images:
-            if 'Primary' in images:
-                artwork['poster'] = embyServer.BuildImageUrl(itemId, PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, images.get(PROPERTY_ITEM_IMAGE_TAGS_PRIMARY))
-
-            if 'Logo' in images:
-                artwork['logo'] = embyServer.BuildImageUrl(itemId, PROPERTY_ITEM_IMAGE_TAGS_LOGO, images.get(PROPERTY_ITEM_IMAGE_TAGS_LOGO))
+            Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, 'poster')
+            Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_LOGO, 'logo')
 
         images = itemObj.get(PROPERTY_ITEM_BACKDROP_IMAGE_TAGS)
         if images:
             artwork['fanart'] = embyServer.BuildImageUrl(itemId, 'Backdrop/0', images[0])
 
         return artwork
+
+    @staticmethod
+    def _mapSingleArtwork(embyServer, artwork, itemId, imagesObj, embyArtwork, kodiArtwork):
+        if embyArtwork in imagesObj:
+            artwork[kodiArtwork] = embyServer.BuildImageUrl(itemId, embyArtwork, imagesObj.get(embyArtwork))
