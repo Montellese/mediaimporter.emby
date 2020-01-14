@@ -337,7 +337,7 @@ class Api:
         images = itemObj.get(PROPERTY_ITEM_IMAGE_TAGS)
         if images:
             Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, 'poster')
-            Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_LOGO, 'logo')
+            Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_LOGO, 'clearlogo')
 
         images = itemObj.get(PROPERTY_ITEM_BACKDROP_IMAGE_TAGS)
         if images:
