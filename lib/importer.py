@@ -77,30 +77,6 @@ def getServerId(path):
 
     return url.netloc
 
-def getItemId(path):
-    if not path:
-        return False
-
-    url = urlparse(path)
-    urlPath = url.path
-    if not urlPath:
-        return False
-
-    urlPathParts = []
-    while urlPath != '/':
-        ( urlPath, subPath ) = posixpath.split(urlPath)
-        urlPathParts.insert(0, subPath)
-
-    if len(urlPathParts) < 3:
-        return False
-
-    itemId = urlPathParts[2]
-
-    if not itemId:
-        return False
-
-    return itemId
-
 def requestUrl(url, authToken='', deviceId='', userId=''):
     headers = Request.PrepareApiCallHeaders(authToken=authToken, deviceId=deviceId, userId=userId)
     return Request.GetAsJson(url, headers=headers)
@@ -670,7 +646,7 @@ def updateOnProvider(handle, options):
         return
 
     # determine the item's identifier
-    itemId = getItemId(itemVideoInfoTag.getPath())
+    itemId = itemVideoInfoTag.getUniqueID(emby.constants.EMBY_PROTOCOL)
     if not itemId:
         log('cannot determine the identifier of the updated item: "{}"'.format(itemVideoInfoTag.getPath()), xbmc.LOGERROR)
         return
