@@ -40,6 +40,10 @@ msgctxt "#32006"
 msgid "music videos"
 msgstr ""
 
+msgctxt "#32007"
+msgid "collections"
+msgstr ""
+
 msgctxt "#32010"
 msgid "Emby"
 msgstr ""

@@ -9,7 +9,8 @@
 import xbmcmediaimport
 
 # import related constants
-SUPPORTED_MEDIA_TYPES = set([ xbmcmediaimport.MediaTypeMovie, xbmcmediaimport.MediaTypeMusicVideo,
+SUPPORTED_MEDIA_TYPES = set([ xbmcmediaimport.MediaTypeMovie, xbmcmediaimport.MediaTypeVideoCollection,
+    xbmcmediaimport.MediaTypeMusicVideo,
     xbmcmediaimport.MediaTypeTvShow, xbmcmediaimport.MediaTypeSeason, xbmcmediaimport.MediaTypeEpisode ])
 
 # API related constants

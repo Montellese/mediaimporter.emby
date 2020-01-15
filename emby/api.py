@@ -20,15 +20,15 @@ from emby.constants import *
 from lib.utils import log
 
 # mapping of Kodi and Emby media types
+EMBY_MEDIATYPE_BOXSET = 'BoxSet'
 EMBY_MEDIATYPES = [
     (xbmcmediaimport.MediaTypeMovie, 'Movie', 32002),
+    (xbmcmediaimport.MediaTypeVideoCollection, EMBY_MEDIATYPE_BOXSET, 32007),
     (xbmcmediaimport.MediaTypeTvShow, 'Series', 32003),
     (xbmcmediaimport.MediaTypeSeason, 'Season', 32004),
     (xbmcmediaimport.MediaTypeEpisode, 'Episode', 32005),
     (xbmcmediaimport.MediaTypeMusicVideo, 'MusicVideo', 32006)
 ]
-
-EMBY_BOXSET = 'BoxSet'
 
 class Api:
     @staticmethod

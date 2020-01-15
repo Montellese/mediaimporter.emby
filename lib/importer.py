@@ -22,7 +22,7 @@ from xbmcgui import ListItem
 import xbmcmediaimport
 
 import emby
-from emby.api import Api, EMBY_BOXSET
+from emby.api import Api, EMBY_MEDIATYPE_BOXSET
 from emby.request import Request
 from emby.server import Server
 
@@ -572,7 +572,7 @@ def execImport(handle, options):
         url = Url.addOptions(baseUrl, urlOptions)
 
         boxsetUrlOptions = {
-            'IncludeItemTypes': EMBY_BOXSET
+            'IncludeItemTypes': EMBY_MEDIATYPE_BOXSET
         }
         boxsetUrl = Url.addOptions(baseUrl, boxsetUrlOptions)
 
