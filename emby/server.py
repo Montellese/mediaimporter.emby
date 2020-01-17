@@ -241,7 +241,7 @@ class Server:
         url = self.BuildItemUrl(itemId)
         url = Url.append(url, constants.URL_IMAGES, imageType)
         if imageTag:
-            url = Url.addOptions(url, { 'tag': imageTag })
+            url = Url.addOptions(url, { constants.URL_QUERY_TAG: imageTag })
 
         return url
 

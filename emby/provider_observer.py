@@ -312,8 +312,8 @@ class ProviderObserver:
         urlParts = urlparse(self._mediaProvider.getBasePath())
         url = urlunparse(urlParts._replace(scheme='ws', path='embywebsocket'))
         url = Url.addOptions(url, {
-            'api_key': self._server.AccessToken(),
-            'deviceId': self._server.DeviceId()
+            URL_QUERY_API_KEY: self._server.AccessToken(),
+            URL_QUERY_DEVICE_ID: self._server.DeviceId()
         })
 
         # connect the websocket
