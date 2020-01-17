@@ -167,6 +167,27 @@ class Server:
 
         return True
 
+    def BuildStreamDeliveryUrl(self, deliveryUrl):
+        if not deliveryUrl:
+            raise ValueError('invalid deliveryUrl')
+
+        return Url.append(self._url, deliveryUrl)
+
+    def BuildSubtitleStreamUrl(self, itemId, sourceId, index, codec):
+        if not itemId:
+            raise('invalid itemId')
+        if not sourceId:
+            raise('invalid sourceId')
+        if not index:
+            raise('invalid index')
+        if not codec:
+            raise('invalid codec')
+
+        # <url>/Videos/<itemId>/<sourceId>/Subtitles/<index>/Stream.<codec>?api_key=<token>
+        url = Url.append(self._url, constants.URL_VIDEOS, itemId, sourceId, constants.URL_VIDEOS_SUBTITLES, index, constants.URL_VIDEOS_SUBTITLES_STREAM)
+        url = '{}.{}'.format(url, codec)
+        return Url.addOptions(url, { constants.URL_QUERY_API_KEY: self._authenticator.AccessToken() })
+
     def BuildUserPlayingItemUrl(self, itemId):
         if not itemId:
             raise ValueError('Invalid itemId')
