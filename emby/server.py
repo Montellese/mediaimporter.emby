@@ -184,7 +184,7 @@ class Server:
             raise('invalid codec')
 
         # <url>/Videos/<itemId>/<sourceId>/Subtitles/<index>/Stream.<codec>?api_key=<token>
-        url = Url.append(self._url, constants.URL_VIDEOS, itemId, sourceId, constants.URL_VIDEOS_SUBTITLES, index, constants.URL_VIDEOS_SUBTITLES_STREAM)
+        url = Url.append(self._url, constants.URL_VIDEOS, itemId, sourceId, constants.URL_VIDEOS_SUBTITLES, str(index), constants.URL_VIDEOS_SUBTITLES_STREAM)
         url = '{}.{}'.format(url, codec)
         return Url.addOptions(url, { constants.URL_QUERY_API_KEY: self._authenticator.AccessToken() })
 

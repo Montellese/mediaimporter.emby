@@ -12,10 +12,9 @@ import time
 import xbmc
 import xbmcmediaimport
 
+from emby.api.library import Library
 from emby.api.playback import PlaybackCheckin
-from emby.constants import EMBY_PROTOCOL, \
-    PLAYING_PLAY_METHOD_DIRECT_PLAY, PLAYING_PLAY_METHOD_DIRECT_STREAM, \
-    PLAYING_PROGRESS_EVENT_TIME_UPDATE, PLAYING_PROGRESS_EVENT_PAUSE, PLAYING_PROGRESS_EVENT_UNPAUSE
+from emby.constants import *
 from emby.server import Server
 
 from lib import kodi
@@ -159,20 +158,35 @@ class Player(xbmc.Player):
         if not self._itemId:
             return
 
-        # generate a session identifier
-        self._playSessionId = PlaybackCheckin.GenerateSessionId()
-
         # determine the play method
         if Server.IsDirectStreamUrl(self._mediaProvider, self._file):
             self._playMethod = PLAYING_PLAY_METHOD_DIRECT_STREAM
         else:
             self._playMethod = PLAYING_PLAY_METHOD_DIRECT_PLAY
 
+        # setup and authenticate with the Emby server
+        try:
+            self._server = Server(self._mediaProvider)
+        except:
+            pass
+
+        if not self._server or not self._server.Authenticate():
+            Player.log('cannot connect to media provider {} to report playback progress of "{}" ({})' \
+                .format(mediaProvider2str(self._mediaProvider), self._item.getLabel(), self._file), xbmc.LOGWARNING)
+            self._reset()
+            return
+
+        # when using DirectStream add any external subtitles
+        if self._playMethod == PLAYING_PLAY_METHOD_DIRECT_STREAM:
+            self._addExternalSubtitles()
+
+        # generate a session identifier
+        self._playSessionId =  PlaybackCheckin.GenerateSessionId()
+
         # prepare the data of the API call
         data = self._preparePlayingData(stopped=False)
 
         # tell the Emby server that a library item is being played
-        self._server = Server(self._mediaProvider)
         PlaybackCheckin.StartPlayback(self._server, data)
 
         self._lastProgressReport = time.time()
@@ -239,6 +253,54 @@ class Player(xbmc.Player):
                 })
 
         return data
+
+    def _addExternalSubtitles(self):
+        if not self._item:
+            return
+
+        # get the item's details to look for external subtitles
+        itemObj = Library.GetItem(self._server, self._itemId)
+        if not itemObj:
+            Player.log('cannot retrieve details of "{}" ({}) from media provider {}' \
+                .format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
+            return
+
+        # extract the media source ID
+        if not PROPERTY_ITEM_MEDIA_SOURCES in itemObj or not itemObj[PROPERTY_ITEM_MEDIA_SOURCES]:
+            Player.log('cannot add external subtitles for "{}" ({}) from media provider {} ' \
+                'because it doesn\'t have a media source' \
+                .format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)), xbmc.LOGDEBUG)
+            return
+
+        mediaSourceId = itemObj.get(PROPERTY_ITEM_MEDIA_SOURCES)[0].get(PROPERTY_ITEM_MEDIA_SOURCES_ID)
+
+        # look for external subtitles
+        for stream in itemObj.get(PROPERTY_ITEM_MEDIA_STREAMS):
+            if stream.get(PROPERTY_ITEM_MEDIA_STREAM_TYPE) != 'Subtitle' or not stream.get(PROPERTY_ITEM_MEDIA_STREAM_IS_EXTERNAL):
+                continue
+
+            # get the index of the subtitle
+            index = stream.get(PROPERTY_ITEM_MEDIA_STREAM_INDEX)
+
+            # determine the language and name
+            name = stream.get(PROPERTY_ITEM_MEDIA_STREAM_DispLAY_TITLE) if PROPERTY_ITEM_MEDIA_STREAM_DispLAY_TITLE in stream else ''
+            language = stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE) if PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE in stream else ''
+
+            # determine the stream URL
+            if PROPERTY_ITEM_MEDIA_STREAM_DELIVERY_URL in stream and \
+                stream.get(PROPERTY_ITEM_MEDIA_STREAM_DELIVERY_URL).upper().startswith('/{}'.format(URL_VIDEOS)):
+                url = self._server.BuildStreamDeliveryUrl(stream.get(PROPERTY_ITEM_MEDIA_STREAM_DELIVERY_URL))
+            else:
+                url = self._server.BuildSubtitleStreamUrl(self._itemId, mediaSourceId, index, stream.get(PROPERTY_ITEM_MEDIA_STREAM_CODEC))
+
+            if not url:
+                Player.log('cannot add external subtitle at index {} for "{}" ({}) from media provider {}' \
+                .format(index, self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
+                continue
+
+            self.addSubtitle(url, name, language, False)  # TODO(Montellese): activate?
+            Player.log('external subtitle "{}" [{}] at index {} added for "{}" ({}) from media provider {}' \
+                .format(name, language, index, self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
 
     @staticmethod
     def log(message, level=xbmc.LOGINFO):
