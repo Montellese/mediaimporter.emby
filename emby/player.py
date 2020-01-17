@@ -36,6 +36,7 @@ class Player(xbmc.Player):
         self._item = None
         self._itemId = None
         self._mediaProvider = None
+        self._server = None
         self._playSessionId = None
         self._paused = False
         self._playMethod = None
@@ -121,6 +122,7 @@ class Player(xbmc.Player):
         self._item = None
         self._itemId = None
         self._mediaProvider = None
+        self._server = None
         self._playSessionId = None
         self._paused = False
         self._playMethod = None
@@ -171,9 +173,9 @@ class Player(xbmc.Player):
         data = self._preparePlayingData(stopped=False)
 
         # tell the Emby server that a library item is being played
-        server = Server(self._mediaProvider)
-        url = server.BuildSessionsPlayingUrl()
-        server.ApiPost(url, data)
+        self._server = Server(self._mediaProvider)
+        url = self._server.BuildSessionsPlayingUrl()
+        self._server.ApiPost(url, data)
 
         self._lastProgressReport = time.time()
 
@@ -187,9 +189,8 @@ class Player(xbmc.Player):
         data = self._preparePlayingData(stopped=False, event=event)
 
         # tell the Emby server that a library item is being played
-        server = Server(self._mediaProvider)
-        url = server.BuildSessionsPlayingProgressUrl()
-        server.ApiPost(url, data)
+        url = self._server.BuildSessionsPlayingProgressUrl()
+        self._server.ApiPost(url, data)
 
         self._lastProgressReport = time.time()
 
@@ -201,9 +202,8 @@ class Player(xbmc.Player):
         data = self._preparePlayingData(stopped=True, failed=failed)
 
         # tell the Emby server that a library item is being played
-        server = Server(self._mediaProvider)
-        url = server.BuildSessionsPlayingStoppedUrl()
-        server.ApiPost(url, data)
+        url = self._server.BuildSessionsPlayingStoppedUrl()
+        self._server.ApiPost(url, data)
 
         Player.log('playback stopped for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
 
