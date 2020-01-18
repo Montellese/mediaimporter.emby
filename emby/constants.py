@@ -166,6 +166,8 @@ SETTING_PROVIDER_PASSWORD = 'emby.password'
 SETTING_PROVIDER_TEST_AUTHENTICATION = 'emby.testauthentication'
 SETTING_PROVIDER_DEVICEID = 'emby.deviceid'
 
+SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY = 'emby.allowdirectplay'
+
 # media import setting identifiers and values
 SETTING_IMPORT_VIEWS = 'emby.importviews'
 SETTING_IMPORT_VIEWS_OPTION_ALL = 'all'

@@ -31,6 +31,7 @@ class ProviderObserver:
         self._connected = False
         self._imports = []
         self._mediaProvider = None
+        self._settings = None
         self._server = None
 
         # create the websocket
@@ -262,7 +263,7 @@ class ProviderObserver:
             ProviderObserver.log('cannot retrieve details of updated item with id "{}"'.format(itemId), xbmc.LOGERROR)
             return None
 
-        return Api.toFileItem(self._server, itemObj)
+        return Api.toFileItem(self._server, itemObj, allowDirectPlay=self._settings.getBool(SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY))
 
     def _FindImportForItem(self, item):
         videoInfoTag = item.getVideoInfoTag()
@@ -290,8 +291,8 @@ class ProviderObserver:
 
         self._mediaProvider = mediaProvider
 
-        settings = self._mediaProvider.prepareSettings()
-        if not settings:
+        self._settings = self._mediaProvider.prepareSettings()
+        if not self._settings:
             raise RuntimeError('cannot prepare media provider settings')
 
         try:

@@ -1,5 +1,5 @@
 [B]Version 0.0.5[/B]
--
+- make Direct Play configurable
 
 [B]Version 0.0.4[/B]
 - Fix importing logo / clearlogo artwork

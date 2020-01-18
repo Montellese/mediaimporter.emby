@@ -62,5 +62,14 @@
         </setting>
       </group>
     </category>
+    <category id="playback" label="32030">
+      <group id="1">
+        <setting id="emby.allowdirectplay" type="boolean" label="32031">
+          <level>0</level>
+          <default>true</default>
+          <control type="toggle" />
+        </setting>
+      </group>
+    </category>
   </section>
 </settings>

@@ -120,7 +120,7 @@ class Api:
             return ''
 
     @staticmethod
-    def toFileItem(embyServer, itemObj, mediaType='', embyMediaType='', libraryView=''):
+    def toFileItem(embyServer, itemObj, mediaType='', embyMediaType='', libraryView='', allowDirectPlay=True):
         # determine the matching Emby media type if possible
         checkMediaType = len(mediaType) > 0
         if checkMediaType and not embyMediaType:
@@ -155,12 +155,15 @@ class Api:
         if isFolder:
             itemPath = embyServer.BuildItemUrl(itemId)
         else:
-            # get the direct path
-            path = itemObj.get(PROPERTY_ITEM_PATH)
-            # if we can access the direct path we can use DirectPlay otherwise we use DirectStream
-            if path and xbmcvfs.exists(path):
-                itemPath = path
-            else:
+            if allowDirectPlay:
+                # get the direct path
+                path = itemObj.get(PROPERTY_ITEM_PATH)
+                # if we can access the direct path we can use Direct Play otherwise we use Direct Stream
+                if path and xbmcvfs.exists(path):
+                    itemPath = path
+
+            # fall back to Direct Stream
+            if not itemPath:
                 itemPath = embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId, itemObj.get(PROPERTY_ITEM_CONTAINER))
 
         item = ListItem(

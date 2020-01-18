@@ -278,7 +278,7 @@ def settingOptionsFillerViews(handle, options):
     # pass the list of views back to Kodi
     settings.setStringOptions(emby.constants.SETTING_IMPORT_VIEWS_SPECIFIC, views)
 
-def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, viewName=None, raw=False):
+def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, viewName=None, raw=False, allowDirectPlay=True):
     items = []
 
     viewUrl = url
@@ -314,7 +314,7 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
             if raw:
                 items.append(itemObj)
             else:
-                item = Api.toFileItem(embyServer, itemObj, mediaType, embyMediaType, viewName)
+                item = Api.toFileItem(embyServer, itemObj, mediaType, embyMediaType, viewName, allowDirectPlay=allowDirectPlay)
                 if not item:
                     continue
 
@@ -523,7 +523,8 @@ def execImport(handle, options):
     log('importing {} items from {}...'.format(mediaTypes, mediaProvider2str(mediaProvider)))
 
     # prepare the media provider settings
-    if not mediaProvider.prepareSettings():
+    mediaProviderSettings = mediaProvider.prepareSettings()
+    if not mediaProviderSettings:
         log('cannot prepare media provider settings', xbmc.LOGERROR)
         return
 
@@ -549,6 +550,9 @@ def execImport(handle, options):
     if not views:
         log('cannot retrieve items without any library views', xbmc.LOGERROR)
         return
+
+    # determine whether Direct Play is allowed
+    allowDirectPlay = mediaProviderSettings.getBool(emby.constants.SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY)
 
     # loop over all media types to be imported
     progress = 0
@@ -582,11 +586,11 @@ def execImport(handle, options):
         # handle library views
         for view in views:
             log('importing {} items from "{}" view from {}...'.format(mediaType, view['name'], mediaProvider2str(mediaProvider)))
-            items.extend(importItems(handle, embyServer, url, mediaType, view['id'], embyMediaType=embyMediaType, viewName=view['name']))
+            items.extend(importItems(handle, embyServer, url, mediaType, view['id'], embyMediaType=embyMediaType, viewName=view['name'], allowDirectPlay=allowDirectPlay))
 
             if mediaType == xbmcmediaimport.MediaTypeMovie:
                 # retrieve all BoxSets / collections matching the current media type
-                boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view['id'], raw=True)
+                boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view['id'], raw=True, allowDirectPlay=allowDirectPlay)
                 for boxsetObj in boxsetObjs:
                     if not emby.constants.PROPERTY_ITEM_ID in boxsetObj or not emby.constants.PROPERTY_ITEM_NAME in boxsetObj:
                         continue
@@ -598,7 +602,7 @@ def execImport(handle, options):
         # handle BoxSets / collections
         for (boxsetId, boxsetName) in iteritems(boxsets):
             # get all items belonging to the BoxSet
-            boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId, embyMediaType=embyMediaType, viewName=boxsetName)
+            boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId, embyMediaType=embyMediaType, viewName=boxsetName, allowDirectPlay=allowDirectPlay)
             for boxsetItem in boxsetItems:
                 # find the matching retrieved item
                 for (index, item) in enumerate(items):
