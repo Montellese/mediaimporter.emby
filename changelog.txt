@@ -2,6 +2,7 @@
 - make Direct Play configurable
 - Fix crash in emby.player.Player callbacks
 - automatically add external subtitles when starting playback of a video
+- make external subtitles configurable
 
 [B]Version 0.0.4[/B]
 - Fix importing logo / clearlogo artwork
