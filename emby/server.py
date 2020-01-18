@@ -6,7 +6,6 @@
 #  See LICENSES/README.md for more information.
 #
 
-import os.path
 from six.moves.urllib.parse import urlparse
 
 import xbmc
@@ -16,7 +15,7 @@ from emby.authenticator import Authenticator
 from emby.request import Request
 
 import lib.semantic_version as semantic_version
-from lib.utils import log, Url
+from lib.utils import log, splitall, Url
 
 class Server:
     class Info:
@@ -192,15 +191,15 @@ class Server:
            parsedBaseUrl.port != parsedUrl.port:
             return False
 
-        urlPaths = os.path.split(parsedUrl.path)
+        urlPaths = splitall(parsedUrl.path)
         # the first part of the path must be emby
-        if urlPaths[0] != constants.EMBY_PROTOCOL:
+        if urlPaths[1] != constants.EMBY_PROTOCOL:
             return False
         # the second part must either be "Videos" or "Audio"
-        if urlPaths[1] not in [ constants.URL_PLAYBACK_MEDIA_TYPE_VIDEO, constants.URL_PLAYBACK_MEDIA_TYPE_AUDIO ]:
+        if urlPaths[2] not in [ constants.URL_PLAYBACK_MEDIA_TYPE_VIDEO, constants.URL_PLAYBACK_MEDIA_TYPE_AUDIO ]:
             return False
         # the fourth part must start with "stream"
-        if urlPaths[3].startsWith(constants.URL_PLAYBACK_STREAM):
+        if not urlPaths[4].startswith(constants.URL_PLAYBACK_STREAM):
             return False
 
         # the query must be "static=true"
