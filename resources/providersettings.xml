@@ -69,6 +69,11 @@
           <default>true</default>
           <control type="toggle" />
         </setting>
+        <setting id="emby.enableexternalsubtitles" type="boolean" label="32032">
+          <level>0</level>
+          <default>true</default>
+          <control type="toggle" />
+        </setting>
       </group>
     </category>
   </section>

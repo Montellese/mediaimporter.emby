@@ -1,6 +1,7 @@
 [B]Version 0.0.5[/B]
 - make Direct Play configurable
 - automatically add external subtitles when starting playback of a video
+- make external subtitles configurable
 
 [B]Version 0.0.4[/B]
 - Fix importing logo / clearlogo artwork

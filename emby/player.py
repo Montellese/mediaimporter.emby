@@ -158,6 +158,13 @@ class Player(xbmc.Player):
         if not self._item:
             return
 
+        settings = self._mediaProvider.prepareSettings()
+        if not settings:
+            Player.log('failed to load settings for {} ({}) playing from {}' \
+                .format(self._item.getLabel(), self._file, mediaProvider2str(mediaProvider)), xbmc.LOGWARNING)
+            self._reset()
+            return
+
         # determine the play method
         if Server.IsDirectStreamUrl(self._mediaProvider, self._file):
             self._playMethod = PLAYING_PLAY_METHOD_DIRECT_STREAM
@@ -177,7 +184,8 @@ class Player(xbmc.Player):
             return
 
         # when using DirectStream add any external subtitles
-        if self._playMethod == PLAYING_PLAY_METHOD_DIRECT_STREAM:
+        if self._playMethod == PLAYING_PLAY_METHOD_DIRECT_STREAM and \
+           settings.getBool(seTting_PROVIDER_PLAYBACK_ENABLE_EXTERNAL_SUBTITLES):
             self._addExternalSubtitles()
 
         # generate a session identifier
