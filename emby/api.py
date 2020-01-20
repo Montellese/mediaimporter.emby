@@ -17,7 +17,7 @@ import xbmcvfs
 
 from emby.constants import *
 
-from lib.utils import log
+from lib.utils import log, Url
 
 # mapping of Kodi and Emby media types
 EMBY_MEDIATYPE_BOXSET = 'BoxSet'
@@ -120,6 +120,16 @@ class Api:
             return ''
 
     @staticmethod
+    def prepareUrlForKodi(url, embyServer=None, verifyHttps=True):
+        if not url:
+            return ''
+
+        if not verifyHttps or (embyServer and not embyServer.VerifyHttps()):
+            url = Url.addProtocolOptions(url, { URL_PROTOCOL_VERIFY_PEER: 'false' })
+
+        return url
+
+    @staticmethod
     def toFileItem(embyServer, itemObj, mediaType='', embyMediaType='', libraryView='', allowDirectPlay=True):
         # determine the matching Emby media type if possible
         checkMediaType = len(mediaType) > 0
@@ -153,7 +163,7 @@ class Api:
         itemPath = None
         isFolder = itemObj.get(PROPERTY_ITEM_IS_FOLDER)
         if isFolder:
-            itemPath = embyServer.BuildItemUrl(itemId)
+            itemPath = Api.prepareUrlForKodi(embyServer.BuildItemUrl(itemId), embyServer=embyServer)
         else:
             if allowDirectPlay:
                 # get the direct path
@@ -164,7 +174,9 @@ class Api:
 
             # fall back to Direct Stream
             if not itemPath:
-                itemPath = embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId, itemObj.get(PROPERTY_ITEM_CONTAINER))
+                itemPath = Api.prepareUrlForKodi( \
+                    embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId, itemObj.get(PROPERTY_ITEM_CONTAINER)), \
+                    embyServer=embyServer)
 
         item = ListItem(
             path = itemPath,
@@ -348,11 +360,15 @@ class Api:
 
         images = itemObj.get(PROPERTY_ITEM_BACKDROP_IMAGE_TAGS)
         if images:
-            artwork['fanart'] = embyServer.BuildImageUrl(itemId, 'Backdrop/0', images[0])
+            artwork['fanart'] = Api.prepareUrlForKodi( \
+                embyServer.BuildImageUrl(itemId, 'Backdrop/0', images[0]), \
+                embyServer=embyServer)
 
         return artwork
 
     @staticmethod
     def _mapSingleArtwork(embyServer, artwork, itemId, imagesObj, embyArtwork, kodiArtwork):
         if embyArtwork in imagesObj:
-            artwork[kodiArtwork] = embyServer.BuildImageUrl(itemId, embyArtwork, imagesObj.get(embyArtwork))
+            artwork[kodiArtwork] = Api.prepareUrlForKodi( \
+                embyServer.BuildImageUrl(itemId, embyArtwork, imagesObj.get(embyArtwork)), \
+                embyServer=embyServer)

@@ -6,7 +6,7 @@
 #  See LICENSES/README.md for more information.
 #
 
-from six.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import urlparse, urlunparse
 
 import xbmc
 
@@ -64,12 +64,21 @@ class Server:
             raise ValueError('Invalid provider')
 
         self._baseUrl = provider.getBasePath()
-        self._url = Url.append(self._baseUrl, constants.EMBY_PROTOCOL)
         self._id = provider.getIdentifier()
 
         settings = provider.getSettings()
         if not settings:
             raise ValueError('Invalid provider without settings')
+
+        self._useHttps = settings.getBool(constants.SETTING_PROVIDER_USE_HTTPS)
+        self._verifyHttps = settings.getBool(constants.SETTING_PROVIDER_VERIFY_HTTPS)
+
+        # make sure the base URL uses the proper protocol
+        parsedUrl = urlparse(self._baseUrl)
+        self._baseUrl = urlunparse(parsedUrl._replace(scheme='https' if self._useHttps else 'http'))
+
+        # prepare the actual URL
+        self._url = Url.append(self._baseUrl, constants.EMBY_PROTOCOL)
 
         self._devideId = settings.getString(constants.SETTING_PROVIDER_DEVICEID)
 
@@ -77,12 +86,18 @@ class Server:
         username = settings.getString(constants.SETTING_PROVIDER_USERNAME)
         password = settings.getString(constants.SETTING_PROVIDER_PASSWORD)
         if userId == constants.SETTING_PROVIDER_USER_OPTION_MANUAL:
-            self._authenticator = Authenticator.WithUsername(self._url, self._devideId, username, password)
+            self._authenticator = Authenticator.WithUsername(self._url, self._devideId, username, password, self._verifyHttps)
         else:
-            self._authenticator = Authenticator.WithUserId(self._url, self._devideId, userId, password)
+            self._authenticator = Authenticator.WithUserId(self._url, self._devideId, userId, password, self._verifyHttps)
 
     def Authenticate(self):
         return self._authenticator.IsAuthenticated() or self._authenticator.Authenticate()
+
+    def UseHttps(self):
+        return self._useHttps
+
+    def VerifyHttps(self):
+        return self._verifyHttps
 
     def Url(self):
         return self._baseUrl
@@ -107,14 +122,14 @@ class Server:
             return False
 
         headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
-        return Request.PostAsJson(url, headers=headers, body=data)
+        return Request.PostAsJson(url, headers=headers, body=data, verifyHttps=self._verifyHttps)
 
     def ApiDelete(self, url):
         if not self._authenticate():
             return False
 
         headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
-        return Request.Delete(url, headers=headers)
+        return Request.Delete(url, headers=headers, verifyHttps=self._verifyHttps)
 
     def BuildUrl(self, endpoint):
         if not endpoint:
@@ -303,13 +318,13 @@ class Server:
     def GetServerInfo(baseUrl):
         publicInfoUrl = Server.BuildPublicInfoUrl(baseUrl)
         headers = Request.PrepareApiCallHeaders()
-        resultObj = Request.GetAsJson(publicInfoUrl, headers=headers)
+        resultObj = Request.GetAsJson(publicInfoUrl, headers=headers, verifyHttps=False)  # TODO(Montellese): verify HTTPS?
 
         return Server.Info.fromPublicInfo(resultObj)
 
     def _get(self, url):
         headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
-        return Request.GetAsJson(url, headers=headers)
+        return Request.GetAsJson(url, headers=headers, verifyHttps=self._verifyHttps)
 
     def _authenticate(self):
         if not self.Authenticate():

@@ -51,60 +51,60 @@ class Request:
         return headers
 
     @staticmethod
-    def Get(url, headers={}, timeout=None):
-        result = Request._get(url, headers=headers, timeout=timeout)
+    def Get(url, headers={}, timeout=None, verifyHttps=True):
+        result = Request._get(url, headers=headers, timeout=timeout, verifyHttps=verifyHttps)
         return Request._handleRequestAsContent(result, 'GET')
 
     @staticmethod
-    def GetAsJson(url, headers={}, timeout=None):
-        result = Request._get(url, headers=headers, timeout=timeout)
+    def GetAsJson(url, headers={}, timeout=None, verifyHttps=True):
+        result = Request._get(url, headers=headers, timeout=timeout, verifyHttps=verifyHttps)
         return Request._handleRequestAsJson(result, 'GET')
 
     @staticmethod
-    def Post(url, headers={}, body={}, timeout=None):
-        result = Request._post(url, headers=headers, body=body, timeout=timeout)
+    def Post(url, headers={}, body={}, timeout=None, verifyHttps=True):
+        result = Request._post(url, headers=headers, body=body, timeout=timeout, verifyHttps=verifyHttps)
         return Request._handleRequestAsContent(result, 'POST')
 
     @staticmethod
-    def PostAsJson(url, headers={}, body={}, timeout=None):
-        result = Request._post(url, headers=headers, body=body, timeout=timeout)
+    def PostAsJson(url, headers={}, body={}, timeout=None, verifyHttps=True):
+        result = Request._post(url, headers=headers, body=body, timeout=timeout, verifyHttps=verifyHttps)
         return Request._handleRequestAsJson(result, 'POST')
 
     @staticmethod
-    def Delete(url, headers={}, timeout=None):
-        result = Request._delete(url, headers=headers, timeout=timeout)
+    def Delete(url, headers={}, timeout=None, verifyHttps=True):
+        result = Request._delete(url, headers=headers, timeout=timeout, verifyHttps=verifyHttps)
         return Request._handleRequestAsContent(result, 'DELETE')
 
     @staticmethod
-    def DeleteAsJson(url, headers={}, timeout=None):
-        result = Request._delete(url, headers=headers, timeout=timeout)
+    def DeleteAsJson(url, headers={}, timeout=None, verifyHttps=True):
+        result = Request._delete(url, headers=headers, timeout=timeout, verifyHttps=verifyHttps)
         return Request._handleRequestAsJson(result, 'DELETE')
 
     @staticmethod
-    def _get(url, headers={}, timeout=None):
+    def _get(url, headers={}, timeout=None, verifyHttps=True):
         Request._logRequest('GET', url, headers)
         try:
-            return requests.get(url, headers=headers, timeout=timeout, verify=False)
+            return requests.get(url, headers=headers, timeout=timeout, verify=verifyHttps)
         except requests.exceptions.RequestException as err:
             log('error retrieving response from GET {}: {}'.format(url, err.message), xbmc.LOGERROR)
 
         return None
 
     @staticmethod
-    def _post(url, headers={}, body={}, timeout=None):
+    def _post(url, headers={}, body={}, timeout=None, verifyHttps=True):
         Request._logRequest('POST', url, headers, body)
         try:
-            return requests.post(url, headers=headers, timeout=timeout, data=body, verify=False)
+            return requests.post(url, headers=headers, timeout=timeout, data=body, verify=verifyHttps)
         except requests.exceptions.RequestException as err:
             log('error retrieving response from POST {}: {}'.format(url, err.message), xbmc.LOGERROR)
 
         return None
 
     @staticmethod
-    def _delete(url, headers={}, timeout=None):
+    def _delete(url, headers={}, timeout=None, verifyHttps=True):
         Request._logRequest('DELETE', url, headers)
         try:
-            return requests.delete(url, headers=headers, timeout=timeout, verify=False)
+            return requests.delete(url, headers=headers, timeout=timeout, verify=verifyHttps)
         except requests.exceptions.RequestException as err:
             log('error retrieving response from DELETE {}: {}'.format(url, err.message), xbmc.LOGERROR)
 

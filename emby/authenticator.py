@@ -20,8 +20,9 @@ class Authenticator:
         UserId = 0
         Username = 1
 
-    def __init__(self, url, deviceId='', userId='', username='', password=''):
+    def __init__(self, url, deviceId='', userId='', username='', password='', verifyHttps=True):
         self._url = url
+        self._verifyHttps = verifyHttps
         self._deviceId = deviceId
         self._userId = userId
         self._username = username
@@ -39,12 +40,12 @@ class Authenticator:
             raise ValueError('Either userId or username must not be empty')
 
     @staticmethod
-    def WithUserId(url, deviceId, userId, password=''):
-        return Authenticator(url, deviceId, userId=userId, password=password)
+    def WithUserId(url, deviceId, userId, password='', verifyHttps=True):
+        return Authenticator(url, deviceId, userId=userId, password=password, verifyHttps=verifyHttps)
 
     @staticmethod
-    def WithUsername(url, deviceId, username, password=''):
-        return Authenticator(url, deviceId, username=username, password=password)
+    def WithUsername(url, deviceId, username, password='', verifyHttps=True):
+        return Authenticator(url, deviceId, username=username, password=password, verifyHttps=verifyHttps)
 
     def Authenticate(self):
         if self.IsAuthenticated():
@@ -70,7 +71,7 @@ class Authenticator:
         headers['Content-Type'] = constants.EMBY_CONTENT_TYPE
         content = json.dumps(body)
 
-        resultObj = Request.PostAsJson(authUrl, headers=headers, body=content, timeout=AUTHENTICATION_REQUEST_TIMEOUT_S)
+        resultObj = Request.PostAsJson(authUrl, headers=headers, body=content, timeout=AUTHENTICATION_REQUEST_TIMEOUT_S, verifyHttps=self._verifyHttps)
         if not resultObj:
             return False
 

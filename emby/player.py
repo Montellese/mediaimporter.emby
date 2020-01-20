@@ -301,9 +301,13 @@ class Player(xbmc.Player):
             # determine the stream URL
             if PROPERTY_ITEM_MEDIA_STREAM_DELIVERY_URL in stream and \
                 stream.get(PROPERTY_ITEM_MEDIA_STREAM_DELIVERY_URL).upper().startswith('/{}'.format(URL_VIDEOS)):
-                url = self._server.BuildStreamDeliveryUrl(stream.get(PROPERTY_ITEM_MEDIA_STREAM_DELIVERY_URL))
+                url = Api.prepareUrlForKodi( \
+                    self._server.BuildStreamDeliveryUrl(stream.get(PROPERTY_ITEM_MEDIA_STREAM_DELIVERY_URL)), \
+                    self._server)
             else:
-                url = self._server.BuildSubtitleStreamUrl(self._itemId, mediaSourceId, index, stream.get(PROPERTY_ITEM_MEDIA_STREAM_CODEC))
+                url = Api.prepareUrlForKodi( \
+                    self._server.BuildSubtitleStreamUrl(self._itemId, mediaSourceId, index, stream.get(PROPERTY_ITEM_MEDIA_STREAM_CODEC)), \
+                    self._server)
 
             if not url:
                 Player.log('cannot add external subtitle at index {} for "{}" ({}) from media provider {}' \

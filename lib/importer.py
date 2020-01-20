@@ -77,9 +77,9 @@ def getServerId(path):
 
     return url.netloc
 
-def requestUrl(url, authToken='', deviceId='', userId=''):
+def requestUrl(url, authToken='', deviceId='', userId='', verifyHttps=True):
     headers = Request.PrepareApiCallHeaders(authToken=authToken, deviceId=deviceId, userId=userId)
-    return Request.GetAsJson(url, headers=headers)
+    return Request.GetAsJson(url, headers=headers, verifyHttps=verifyHttps)
 
 def preprocessLastPlayed(lastPlayed):
     lastPlayedDate = None
@@ -216,8 +216,17 @@ def settingOptionsFillerUsers(handle, options):
     # get the provider's settings
     settings = mediaProvider.getSettings()
 
+    verifyHttps = False
+    # if we have a valid media provider configuration retrieve the verify HTTPS setting from it
+    try:
+        embyServer = Server(mediaProvider)
+        if embyServer.Authenticate():
+            verifyHttps = embyServer.VerifyHttps()
+    except:
+        pass
+
     usersUrl = Url.append(mediaProvider.getBasePath(), emby.constants.EMBY_PROTOCOL, emby.constants.URL_USERS, emby.constants.URL_USERS_PUBLIC)
-    resultObj = requestUrl(usersUrl, deviceId=settings.getString(emby.constants.SETTING_PROVIDER_DEVICEID))
+    resultObj = requestUrl(usersUrl, deviceId=settings.getString(emby.constants.SETTING_PROVIDER_DEVICEID), verifyHttps=verifyHttps)
     if not resultObj:
         return
 
@@ -340,7 +349,7 @@ def discoverProvider(handle, options):
         return
 
     providerId = Server.BuildProviderId(serverInfo.id)
-    providerIconUrl = Server.BuildIconUrl(baseUrl)
+    providerIconUrl = Api.prepareUrlForKodi(Server.BuildIconUrl(baseUrl), verifyHttps=False)
     mediaProvider = xbmcmediaimport.MediaProvider(providerId, baseUrl, serverInfo.name, providerIconUrl, emby.constants.SUPPORTED_MEDIA_TYPES)
 
     log('Emby server {} successfully discovered at {}'.format(mediaProvider2str(mediaProvider), baseUrl))

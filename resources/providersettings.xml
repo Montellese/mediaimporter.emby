@@ -3,6 +3,16 @@
   <section id="emby" label="32010">
     <category id="access" label="32011">
       <group id="1">
+        <setting id="emby.usehttps" type="boolean" label="32033">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle" />
+        </setting>
+        <setting id="emby.verifyhttps" type="boolean" parent="emby.usehttps" label="32034">
+          <level>0</level>
+          <default>true</default>
+          <control type="toggle" />
+        </setting>
         <setting id="emby.user" type="string" label="32012">
           <level>0</level>
           <default>manual</default>

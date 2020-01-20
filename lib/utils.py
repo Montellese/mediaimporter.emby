@@ -109,3 +109,18 @@ class Url:
         urlQuery.update(options)
         urlParts[4] = urlencode(urlQuery)
         return urlunparse(urlParts)
+    
+    @staticmethod
+    def addProtocolOptions(url, options):
+        if not url:
+            return ''
+        if not options:
+            return url
+        
+        delim = '|'
+        if delim in url:
+            delim = '&'
+    
+        optionsList = [ '{}={}'.format(key, value) for key, value in options ]
+
+        return '{}{}{}'.format(url, delim, '&'.join(optionsList))

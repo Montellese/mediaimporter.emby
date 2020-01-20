@@ -33,10 +33,7 @@ class ProviderObserver:
         self._mediaProvider = None
         self._settings = None
         self._server = None
-
-        # create the websocket
-        self._websocket = websocket.WebSocket()
-        self._websocket.settimeout(0.1)
+        self._websocket = None
 
     def __del__(self):
         self._StopAction()
@@ -311,11 +308,26 @@ class ProviderObserver:
 
         # prepare the URL
         urlParts = urlparse(self._mediaProvider.getBasePath())
-        url = urlunparse(urlParts._replace(scheme='ws', path='embywebsocket'))
+
+        # determine the proper scheme (ws:// or wss://) and whether or not to verify the HTTPS certificate
+        websocketScheme = 'ws'
+        websocketSslOptions = None
+        if urlParts.scheme == 'https':
+            websocketScheme = 'wss'
+            if not self._server.VerifyHttps():
+                websocketSslOptions = {
+                    WS_OPTIONS_SSL_CERTIFICATE_REQUEST: websocket.ssl.CERT_NONE
+                }
+
+        url = urlunparse(urlParts._replace(scheme=websocketScheme, path='embywebsocket'))
         url = Url.addOptions(url, {
             URL_QUERY_API_KEY: self._server.AccessToken(),
             URL_QUERY_DEVICE_ID: self._server.DeviceId()
         })
+
+        # create the websocket
+        self._websocket = websocket.WebSocket(sslopt=websocketSslOptions)
+        self._websocket.settimeout(0.1)
 
         # connect the websocket
         try:

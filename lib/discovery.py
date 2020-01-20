@@ -54,7 +54,7 @@ class EmbyServer():
         server = EmbyServer()
         server.id = obj[ServerPropertyId]
         server.name = obj[ServerPropertyName]
-        server.address = obj[ServerPropertyAddress]
+        server.address = obj[ServerPropertyAddress]  # TODO(Montellese): HTTPS?
         server.registered = False
         server.lastseen = time.time()
 
