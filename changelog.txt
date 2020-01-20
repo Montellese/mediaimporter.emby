@@ -1,3 +1,6 @@
+[B]Version 0.0.5[/B]
+-
+
 [B]Version 0.0.4[/B]
 - Fix importing logo / clearlogo artwork
 - Import additional artwork (clearart, banner, landscape, discart)
