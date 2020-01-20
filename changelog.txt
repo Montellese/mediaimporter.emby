@@ -1,3 +1,9 @@
+[B]Version 0.0.4[/B]
+- Fix importing logo / clearlogo artwork
+- Import additional artwork (clearart, banner, landscape, discart)
+- Fix reporting playback progress to the Emby server
+- Import boxsets / collections / sets along with movies
+
 [B]Version 0.0.3[/B]
 - Support DirectPlay for files which are directly accessible over Kodi's VFS
 
