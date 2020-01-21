@@ -24,6 +24,7 @@ import xbmcmediaimport
 
 import emby
 from emby.api.embyconnect import EmbyConnect
+from emby.api.kodi_companion import KodiCompanion
 from emby.api.library import Library
 from emby.api.user import User
 from emby.api.userdata import UserData
@@ -31,7 +32,7 @@ from emby.request import Request
 from emby.server import Server
 
 from lib import kodi
-from lib.utils import __addon__, localise, log, mediaProvider2str, Url
+from lib.utils import __addon__, localise, log, mediaProvider2str, Url, utc
 
 # list of fields to retrieve
 EMBY_ITEM_FIELDS = [
@@ -637,6 +638,34 @@ def execImport(handle, options):
     # determine whether to import collections
     importCollections = importSettings.getBool(emby.constants.SETTING_IMPORT_IMPORT_COLLECTIONS)
 
+    # determine the last sync time and whether we should perform a fast sync
+    fastSync = False
+    syncUrlOptions = {}
+    lastSync = mediaImport.getLastSynced()
+    if lastSync:
+        # check if we should use the Kodi Companion Emby server plugin
+        if mediaProviderSettings.getBool(emby.constants.SETTING_PROVIDER_SYNCHRONIZATION_USE_KODI_COMPANION):
+            if KodiCompanion.IsInstalled(embyServer):
+                fastSync = True
+
+                # convert the last sync datetime string to ISO 8601
+                lastSync = parser.parse(lastSync).astimezone(utc).isoformat(timespec='seconds')
+
+                syncUrlOptions.update({
+                    # only set MinDateLastSavedForUser because it already covers DateLastSaved, RatingLastModified
+                    # and PlaystateLastModified. Setting both MinDateLastSaved and MinDateLastSavedForUser will
+                    # cause issues, see https://emby.media/community/index.php?/topic/82258-retrieving-changeset-when-client-returns-online-mediaimport/
+                    emby.constants.URL_QUERY_ITEMS_MIN_DATE_LAST_SAVED_FOR_USER: lastSync
+                })
+                log('using fast synchronization to import {} items from {} with Kodi companion plugin' \
+                    .format(mediaTypes, mediaProvider2str(mediaProvider)), xbmc.LOGDEBUG)
+
+                # retrieving the sync queue from Kodi companion
+                syncQueue = KodiCompanion.SyncQueue.GetItems(embyServer, lastSync)
+            else:
+                log('Kodi companion usage is enabled to import {} items from {} but the server plugin is not installed' \
+                    .format(mediaTypes, mediaProvider2str(mediaProvider)), xbmc.LOGWARNING)
+
     # loop over all media types to be imported
     progress = 0
     progressTotal = len(mediaTypes)
@@ -659,9 +688,10 @@ def execImport(handle, options):
 
         xbmcmediaimport.setProgressStatus(handle, __addon__.getLocalizedString(32001).format(__addon__.getLocalizedString(localizedMediaType)))
 
-        urlOptions = {
+        urlOptions = syncUrlOptions.copy()
+        urlOptions.update({
             emby.constants.URL_QUERY_ITEMS_INCLUDE_ITEM_TYPES: embyMediaType
-        }
+        })
         url = Url.addOptions(baseUrl, urlOptions)
 
         boxsetUrlOptions = {
@@ -695,17 +725,39 @@ def execImport(handle, options):
                 boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId, embyMediaType=embyMediaType, viewName=boxsetName, allowDirectPlay=allowDirectPlay)
                 for boxsetItem in boxsetItems:
                     # find the matching retrieved item
-                    for (index, item) in enumerate(items):
+                    for index, item in enumerate(items):
                         if boxsetItem.getPath() == item.getPath():
                             # set the BoxSet / collection
                             kodi.Api.setCollection(item, boxsetName)
                             items[index] = item
 
-        log('{} {} items imported from {}'.format(len(items), mediaType, mediaProvider2str(mediaProvider)))
+        # in a fast sync we need to get the removed items from Kodi companion
+        if fastSync:
+            if items:
+                log('{} changed {} items imported from {}'.format(len(items), mediaType, mediaProvider2str(mediaProvider)))
+
+            # handle removed items through Kodi companion's sync queue
+            if syncQueue.itemsRemoved:
+                # retrieve all local items matching the current media type from the current import 
+                localItems = xbmcmediaimport.getImportedItems(handle, mediaType)
+
+                # match the local items against the changed items
+                removedItems, = kodi.Api.matchImportedItemIdsToLocalItems(localItems, syncQueue.itemsRemoved)  # pylint: disable=unbalanced-tuple-unpacking
+
+                # erase all removed items matching the current media type from the sync queue
+                syncQueue.itemsRemoved = [ removedItem for removedItem in syncQueue.itemsRemoved if removedItem in removedItems ]
+
+                if removedItems:
+                    log('{} previously imported {} items removed from {}'.format(len(removedItems), mediaType, mediaProvider2str(mediaProvider)))
+                    xbmcmediaimport.addImportItems(handle, removedItems, mediaType, xbmcmediaimport.MediaImportChangesetTypeRemoved)
+        else:
+            log('{} {} items imported from {}'.format(len(items), mediaType, mediaProvider2str(mediaProvider)))
+
+        # pass the imported items back to Kodi
         if items:
             xbmcmediaimport.addImportItems(handle, items, mediaType)
 
-    xbmcmediaimport.finishImport(handle)
+    xbmcmediaimport.finishImport(handle, fastSync)
 
 def updateOnProvider(handle, options):
     # retrieve the media import

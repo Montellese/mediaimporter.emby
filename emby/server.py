@@ -311,6 +311,9 @@ class Server:
             # execute the actual request again
             return function(url, headers, *args)
 
+    def BuildPluginUrl(self):
+        return self.BuildUrl(constants.URL_PLUGINS)
+
     def _authenticate(self, force=False):
         if not self._authenticator.Authenticate(force=force):
             log('user authentication failed on media provider {}'.format(self._id))

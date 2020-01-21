@@ -149,6 +149,34 @@ class Api:
         return embyItemId
 
     @staticmethod
+    def matchImportedItemIdsToLocalItems(localItems, *importedItemIdLists):
+        matchedItemLists = []
+        itemIdsToProcessLists = []
+        for importedItemIds in importedItemIdLists:
+            matchedItemLists.append([])
+            itemIdsToProcessLists.append(importedItemIds.copy())
+
+        for localItem in localItems:
+            # abort if there are no more items to process
+            if all(len (itemIdsToProcess) == 0 for itemIdsToProcess in itemIdsToProcessLists):
+                break
+
+            # retrieve the local item's Emby ID
+            localItemId = Api.getEmbyItemIdFromItem(localItem)
+            if not localItemId:
+                continue
+
+            # check if it matches one of the imported item IDs
+            for index, importedItemIds in enumerate(importedItemIdLists):
+                if not localItemId in itemIdsToProcessLists[index]:
+                    continue
+
+                matchedItemLists[index].append(localItem)
+                itemIdsToProcessLists[index].remove(localItemId)
+
+        return tuple(matchedItemLists)
+
+    @staticmethod
     def toFileItem(embyServer, itemObj, mediaType='', embyMediaType='', libraryView='', allowDirectPlay=True):
         # determine the matching Emby media type if possible
         checkMediaType = len(mediaType) > 0

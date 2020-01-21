@@ -10,7 +10,6 @@
     </requires>
     <extension point="kodi.mediaimporter" protocol="Emby" discovery="discovery.py" library="importer.py" observer="observer.py">
         <canlookupprovider>true</canlookupprovider>
-        <provideschangeset>false</provideschangeset>
         <providersettings>providersettings.xml</providersettings>
         <importsettings>importsettings.xml</importsettings>
     </extension>

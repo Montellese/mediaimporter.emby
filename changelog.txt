@@ -4,6 +4,7 @@
 - import local or remote trailer
 - fix exceptions / crashes when playing non-imported videos
 - support authentication with Emby Connect
+- support fast synchronization after a successful initial full synchronization
 
 [B]Version 0.0.6[/B]
 - fix playback stopped / ended callback handling
