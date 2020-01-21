@@ -333,7 +333,7 @@ def discoverProvider(handle, options):
 
     log('trying to discover an Emby server at {}...'.format(baseUrl))
     try:
-        serverInfo = Server.GetServerInfo(baseUrl)
+        serverInfo = emby.api.server.Server.GetInfo(baseUrl)
         if not serverInfo:
             return
     except:
@@ -358,7 +358,7 @@ def lookupProvider(handle, options):
 
     providerFound = False
     try:
-        if Server.GetServerInfo(basePath):
+        if emby.api.server.Server.GetInfo(basePath):
             providerFound = True
     except:
         pass
@@ -668,7 +668,7 @@ def updateOnProvider(handle, options):
 
     # retrieve the version of the Emby server
     useUserDataCall = False
-    serverInfo = Server.GetServerInfo(embyServer.Url())
+    serverInfo = emby.api.server.Server.GetInfo(embyServer.Url())
     if serverInfo and serverInfo.supportsUserDataUpdates():
         useUserDataCall = True
 
