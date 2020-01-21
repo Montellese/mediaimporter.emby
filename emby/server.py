@@ -40,6 +40,10 @@ class Server:
         def isUnknown(self):
             return not self.isEmbyServer() and not self.isJellyfinServer()
 
+        def supportsUserDataUpdates(self):
+            # only Emby 4.3+ servers support the UserData update call
+            return self.isEmbyServer() and self.version.major >= 4 and self.version.minor >= 3
+
         @staticmethod
         def fromPublicInfo(response):
             if not response or \
