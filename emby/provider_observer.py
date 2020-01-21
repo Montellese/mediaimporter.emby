@@ -14,10 +14,10 @@ import websocket
 import xbmc
 import xbmcmediaimport
 
-from emby.api import Api
 from emby.constants import *
 from emby.server import Server
 
+from lib import kodi
 from lib.utils import log, mediaImport2str, mediaProvider2str, Url
 
 class ProviderObserver:
@@ -263,7 +263,7 @@ class ProviderObserver:
             ProviderObserver.log('cannot retrieve details of updated item with id "{}"'.format(itemId), xbmc.LOGERROR)
             return None
 
-        return Api.toFileItem(self._server, itemObj, allowDirectPlay=self._settings.getBool(SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY))
+        return kodi.Api.toFileItem(self._server, itemObj, allowDirectPlay=self._settings.getBool(SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY))
 
     def _FindImportForItem(self, item):
         videoInfoTag = item.getVideoInfoTag()
@@ -284,7 +284,7 @@ class ProviderObserver:
 
         # if we are already connected check if something important changed in the media provider
         if self._connected:
-            if Api.compareMediaProviders(self._mediaProvider, mediaProvider):
+            if kodi.Api.compareMediaProviders(self._mediaProvider, mediaProvider):
                 return True
 
         self._StopAction(restart=True)

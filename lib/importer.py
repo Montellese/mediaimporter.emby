@@ -22,10 +22,10 @@ from xbmcgui import ListItem
 import xbmcmediaimport
 
 import emby
-from emby.api import Api, EMBY_MEDIATYPE_BOXSET
 from emby.request import Request
 from emby.server import Server
 
+from lib import kodi
 from lib.utils import __addon__, localise, log, mediaProvider2str, Url
 
 # list of fields to retrieve
@@ -314,7 +314,7 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
             if raw:
                 items.append(itemObj)
             else:
-                item = Api.toFileItem(embyServer, itemObj, mediaType, embyMediaType, viewName, allowDirectPlay=allowDirectPlay)
+                item = kodi.Api.toFileItem(embyServer, itemObj, mediaType, embyMediaType, viewName, allowDirectPlay=allowDirectPlay)
                 if not item:
                     continue
 
@@ -562,7 +562,7 @@ def execImport(handle, options):
         if xbmcmediaimport.shouldCancel(handle, progress, progressTotal):
             return
 
-        mappedMediaType = Api.getEmbyMediaType(mediaType)
+        mappedMediaType = kodi.Api.getEmbyMediaType(mediaType)
         if not mappedMediaType:
             log('cannot import unsupported media type "{}"'.format(mediaType), xbmc.LOGERROR)
             continue
@@ -576,7 +576,7 @@ def execImport(handle, options):
         url = Url.addOptions(baseUrl, urlOptions)
 
         boxsetUrlOptions = {
-            'IncludeItemTypes': EMBY_MEDIATYPE_BOXSET
+            'IncludeItemTypes': kodi.EMBY_MEDIATYPE_BOXSET
         }
         boxsetUrl = Url.addOptions(baseUrl, boxsetUrlOptions)
 
@@ -608,7 +608,7 @@ def execImport(handle, options):
                 for (index, item) in enumerate(items):
                     if boxsetItem.getPath() == item.getPath():
                         # set the BoxSet / collection
-                        Api.setCollection(item, boxsetName)
+                        kodi.Api.setCollection(item, boxsetName)
                         items[index] = item
 
         log('{} {} items imported from {}'.format(len(items), mediaType, mediaProvider2str(mediaProvider)))
@@ -693,7 +693,7 @@ def updateOnProvider(handle, options):
     lastPlayed = itemVideoInfoTag.getLastPlayed()
     # retrieve playback position from the updated item
     playbackPositionInSeconds = max(0.0, float(item.getProperty('resumetime')))
-    playbackPositionInTicks = Api.secondsToTicks(playbackPositionInSeconds)
+    playbackPositionInTicks = kodi.Api.secondsToTicks(playbackPositionInSeconds)
 
     userDataObj = itemObj[emby.constants.PROPERTY_ITEM_USER_DATA]
 

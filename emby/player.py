@@ -13,12 +13,12 @@ from uuid import uuid4
 import xbmc
 import xbmcmediaimport
 
-from emby.api import Api
 from emby.constants import EMBY_PROTOCOL, \
     PLAYING_PLAY_METHOD_DIRECT_PLAY, PLAYING_PLAY_METHOD_DIRECT_STREAM, \
     PLAYING_PROGRESS_EVENT_TIME_UPDATE, PLAYING_PROGRESS_EVENT_PAUSE, PLAYING_PROGRESS_EVENT_UNPAUSE
 from emby.server import Server
 
+from lib import kodi
 from lib.utils import log, mediaProvider2str
 
 class Player(xbmc.Player):
@@ -239,8 +239,8 @@ class Player(xbmc.Player):
 
             try:
                 data.update({
-                    'PositionTicks': Api.secondsToTicks(self.getTime()),
-                    'RunTimeTicks': Api.secondsToTicks(self.getTotalTime()),
+                    'PositionTicks': kodi.Api.secondsToTicks(self.getTime()),
+                    'RunTimeTicks': kodi.Api.secondsToTicks(self.getTotalTime()),
                 })
             except RuntimeError:
                 pass
