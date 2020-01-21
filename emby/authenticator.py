@@ -6,20 +6,11 @@
 #  See LICENSES/README.md for more information.
 #
 
-import hashlib
-import json
+from emby.api.authentication import Authentication
 
-from emby import constants
-from emby.request import Request
 from lib.utils import Url
 
-AUTHENTICATION_REQUEST_TIMEOUT_S = 2
-
 class Authenticator:
-    class AuthenticationMethod:
-        UserId = 0
-        Username = 1
-
     def __init__(self, url, deviceId='', userId='', username='', password=''):
         self._url = url
         self._deviceId = deviceId
@@ -32,9 +23,9 @@ class Authenticator:
             raise ValueError('url must not be empty')
 
         if self._userId:
-            self._authMethod = Authenticator.AuthenticationMethod.UserId
+            self._authMethod = Authentication.Method.UserId
         elif self._username:
-            self._authMethod = Authenticator.AuthenticationMethod.Username
+            self._authMethod = Authentication.Method.Username
         else:
             raise ValueError('Either userId or username must not be empty')
 
@@ -50,41 +41,16 @@ class Authenticator:
         if self.IsAuthenticated():
             return True
 
-        # prepare the authentication URL
-        authUrl = self._url
-        authUrl = Url.append(authUrl, constants.URL_USERS)
+        (result, accessToken, userId) = \
+            Authentication.Authenticate(self._url, self._authMethod, \
+                username=self._username, userId=self._userId, password=self._password, \
+                deviceId=self._deviceId)
 
-        body = {
-            constants.PROPERTY_USER_AUTHENTICATION_PASSWORD: self._password
-        }
-        if self._authMethod == Authenticator.AuthenticationMethod.UserId:
-            authUrl = Url.append(authUrl, self._userId, constants.URL_AUTHENTICATE)
-        elif self._authMethod == Authenticator.AuthenticationMethod.Username:
-            authUrl = Url.append(authUrl, constants.URL_AUTHENTICATE_BY_NAME)
-
-            body[constants.PROPERTY_USER_AUTHENTICATION_USERNAME] = self._username
-        else:
+        if not result:
             return False
 
-        headers = Request.PrepareApiCallHeaders(deviceId=self._deviceId, userId=self._userId)
-        headers['Content-Type'] = constants.EMBY_CONTENT_TYPE
-        content = json.dumps(body)
-
-        resultObj = Request.PostAsJson(authUrl, headers=headers, body=content, timeout=AUTHENTICATION_REQUEST_TIMEOUT_S)
-        if not resultObj:
-            return False
-
-        if not constants.PROPERTY_USER_AUTHENTICATION_ACCESS_TOKEN in resultObj:
-            return False
-        self._accessToken = resultObj[constants.PROPERTY_USER_AUTHENTICATION_ACCESS_TOKEN]
-
-        if not constants.PROPERTY_USER_AUTHENTICATION_USER in resultObj:
-            return False
-        userObj = resultObj[constants.PROPERTY_USER_AUTHENTICATION_USER]
-        if not constants.PROPERTY_USER_AUTHENTICATION_USER_ID in userObj:
-            return False
-
-        self._userId = userObj[constants.PROPERTY_USER_AUTHENTICATION_USER_ID]
+        self._accessToken = accessToken
+        self._userId = userId
 
         return self.IsAuthenticated()
 

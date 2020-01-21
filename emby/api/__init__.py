@@ -6,4 +6,5 @@
 #  See LICENSES/README.md for more information.
 #
 
+from . import authentication
 from . import server
