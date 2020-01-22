@@ -6,7 +6,6 @@
 #  See LICENSES/README.md for more information.
 #
 
-import time
 import json
 from six import iteritems
 import socket
@@ -20,48 +19,6 @@ from emby.server import Server
 
 from lib.monitor import Monitor
 from lib.utils import log
-
-class EmbyServer():
-    def __init__(self):
-        self.id = ''
-        self.name = ''
-        self.address = ''
-        self.registered = False
-        self.lastseen = None
-
-    def isExpired(self, timeoutS):
-        return self.registered and self.lastseen + timeoutS < time.time()
-
-    @staticmethod
-    def fromString(data):
-        ServerPropertyId = 'Id'
-        ServerPropertyName = 'Name'
-        ServerPropertyAddress = 'Address'
-
-        if data is None:
-            return None
-
-        if isinstance(data, bytes):
-            data = data.decode('utf-8')
-        elif not isinstance(data, str):
-            data = str(data)
-
-        obj = json.loads(data)
-        if not ServerPropertyId in obj or not ServerPropertyName in obj or not ServerPropertyAddress in obj:
-            log('invalid discovery message received: {}'.format(str(data)))
-            return None
-
-        server = EmbyServer()
-        server.id = obj[ServerPropertyId]
-        server.name = obj[ServerPropertyName]
-        server.address = obj[ServerPropertyAddress]
-        server.registered = False
-        server.lastseen = time.time()
-
-        if not server.id or not server.name or not server.address:
-            return None
-
-        return server
 
 class DiscoveryService:
     DiscoveryAddress = '255.255.255.255'
@@ -86,12 +43,12 @@ class DiscoveryService:
             self._sock.settimeout(DiscoveryService.DiscoveryTimeoutS)
             (data, _) = self._sock.recvfrom(1024)
         except socket.timeout:
-            return # nothing to do
+            return
 
         if not data or data == DiscoveryService.DiscoveryMessage:
-            return # nothing to do
+            return
 
-        server = EmbyServer.fromString(data)
+        server = emby.api.server.Server.Discovery.fromString(data)
         if not server is None:
             self._addServer(server)
 

@@ -10,6 +10,8 @@ import json
 from six import ensure_str
 import time
 
+import xbmc
+
 from emby import constants
 from emby.request import Request
 from emby import server
@@ -18,6 +20,45 @@ import lib.semantic_version as semantic_version
 from lib.utils import log
 
 class Server:
+    class Discovery:
+        def __init__(self):
+            self.id = ''
+            self.name = ''
+            self.address = ''
+            self.registered = False
+            self.lastseen = None
+
+        def isExpired(self, timeoutS):
+            return self.registered and self.lastseen + timeoutS < time.time()
+
+        @staticmethod
+        def fromString(data):
+            ServerPropertyId = 'Id'
+            ServerPropertyName = 'Name'
+            ServerPropertyAddress = 'Address'
+
+            if data is None:
+                return None
+
+            data = ensure_str(data)
+
+            obj = json.loads(data)
+            if not ServerPropertyId in obj or not ServerPropertyName in obj or not ServerPropertyAddress in obj:
+                log('invalid discovery message received: {}'.format(str(data)), xbmc.LOGWARNING)
+                return None
+
+            server = Server.Discovery()
+            server.id = obj[ServerPropertyId]
+            server.name = obj[ServerPropertyName]
+            server.address = obj[ServerPropertyAddress]
+            server.registered = False
+            server.lastseen = time.time()
+
+            if not server.id or not server.name or not server.address:
+                return None
+
+            return server
+
     class Info:
         EMBY_SERVER = 'Emby Server'
         JELLYFIN_SERVER = 'Jellyfin Server'
