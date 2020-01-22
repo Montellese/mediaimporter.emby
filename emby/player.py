@@ -73,7 +73,10 @@ class Player(xbmc.Player):
     def onPlayBackStarted(self):
         with self._lock:
             self._reset()
-            self._file = self.getPlayingFile()
+            try:
+                self._file = self.getPlayingFile()
+            except xbmc.PlayerException:
+                pass
 
     def onAVStarted(self):
         with self._lock:
@@ -181,6 +184,8 @@ class Player(xbmc.Player):
         Player.log('playback start for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
 
     def _reportPlaybackProgress(self, event=PLAYING_PROGRESS_EVENT_TIME_UPDATE):
+        if not self.isPlaying():
+            self._reset()
         if not self._item:
             return False
 
@@ -196,6 +201,8 @@ class Player(xbmc.Player):
         return True
 
     def _stopPlayback(self, failed=False):
+        if not self.isPlaying():
+            self._reset()
         if not self._item:
             return
 
@@ -235,7 +242,7 @@ class Player(xbmc.Player):
                     'PositionTicks': Api.secondsToTicks(self.getTime()),
                     'RunTimeTicks': Api.secondsToTicks(self.getTotalTime()),
                 })
-            except Exception:
+            except xbmc.PlayerException:
                 pass
 
             if event:
