@@ -23,6 +23,7 @@ import xbmcmediaimport
 
 import emby
 from emby.api.library import Library
+from emby.api.user import User
 from emby.api.userdata import UserData
 from emby.request import Request
 from emby.server import Server
@@ -68,10 +69,6 @@ def mediaTypesFromOptions(options):
         mediaTypes = options['mediatypes[]']
 
     return mediaTypes
-
-def requestUrl(url, authToken='', deviceId='', userId=''):
-    headers = Request.PrepareApiCallHeaders(authToken=authToken, deviceId=deviceId, userId=userId)
-    return Request.GetAsJson(url, headers=headers)
 
 def getLibraryViewsFromSettings(importSettings):
     if not importSettings:
@@ -128,30 +125,9 @@ def settingOptionsFillerUsers(handle, options):
     # get the provider's settings
     settings = mediaProvider.getSettings()
 
-    usersUrl = Url.append(mediaProvider.getBasePath(), emby.constants.EMBY_PROTOCOL, emby.constants.URL_USERS, emby.constants.URL_USERS_PUBLIC)
-    resultObj = requestUrl(usersUrl, deviceId=settings.getString(emby.constants.SETTING_PROVIDER_DEVICEID))
-    if not resultObj:
-        return
-
     users = [ (__addon__.getLocalizedString(32015), emby.constants.SETTING_PROVIDER_USER_OPTION_MANUAL) ]
-    for userObj in resultObj:
-        # make sure the 'Name' and 'Id' properties are available
-        if not emby.constants.PROPERTY_USER_NAME in userObj or not emby.constants.PROPERTY_USER_ID in userObj:
-            continue
-
-        # make sure the name and id properties are valid
-        name = userObj[emby.constants.PROPERTY_USER_NAME]
-        identifier = userObj[emby.constants.PROPERTY_USER_ID]
-        if not name or not identifier:
-            continue
-
-        # check if the user is disabled
-        if emby.constants.PROPERTY_USER_POLICY in userObj and \
-           emby.constants.PROPERTY_USER_IS_DISABLED in userObj[emby.constants.PROPERTY_USER_POLICY] and \
-           userObj[emby.constants.PROPERTY_USER_POLICY][emby.constants.PROPERTY_USER_IS_DISABLED]:
-            continue
-
-        users.append((name, identifier))
+    publicUsers = User.GetPublicUsers(mediaProvider.getBasePath(), deviceId=settings.getString(emby.constants.SETTING_PROVIDER_DEVICEID))
+    users.extend([ (user.name, user.id) for user in publicUsers ])
 
     # pass the list of users back to Kodi
     settings.setStringOptions(emby.constants.SETTING_PROVIDER_USER, users)

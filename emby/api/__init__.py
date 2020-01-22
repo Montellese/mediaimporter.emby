@@ -10,4 +10,5 @@ from . import authentication
 from . import library
 from . import playback
 from . import server
+from . import user
 from . import userdata
