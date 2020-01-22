@@ -1,5 +1,6 @@
 [B]Version 0.0.5[/B]
 - make Direct Play configurable
+- Fix crash in emby.player.Player callbacks
 
 [B]Version 0.0.4[/B]
 - Fix importing logo / clearlogo artwork

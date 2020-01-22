@@ -81,29 +81,28 @@ class Player(xbmc.Player):
 
     def onPlayBackSeek(self, time, seekOffset):
         with self._lock:
-            self._reportPlaybackProgress()
-
-        Player.log('playback seek for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
+            if self._reportPlaybackProgress():
+                Player.log('playback seek for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
 
     def onPlayBackSeekChapter(self, chapter):
         with self._lock:
-            self._reportPlaybackProgress()
+            if not self._item:
+                return
 
-        Player.log('playback seek chapter for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
+            if self._reportPlaybackProgress():
+                Player.log('playback seek chapter for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
 
     def onPlayBackPaused(self):
         with self._lock:
             self._paused = True
-            self._reportPlaybackProgress(event=PLAYING_PROGRESS_EVENT_PAUSE)
-
-        Player.log('playback paused for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
+            if self._reportPlaybackProgress():
+                Player.log('playback paused for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
 
     def onPlayBackResumed(self):
         with self._lock:
             self._paused = False
-            self._reportPlaybackProgress(event=PLAYING_PROGRESS_EVENT_UNPAUSE)
-
-        Player.log('playback resumed for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
+            if self._reportPlaybackProgress():
+                Player.log('playback resumed for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
 
     def onPlayBackStopped(self):
         with self._lock:
@@ -183,7 +182,7 @@ class Player(xbmc.Player):
 
     def _reportPlaybackProgress(self, event=PLAYING_PROGRESS_EVENT_TIME_UPDATE):
         if not self._item:
-            return
+            return False
 
         # prepare the data of the API call
         data = self._preparePlayingData(stopped=False, event=event)
@@ -193,6 +192,8 @@ class Player(xbmc.Player):
         self._server.ApiPost(url, data)
 
         self._lastProgressReport = time.time()
+
+        return True
 
     def _stopPlayback(self, failed=False):
         if not self._item:
