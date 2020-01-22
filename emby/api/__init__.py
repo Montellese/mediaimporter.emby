@@ -9,3 +9,4 @@
 from . import authentication
 from . import playback
 from . import server
+from . import userdata

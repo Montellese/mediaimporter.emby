@@ -22,6 +22,7 @@ from xbmcgui import ListItem
 import xbmcmediaimport
 
 import emby
+from emby.api.userdata import UserData
 from emby.request import Request
 from emby.server import Server
 
@@ -70,53 +71,6 @@ def mediaTypesFromOptions(options):
 def requestUrl(url, authToken='', deviceId='', userId=''):
     headers = Request.PrepareApiCallHeaders(authToken=authToken, deviceId=deviceId, userId=userId)
     return Request.GetAsJson(url, headers=headers)
-
-def preprocessLastPlayed(lastPlayed):
-    lastPlayedDate = None
-    if lastPlayed:
-        lastPlayedDate = parser.parse(lastPlayed)
-    if not lastPlayedDate or lastPlayedDate.year < 1900:
-        lastPlayedDate = datetime.now()
-
-    return lastPlayedDate
-
-def markAsWatched(embyServer, itemId, lastPlayed):
-    lastPlayedDate = preprocessLastPlayed(lastPlayed)
-
-    url = embyServer.BuildUserPlayedItemUrl(itemId)
-    url = Url.addOptions(url, { 'DatePlayed': lastPlayedDate.strftime('%Y%m%d%H%M%S') })
-
-    if not embyServer.ApiPost(url):
-        return False
-
-    return True
-
-def markAsUnwatched(embyServer, itemId):
-    url = embyServer.BuildUserPlayedItemUrl(itemId)
-
-    embyServer.ApiDelete(url)
-    return True
-
-def updateResumePoint(embyServer, itemId, positionInTicks):
-    url = embyServer.BuildUserPlayingItemUrl(itemId)
-    url = Url.addOptions(url, { 'PositionTicks': positionInTicks })
-
-    embyServer.ApiDelete(url)
-    return True
-
-def updateUserData(embyServer, itemId, playcount, watched, lastPlayed, playbackPositionInTicks):
-    lastPlayedDate = preprocessLastPlayed(lastPlayed)
-
-    url = embyServer.BuildUserItemUserDataUrl(itemId)
-    body = {
-        'ItemId': itemId,
-        'PlayCount': playcount,
-        'Played': watched,
-        'LastPlayedDate': lastPlayedDate.strftime('%Y-%m-%dT%H:%M:%S.%f%Z'),
-        'PlaybackPositionTicks': playbackPositionInTicks
-    }
-
-    embyServer.ApiPost(url, body)
 
 def getLibraryViews(embyServer, mediaTypes):
     viewsUrl = embyServer.BuildUserUrl(emby.constants.URL_VIEWS)
@@ -656,12 +610,6 @@ def updateOnProvider(handle, options):
         log('failed to authenticate on media provider {}'.format(mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
         return
 
-    # retrieve the version of the Emby server
-    useUserDataCall = False
-    serverInfo = emby.api.server.Server.GetInfo(embyServer.Url())
-    if serverInfo and serverInfo.supportsUserDataUpdates():
-        useUserDataCall = True
-
     # get the URL to retrieve all details of the item from the Emby server
     getItemUrl = embyServer.BuildUserItemUrl(itemId)
 
@@ -708,24 +656,9 @@ def updateOnProvider(handle, options):
         log('no playback related properties of "{}" ({}) have changed => nothing to update on {}'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
         return
 
-    if useUserDataCall:
-        log('updating playback related properties of "{}" ({}) on {}...'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
-        updateUserData(embyServer, itemId, playcount, watched, lastPlayed, playbackPositionInTicks)
-    else:
-        if updateItemPlayed:
-            if watched:
-                log('marking "{}" ({}) as watched on {}...'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
-                if not markAsWatched(embyServer, itemId, lastPlayed):
-                    log('failed to mark item "{}" ({}) as watched'.format(item.getLabel(), item.getPath()), xbmc.LOGWARNING)
-            else:
-                log('marking "{}" ({}) as unwatched on {}...'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
-                if not markAsUnwatched(embyServer, itemId):
-                    log('failed to mark item "{}" ({}) as unwatched'.format(item.getLabel(), item.getPath()), xbmc.LOGWARNING)
-
-        if updatePlaybackPosition:
-            log('updating resume point of "{}" ({}) on {}...'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
-            if not updateResumePoint(embyServer, itemId, playbackPositionInTicks):
-                    log('failed to update resume point for item "{}" ({})'.format(item.getLabel(), item.getPath()), xbmc.LOGWARNING)
+    log('updating playback related properties of "{}" ({}) on {}...'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
+    if not UserData.Update(embyServer, itemId, updateItemPlayed, updatePlaybackPosition, watched, playcount, lastPlayed, playbackPositionInTicks):
+        log('updating playback related properties of "{}" ({}) on {} failed'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
 
     xbmcmediaimport.finishUpdateOnProvider(handle)
 
