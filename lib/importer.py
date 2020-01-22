@@ -554,11 +554,8 @@ def updateOnProvider(handle, options):
         log('failed to authenticate on media provider {}'.format(mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
         return
 
-    # get the URL to retrieve all details of the item from the Emby server
-    getItemUrl = embyServer.BuildUserItemUrl(itemId)
-
     # retrieve all details of the item
-    itemObj = embyServer.ApiGet(getItemUrl)
+    itemObj = Library.GetItem(embyServer, itemId)
     if not itemObj:
         log('cannot retrieve details of updated item with id {}'.format(itemId), xbmc.LOGERROR)
         return

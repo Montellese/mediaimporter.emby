@@ -65,3 +65,13 @@ class Library:
             libraryViews.append(libraryView)
 
         return libraryViews
+
+    @staticmethod
+    def GetItem(embyServer, itemId):
+        if not embyServer:
+            raise ValueError('invalid embyServer')
+        if not itemId:
+            raise ValueError('invalid itemId')
+
+        itemUrl = embyServer.BuildUserItemUrl(itemId)
+        return embyServer.ApiGet(itemUrl)
