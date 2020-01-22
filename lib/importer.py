@@ -22,6 +22,7 @@ from xbmcgui import ListItem
 import xbmcmediaimport
 
 import emby
+from emby.api.library import Library
 from emby.api.userdata import UserData
 from emby.request import Request
 from emby.server import Server
@@ -72,39 +73,6 @@ def requestUrl(url, authToken='', deviceId='', userId=''):
     headers = Request.PrepareApiCallHeaders(authToken=authToken, deviceId=deviceId, userId=userId)
     return Request.GetAsJson(url, headers=headers)
 
-def getLibraryViews(embyServer, mediaTypes):
-    viewsUrl = embyServer.BuildUserUrl(emby.constants.URL_VIEWS)
-    resultObj = embyServer.ApiGet(viewsUrl)
-    if not resultObj or not emby.constants.PROPERTY_ITEM_ITEMS in resultObj:
-        return []
-
-    viewsObj = resultObj[emby.constants.PROPERTY_ITEM_ITEMS]
-    libraryViews = []
-    for view in viewsObj:
-        if not emby.constants.PROPERTY_VIEW_ID in view or not emby.constants.PROPERTY_VIEW_NAME in view or not emby.constants.PROPERTY_VIEW_COLLECTION_TYPE in view:
-            continue
-
-        mediaType = view[emby.constants.PROPERTY_VIEW_COLLECTION_TYPE]
-        if not mediaType:
-            continue
-
-        matchingMediaTypes = [ type for type in mediaTypes if mediaType == type or mediaType == type + 's' ]
-        if not matchingMediaTypes:
-            continue
-
-        libraryView = {
-            'id': view[emby.constants.PROPERTY_VIEW_ID],
-            'name': view[emby.constants.PROPERTY_VIEW_NAME],
-            'mediaType': mediaType
-        }
-
-        if not libraryView['id'] or not libraryView['name']:
-            continue
-
-        libraryViews.append(libraryView)
-
-    return libraryViews
-
 def getLibraryViewsFromSettings(importSettings):
     if not importSettings:
         raise ValueError('invalid importSettings')
@@ -120,13 +88,13 @@ def getMatchingLibraryViews(embyServer, mediaTypes, selectedViews):
     if not mediaTypes:
         raise ValueError('invalid mediaTypes')
 
-    libraryViews = getLibraryViews(embyServer, mediaTypes)
+    libraryViews = Library.GetViews(embyServer, mediaTypes)
 
     matchingLibraryViews = []
     if not selectedViews:
         matchingLibraryViews = libraryViews
     else:
-        matchingLibraryViews = [ libraryView for libraryView in libraryViews if libraryView['id'] in selectedViews ]
+        matchingLibraryViews = [ libraryView for libraryView in libraryViews if libraryView.id in selectedViews ]
 
     return matchingLibraryViews
 
@@ -211,10 +179,10 @@ def settingOptionsFillerViews(handle, options):
         log('failed to authenticate on media provider {}'.format(mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
         return
 
-    libraryViews = getLibraryViews(embyServer, mediaImport.getMediaTypes())
+    libraryViews = Library.GetViews(embyServer, mediaImport.getMediaTypes())
     views = []
     for libraryView in libraryViews:
-        views.append((libraryView['name'], libraryView['id']))
+        views.append((libraryView.name, libraryView.id))
 
     # get the import's settings
     settings = mediaImport.getSettings()
@@ -529,12 +497,12 @@ def execImport(handle, options):
 
         # handle library views
         for view in views:
-            log('importing {} items from "{}" view from {}...'.format(mediaType, view['name'], mediaProvider2str(mediaProvider)))
-            items.extend(importItems(handle, embyServer, url, mediaType, view['id'], embyMediaType=embyMediaType, viewName=view['name'], allowDirectPlay=allowDirectPlay))
+            log('importing {} items from "{}" view from {}...'.format(mediaType, view.name, mediaProvider2str(mediaProvider)))
+            items.extend(importItems(handle, embyServer, url, mediaType, view.id, embyMediaType=embyMediaType, viewName=view.name, allowDirectPlay=allowDirectPlay))
 
             if mediaType == xbmcmediaimport.MediaTypeMovie:
                 # retrieve all BoxSets / collections matching the current media type
-                boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view['id'], raw=True, allowDirectPlay=allowDirectPlay)
+                boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view.id, raw=True, allowDirectPlay=allowDirectPlay)
                 for boxsetObj in boxsetObjs:
                     if not emby.constants.PROPERTY_ITEM_ID in boxsetObj or not emby.constants.PROPERTY_ITEM_NAME in boxsetObj:
                         continue
