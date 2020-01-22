@@ -8,11 +8,11 @@
 
 import threading
 import time
-from uuid import uuid4
 
 import xbmc
 import xbmcmediaimport
 
+from emby.api.playback import PlaybackCheckin
 from emby.constants import EMBY_PROTOCOL, \
     PLAYING_PLAY_METHOD_DIRECT_PLAY, PLAYING_PLAY_METHOD_DIRECT_STREAM, \
     PLAYING_PROGRESS_EVENT_TIME_UPDATE, PLAYING_PROGRESS_EVENT_PAUSE, PLAYING_PROGRESS_EVENT_UNPAUSE
@@ -163,7 +163,7 @@ class Player(xbmc.Player):
             return
 
         # generate a session identifier
-        self._playSessionId = str(uuid4()).replace("-", "")
+        self._playSessionId = PlaybackCheckin.GenerateSessionId()
 
         # determine the play method
         if Server.IsDirectStreamUrl(self._mediaProvider, self._file):
@@ -176,8 +176,7 @@ class Player(xbmc.Player):
 
         # tell the Emby server that a library item is being played
         self._server = Server(self._mediaProvider)
-        url = self._server.BuildSessionsPlayingUrl()
-        self._server.ApiPost(url, data)
+        PlaybackCheckin.StartPlayback(self._server, data)
 
         self._lastProgressReport = time.time()
 
@@ -189,12 +188,8 @@ class Player(xbmc.Player):
         if not self._item:
             return False
 
-        # prepare the data of the API call
         data = self._preparePlayingData(stopped=False, event=event)
-
-        # tell the Emby server that a library item is being played
-        url = self._server.BuildSessionsPlayingProgressUrl()
-        self._server.ApiPost(url, data)
+        PlaybackCheckin.PlaybackProgress(self._server, data)
 
         self._lastProgressReport = time.time()
 
@@ -206,12 +201,8 @@ class Player(xbmc.Player):
         if not self._item:
             return
 
-        # prepare the data of the API call
         data = self._preparePlayingData(stopped=True, failed=failed)
-
-        # tell the Emby server that a library item is being played
-        url = self._server.BuildSessionsPlayingStoppedUrl()
-        self._server.ApiPost(url, data)
+        PlaybackCheckin.StopPlayback(self._server, data)
 
         Player.log('playback stopped for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
 
