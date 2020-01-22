@@ -224,6 +224,17 @@ class Server:
         return '{}://{}/'.format(constants.EMBY_PROTOCOL, serverId)
 
     @staticmethod
+    def GetServerId(providerId):
+        if not providerId:
+            raise ValueError('Invalid serverId')
+
+        url = urlparse(providerId)
+        if url.scheme != constants.EMBY_PROTOCOL or not url.netloc:
+            return False
+
+        return url.netloc
+
+    @staticmethod
     def BuildPublicInfoUrl(baseUrl):
         if not baseUrl:
             raise ValueError('Invalid baseUrl')

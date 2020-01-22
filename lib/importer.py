@@ -67,16 +67,6 @@ def mediaTypesFromOptions(options):
 
     return mediaTypes
 
-def getServerId(path):
-    if not path:
-        return False
-
-    url = urlparse(path)
-    if url.scheme != emby.constants.EMBY_PROTOCOL or not url.netloc:
-        return False
-
-    return url.netloc
-
 def requestUrl(url, authToken='', deviceId='', userId=''):
     headers = Request.PrepareApiCallHeaders(authToken=authToken, deviceId=deviceId, userId=userId)
     return Request.GetAsJson(url, headers=headers)
@@ -373,7 +363,7 @@ def canImport(handle, options):
     path = unquote(options['path'][0])
 
     # try to get the emby server's identifier from the path
-    id = getServerId(path)
+    id = Server.GetServerId(path)
     if not id:
       return
 
