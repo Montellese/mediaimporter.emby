@@ -75,7 +75,7 @@ class Player(xbmc.Player):
             self._reset()
             try:
                 self._file = self.getPlayingFile()
-            except xbmc.PlayerException:
+            except RuntimeError:
                 pass
 
     def onAVStarted(self):
@@ -242,7 +242,7 @@ class Player(xbmc.Player):
                     'PositionTicks': Api.secondsToTicks(self.getTime()),
                     'RunTimeTicks': Api.secondsToTicks(self.getTotalTime()),
                 })
-            except xbmc.PlayerException:
+            except RuntimeError:
                 pass
 
             if event:
