@@ -6,8 +6,6 @@
 #  See LICENSES/README.md for more information.
 #
 
-import lib.semantic_version as semantic_version
-
 class Plugin:
     class Serialization:
         PROPERTY_ID = 'Id'
@@ -46,7 +44,7 @@ class Plugin:
                 description = pluginObj[Plugin.Serialization.PROPERTY_DESCRIPTION]
             version = None
             if Plugin.Serialization.PROPERTY_VERSION in pluginObj:
-                version = semantic_version.Version(pluginObj[Plugin.Serialization.PROPERTY_VERSION])
+                version = pluginObj[Plugin.Serialization.PROPERTY_VERSION]
             imageTag = None
             if Plugin.Serialization.PROPERTY_IMAGE_TAG in pluginObj:
                 imageTag = pluginObj[Plugin.Serialization.PROPERTY_IMAGE_TAG]
