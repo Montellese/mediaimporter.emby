@@ -38,7 +38,7 @@ class Authentication:
 
             authUrl = Url.append(authUrl, userId, constants.URL_AUTHENTICATE)
         elif authenticationMethod == Authentication.Method.Username:
-            if not userId:
+            if not username:
                 raise ValueError('invalid username')
 
             authUrl = Url.append(authUrl, constants.URL_AUTHENTICATE_BY_NAME)
