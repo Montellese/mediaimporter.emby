@@ -525,7 +525,7 @@ def updateOnProvider(handle, options):
         log('cannot prepare media import settings', xbmc.LOGERROR)
         return
 
-    item = xbmcmediaimport.GetUpdatedItem(handle)
+    item = xbmcmediaimport.getUpdatedItem(handle)
     if not item:
         log('cannot retrieve updated item', xbmc.LOGERROR)
         return
