@@ -136,30 +136,27 @@ class Player(xbmc.Player):
         if not self.isPlayingVideo():
             return
 
+        self._item = self.getPlayingItem()
+        if not self._item:
+            return
+
+        # check if the item has been imported from a media provider
+        mediaProviderId = self._item.getMediaProviderId()
+        if not mediaProviderId:
+            return
+
+        if not mediaProviderId in self._providers:
+            Player.log('currently playing item {} ({}) has been imported from an unknown media provider {}' \
+                .format(self._item.getLabel(), self._file, mediaProviderId), xbmc.LOGWARNING)
+            return
+        self._mediaProvider = self._providers[mediaProviderId]
+
         videoInfoTag = self.getVideoInfoTag()
         if not videoInfoTag:
             return
 
         self._itemId = videoInfoTag.getUniqueID(EMBY_PROTOCOL)
         if not self._itemId:
-            return
-
-        for mediaProvider in self._providers.values():
-            importedItems = xbmcmediaimport.getImportedItemsByProvider(mediaProvider)
-            matchingItems = [ importedItem for importedItem in importedItems \
-                if importedItem.getVideoInfoTag() and importedItem.getVideoInfoTag().getUniqueID(EMBY_PROTOCOL) == self._itemId ]
-            if not matchingItems:
-                continue
-
-            if len(matchingItems) > 1:
-                Player.log('multiple items imported from {} match the imported Emby item {} playing from {}' \
-                    .format(mediaProvider2str(mediaProvider), self._itemId, self._file), xbmc.LOGWARNING)
-
-            self._item = matchingItems[0]
-            self._mediaProvider = mediaProvider
-            break
-
-        if not self._item:
             return
 
         # generate a session identifier
