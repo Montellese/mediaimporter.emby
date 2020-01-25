@@ -14,6 +14,7 @@ import websocket
 import xbmc
 import xbmcmediaimport
 
+from emby.api.library import Library
 from emby.constants import *
 from emby.server import Server
 
@@ -254,11 +255,8 @@ class ProviderObserver:
                 ProviderObserver.log('failed to change {} imported items for media import {}'.format(len(changedItems), mediaImport2str(mediaImport)), xbmc.LOGWARNING)
 
     def _GetItemDetails(self, itemId):
-        # get the URL to retrieve all details of the item from the Emby server
-        getItemUrl = self._server.BuildUserItemUrl(itemId)
-
         # retrieve all details of the item
-        itemObj = self._server.ApiGet(getItemUrl)
+        itemObj = Library.GetItem(self._server, itemId)
         if not itemObj:
             ProviderObserver.log('cannot retrieve details of updated item with id "{}"'.format(itemId), xbmc.LOGERROR)
             return None
