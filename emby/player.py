@@ -154,7 +154,7 @@ class Player(xbmc.Player):
         if not videoInfoTag:
             return
 
-        self._itemId = videoInfoTag.getUniqueID(EMBY_PROTOCOL)
+        self._itemId = kodi.Api.getEmbyItemIdFromVideoInfoTag(videoInfoTag)
         if not self._itemId:
             return
 

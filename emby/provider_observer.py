@@ -182,7 +182,7 @@ class ProviderObserver:
             else:
                 # find the removed item in the list of imported items
                 importedItems = xbmcmediaimport.getImportedItemsByProvider(self._mediaProvider)
-                matchingItems = [ importedItem for importedItem in importedItems if importedItem.getUniqueID(EMBY_PROTOCOL) == itemId ]
+                matchingItems = [ importedItem for importedItem in importedItems if kodi.Api.getEmbyItemIdFromItem(importedItem) == itemId ]
                 if not matchingItems:
                     ProviderObserver.log('failed to find removed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
                     continue

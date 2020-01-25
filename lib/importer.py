@@ -538,7 +538,7 @@ def updateOnProvider(handle, options):
         return
 
     # determine the item's identifier
-    itemId = itemVideoInfoTag.getUniqueID(emby.constants.EMBY_PROTOCOL)
+    itemId = kodi.Api.getEmbyItemIdFromVideoInfoTag(itemVideoInfoTag)
     if not itemId:
         log('cannot determine the identifier of the updated item: "{}"'.format(itemVideoInfoTag.getPath()), xbmc.LOGERROR)
         return

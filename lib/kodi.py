@@ -120,6 +120,28 @@ class Api:
             return ''
 
     @staticmethod
+    def getEmbyItemIdFromItem(localItem):
+        if not localItem:
+            raise ValueError('invalid localItem')
+
+        videoInfoTag = localItem.getVideoInfoTag()
+        if not videoInfoTag:
+            return None
+
+        return Api.getEmbyItemIdFromVideoInfoTag(videoInfoTag)
+
+    @staticmethod
+    def getEmbyItemIdFromVideoInfoTag(videoInfoTag):
+        if not videoInfoTag:
+            raise ValueError('invalid videoInfoTag')
+
+        embyItemId = videoInfoTag.getUniqueID(EMBY_PROTOCOL)
+        if not embyItemId:
+            return None
+
+        return embyItemId
+
+    @staticmethod
     def toFileItem(embyServer, itemObj, mediaType='', embyMediaType='', libraryView='', allowDirectPlay=True):
         # determine the matching Emby media type if possible
         checkMediaType = len(mediaType) > 0
