@@ -446,9 +446,11 @@ def execImport(handle, options):
     progress = 0
     progressTotal = len(mediaTypes)
     for mediaType in mediaTypes:
-        log('importing {} items from {}...'.format(mediaType, mediaProvider2str(mediaProvider)))
         if xbmcmediaimport.shouldCancel(handle, progress, progressTotal):
             return
+        progress += 1
+
+        log('importing {} items from {}...'.format(mediaType, mediaProvider2str(mediaProvider)))
 
         mappedMediaType = kodi.Api.getEmbyMediaType(mediaType)
         if not mappedMediaType:
@@ -503,8 +505,6 @@ def execImport(handle, options):
         log('{} {} items imported from {}'.format(len(items), mediaType, mediaProvider2str(mediaProvider)))
         if items:
             xbmcmediaimport.addImportItems(handle, items, mediaType)
-
-        progress += 1
 
     xbmcmediaimport.finishImport(handle)
 
