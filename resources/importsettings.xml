@@ -28,6 +28,14 @@
             <multiselect>true</multiselect>
           </control>
         </setting>
+        <setting id="emby.importcollections" type="boolean" label="32025">
+          <level>0</level>
+          <default>true</default>
+          <dependencies>
+            <dependency type="visible" on="property" name="HasMediaType">set</dependency>
+          </dependencies>
+          <control type="toggle" />
+        </setting>
       </group>
     </category>
   </section>

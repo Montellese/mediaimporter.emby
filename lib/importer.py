@@ -442,6 +442,9 @@ def execImport(handle, options):
     # determine whether Direct Play is allowed
     allowDirectPlay = mediaProviderSettings.getBool(emby.constants.SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY)
 
+    # determine whether to import collections
+    importCollections = importSettings.getBool(emby.constants.SETTING_IMPORT_IMPORT_COLLECTIONS)
+
     # loop over all media types to be imported
     progress = 0
     progressTotal = len(mediaTypes)
@@ -449,6 +452,10 @@ def execImport(handle, options):
         if xbmcmediaimport.shouldCancel(handle, progress, progressTotal):
             return
         progress += 1
+
+        if mediaType == xbmcmediaimport.MediaTypeVideoCollection and not importCollections:
+            log('importing {} items from {} is disabled'.format(mediaType, mediaProvider2str(mediaProvider)), xbmc.LOGDEBUG)
+            continue
 
         log('importing {} items from {}...'.format(mediaType, mediaProvider2str(mediaProvider)))
 
@@ -478,7 +485,7 @@ def execImport(handle, options):
             log('importing {} items from "{}" view from {}...'.format(mediaType, view.name, mediaProvider2str(mediaProvider)))
             items.extend(importItems(handle, embyServer, url, mediaType, view.id, embyMediaType=embyMediaType, viewName=view.name, allowDirectPlay=allowDirectPlay))
 
-            if items and mediaType == xbmcmediaimport.MediaTypeMovie:
+            if importCollections and items and mediaType == xbmcmediaimport.MediaTypeMovie:
                 # retrieve all BoxSets / collections matching the current media type
                 boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view.id, raw=True, allowDirectPlay=allowDirectPlay)
                 for boxsetObj in boxsetObjs:
@@ -490,7 +497,7 @@ def execImport(handle, options):
                     boxsets[boxsetId] = boxsetName
 
         # handle BoxSets / collections
-        if items:
+        if importCollections and items:
             for (boxsetId, boxsetName) in iteritems(boxsets):
                 # get all items belonging to the BoxSet
                 boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId, embyMediaType=embyMediaType, viewName=boxsetName, allowDirectPlay=allowDirectPlay)
