@@ -476,7 +476,7 @@ def execImport(handle, options):
             log('importing {} items from "{}" view from {}...'.format(mediaType, view.name, mediaProvider2str(mediaProvider)))
             items.extend(importItems(handle, embyServer, url, mediaType, view.id, embyMediaType=embyMediaType, viewName=view.name, allowDirectPlay=allowDirectPlay))
 
-            if mediaType == xbmcmediaimport.MediaTypeMovie:
+            if items and mediaType == xbmcmediaimport.MediaTypeMovie:
                 # retrieve all BoxSets / collections matching the current media type
                 boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view.id, raw=True, allowDirectPlay=allowDirectPlay)
                 for boxsetObj in boxsetObjs:
@@ -488,19 +488,21 @@ def execImport(handle, options):
                     boxsets[boxsetId] = boxsetName
 
         # handle BoxSets / collections
-        for (boxsetId, boxsetName) in iteritems(boxsets):
-            # get all items belonging to the BoxSet
-            boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId, embyMediaType=embyMediaType, viewName=boxsetName, allowDirectPlay=allowDirectPlay)
-            for boxsetItem in boxsetItems:
-                # find the matching retrieved item
-                for (index, item) in enumerate(items):
-                    if boxsetItem.getPath() == item.getPath():
-                        # set the BoxSet / collection
-                        kodi.Api.setCollection(item, boxsetName)
-                        items[index] = item
+        if items:
+            for (boxsetId, boxsetName) in iteritems(boxsets):
+                # get all items belonging to the BoxSet
+                boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId, embyMediaType=embyMediaType, viewName=boxsetName, allowDirectPlay=allowDirectPlay)
+                for boxsetItem in boxsetItems:
+                    # find the matching retrieved item
+                    for (index, item) in enumerate(items):
+                        if boxsetItem.getPath() == item.getPath():
+                            # set the BoxSet / collection
+                            kodi.Api.setCollection(item, boxsetName)
+                            items[index] = item
 
         log('{} {} items imported from {}'.format(len(items), mediaType, mediaProvider2str(mediaProvider)))
-        xbmcmediaimport.addImportItems(handle, items, mediaType)
+        if items:
+            xbmcmediaimport.addImportItems(handle, items, mediaType)
 
         progress += 1
 
