@@ -4,6 +4,7 @@
 - automatically add external subtitles when starting playback of a video
 - make external subtitles configurable
 - make importing collections / movie sets configurable (enabled by default)
+- support secure websocket connections
 
 [B]Version 0.0.4[/B]
 - Fix importing logo / clearlogo artwork

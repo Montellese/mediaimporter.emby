@@ -307,9 +307,12 @@ class ProviderObserver:
             self._Reset()
             return False
 
-        # prepare the URL
+        # analyze the media provider's URL
         urlParts = urlparse(self._mediaProvider.getBasePath())
-        url = urlunparse(urlParts._replace(scheme='ws', path='embywebsocket'))
+        # determine the proper scheme (ws:// or wss://) and whether or not to verify the HTTPS certificate
+        websocketScheme = 'wss' if urlParts.scheme == 'https' else 'ws'
+        # put the urL back together
+        url = urlunparse(urlParts._replace(scheme=websocketScheme, path='embywebsocket'))
         url = Url.addOptions(url, {
             URL_QUERY_API_KEY: self._server.AccessToken(),
             URL_QUERY_DEVICE_ID: self._server.DeviceId()
