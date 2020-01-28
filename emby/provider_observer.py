@@ -51,11 +51,11 @@ class ProviderObserver:
         # if a matching import has been found update it
         if matchingImportIndices:
             self._imports[matchingImportIndices[0]] = mediaImport
-            ProviderObserver.log('media import {} updated'.format(mediaImport2str(mediaImport)))
+            ProviderObserver.log('media import {} from {} updated'.format(mediaImport2str(mediaImport), mediaProvider2str(self._mediaProvider)))
         else:
             # otherwise add the import to the list
             self._imports.append(mediaImport)
-            ProviderObserver.log('media import {} added'.format(mediaImport2str(mediaImport)))
+            ProviderObserver.log('media import {} from {} added'.format(mediaImport2str(mediaImport), mediaProvider2str(self._mediaProvider)))
 
     def RemoveImport(self, mediaImport):
         if not mediaImport:
@@ -68,7 +68,7 @@ class ProviderObserver:
 
         # remove the media import from the list
         del self._imports[matchingImportIndices[0]]
-        ProviderObserver.log('media import {} removed'.format(mediaImport2str(mediaImport)))
+        ProviderObserver.log('media import {} from {} removed'.format(mediaImport2str(mediaImport), mediaProvider2str(self._mediaProvider)))
 
     def Start(self, mediaProvider):
         if not mediaProvider:
@@ -148,7 +148,7 @@ class ProviderObserver:
             ProviderObserver.log('ignoring "{}" message from {}'.format(messageType, mediaProvider2str(self._mediaProvider)), xbmc.LOGDEBUG)
 
     def _ProcessMessageLibraryChanged(self, data):
-        ProviderObserver.log('processing library changed message...')
+        ProviderObserver.log('processing library changed message from {}...'.format(mediaProvider2str(self._mediaProvider)))
 
         itemsAdded = data[WS_LIBRARY_CHANGED_ITEMS_ADDED]
         itemsUpdated = data[WS_LIBRARY_CHANGED_ITEMS_UPDATED]
@@ -177,22 +177,22 @@ class ProviderObserver:
                 # get all details for the added / changed item
                 item = self._GetItemDetails(itemId)
                 if not item:
-                    ProviderObserver.log('failed to get details for changed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
+                    ProviderObserver.log('failed to get details for changed item with id "{}" from {}'.format(itemId, mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
                     continue
             else:
                 # find the removed item in the list of imported items
                 importedItems = xbmcmediaimport.getImportedItemsByProvider(self._mediaProvider)
                 matchingItems = [ importedItem for importedItem in importedItems if kodi.Api.getEmbyItemIdFromItem(importedItem) == itemId ]
                 if not matchingItems:
-                    ProviderObserver.log('failed to find removed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
+                    ProviderObserver.log('failed to find removed item with id "{}" from {}'.format(itemId, mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
                     continue
                 if len(matchingItems) > 1:
-                    ProviderObserver.log('multiple imported items for item with id "{}" found => only removing the first one'.format(itemId), xbmc.LOGWARNING)
+                    ProviderObserver.log('multiple imported items for item with id "{}" from {} found => only removing the first one'.format(itemId, mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
 
                 item = matchingItems[0]
 
             if not item:
-                ProviderObserver.log('failed to process changed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
+                ProviderObserver.log('failed to process changed item with id "{}" from {}'.format(itemId, mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
                 continue
 
             changedItems.append((changesetType, item, itemId))
@@ -207,7 +207,7 @@ class ProviderObserver:
         return [(changesetType, item) for item in items if isinstance(item, string_types) and item]
 
     def _ProcessMessageUserDataChanged(self, data):
-        ProviderObserver.log('processing userdata changed message...')
+        ProviderObserver.log('processing userdata changed message from {}...'.format(mediaProvider2str(self._mediaProvider)))
 
         userDataList = data[WS_USER_DATA_CHANGED_USER_DATA_LIST]
 
@@ -222,7 +222,7 @@ class ProviderObserver:
 
             item = self._GetItemDetails(itemId)
             if not item:
-                ProviderObserver.log('failed to get details for changed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
+                ProviderObserver.log('failed to get details for changed item with id "{}" from {}'.format(itemId, mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
                 continue
 
             changedItems.append((xbmcmediaimport.MediaImportChangesetTypeChanged, item, itemId))
@@ -239,7 +239,7 @@ class ProviderObserver:
             # find a matching import for the changed item
             mediaImport = self._FindImportForItem(item)
             if not mediaImport:
-                ProviderObserver.log('failed to determine media import for changed item with id "{}"'.format(itemId), xbmc.LOGWARNING)
+                ProviderObserver.log('failed to determine media import for changed item with id "{}" from {}'.format(itemId, mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
                 continue
 
             if mediaImport not in changedItemsMap:
@@ -250,15 +250,15 @@ class ProviderObserver:
         # finally pass the changed items grouped by their media import to Kodi
         for (mediaImport, changedItems) in changedItemsMap.items():
             if xbmcmediaimport.changeImportedItems(mediaImport, changedItems):
-                ProviderObserver.log('changed {} imported items for media import {}'.format(len(changedItems), mediaImport2str(mediaImport)))
+                ProviderObserver.log('changed {} imported items for media import {} from {}'.format(len(changedItems), mediaImport2str(mediaImport), mediaProvider2str(self._mediaProvider)))
             else:
-                ProviderObserver.log('failed to change {} imported items for media import {}'.format(len(changedItems), mediaImport2str(mediaImport)), xbmc.LOGWARNING)
+                ProviderObserver.log('failed to change {} imported items for media import {} from {}'.format(len(changedItems), mediaImport2str(mediaImport), mediaProvider2str(self._mediaProvider)), xbmc.LOGWARNING)
 
     def _GetItemDetails(self, itemId):
         # retrieve all details of the item
         itemObj = Library.GetItem(self._server, itemId)
         if not itemObj:
-            ProviderObserver.log('cannot retrieve details of updated item with id "{}"'.format(itemId), xbmc.LOGERROR)
+            ProviderObserver.log('cannot retrieve details of updated item with id "{}" from {}'.format(itemId, mediaProvider2str(self._mediaProvider)), xbmc.LOGERROR)
             return None
 
         return kodi.Api.toFileItem(self._server, itemObj, allowDirectPlay=self._settings.getBool(SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY))
@@ -318,8 +318,8 @@ class ProviderObserver:
         # connect the websocket
         try:
             self._websocket.connect(url)
-        except:
-            ProviderObserver.log('failed to connect to {} using a websocket'.format(url), xbmc.LOGERROR)
+        except Exception as err:
+            ProviderObserver.log('failed to connect to {} using a websocket. {}'.format(url, err), xbmc.LOGERROR)
             self._Reset()
             return False
 
