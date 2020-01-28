@@ -130,7 +130,8 @@ class Server:
             url = '{}.{}'.format(url, containers[0])
 
         url = Url.addOptions(url, {
-            constants.URL_PLAYBACK_OPTION_STATIC: constants.URL_PLAYBACK_OPTION_STATIC_TRUE
+            constants.URL_PLAYBACK_OPTION_STATIC: constants.URL_PLAYBACK_OPTION_STATIC_TRUE,
+            constants.URL_QUERY_API_KEY: self.AccessToken()
         })
 
         return url
@@ -161,8 +162,8 @@ class Server:
         if not urlPaths[4].startswith(constants.URL_PLAYBACK_STREAM):
             return False
 
-        # the query must be "static=true"
-        if parsedUrl.query != '{}={}'.format(constants.URL_PLAYBACK_OPTION_STATIC, constants.URL_PLAYBACK_OPTION_STATIC_TRUE):
+        # the query must contain "static=true"
+        if not parsedUrl.query.contains('{}={}'.format(constants.URL_PLAYBACK_OPTION_STATIC, constants.URL_PLAYBACK_OPTION_STATIC_TRUE)):
             return False
 
         return True
