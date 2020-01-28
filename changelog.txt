@@ -5,6 +5,7 @@
 - make external subtitles configurable
 - make importing collections / movie sets configurable (enabled by default)
 - support secure websocket connections
+- improve websocket connections to remote Emby servers
 
 [B]Version 0.0.4[/B]
 - Fix importing logo / clearlogo artwork

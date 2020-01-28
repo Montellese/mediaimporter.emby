@@ -34,10 +34,7 @@ class ProviderObserver:
         self._mediaProvider = None
         self._settings = None
         self._server = None
-
-        # create the websocket
-        self._websocket = websocket.WebSocket()
-        self._websocket.settimeout(0.1)
+        self._websocket = None
 
     def __del__(self):
         self._StopAction()
@@ -318,6 +315,9 @@ class ProviderObserver:
             URL_QUERY_DEVICE_ID: self._server.DeviceId()
         })
 
+        # create the websocket
+        self._websocket = websocket.WebSocket()
+
         # connect the websocket
         try:
             self._websocket.connect(url)
@@ -325,6 +325,9 @@ class ProviderObserver:
             ProviderObserver.log('failed to connect to {} using a websocket. {}'.format(url, err), xbmc.LOGERROR)
             self._Reset()
             return False
+
+        # reduce the timeout
+        self._websocket.settimeout(1.0)
 
         ProviderObserver.log('successfully connected to {} to observe media imports'.format(mediaProvider2str(self._mediaProvider)))
         self._connected = True
