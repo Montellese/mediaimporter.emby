@@ -175,7 +175,7 @@ SETTING_PROVIDER_TEST_AUTHENTICATION = 'emby.testauthentication'
 SETTING_PROVIDER_DEVICEID = 'emby.deviceid'
 
 SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY = 'emby.allowdirectplay'
-seTting_PROVIDER_PLAYBACK_ENABLE_EXTERNAL_SUBTITLES = 'emby.enableexternalsubtitles'
+SETTING_PROVIDER_PLAYBACK_ENABLE_EXTERNAL_SUBTITLES = 'emby.enableexternalsubtitles'
 
 # media import setting identifiers and values
 SETTING_IMPORT_VIEWS = 'emby.importviews'

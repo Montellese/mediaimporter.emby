@@ -185,7 +185,7 @@ class Player(xbmc.Player):
 
         # when using DirectStream add any external subtitles
         if self._playMethod == PLAYING_PLAY_METHOD_DIRECT_STREAM and \
-           settings.getBool(seTting_PROVIDER_PLAYBACK_ENABLE_EXTERNAL_SUBTITLES):
+           settings.getBool(SETTING_PROVIDER_PLAYBACK_ENABLE_EXTERNAL_SUBTITLES):
             self._addExternalSubtitles()
 
         # generate a session identifier
