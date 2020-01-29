@@ -54,14 +54,14 @@ def localise(id):
 
 def mediaProvider2str(mediaProvider):
     if not mediaProvider:
-        raise ValueError('invalid mediaProvider')
+        return 'unknown media provider'
 
     return '"{}" ({})'.format(mediaProvider.getFriendlyName(), mediaProvider.getIdentifier())
 
 
 def mediaImport2str(mediaImport):
     if not mediaImport:
-        raise ValueError('invalid mediaImport')
+        return 'unknown media import'
 
     return '{} ({})'.format(mediaImport.getPath(), mediaImport.getMediaTypes())
 
