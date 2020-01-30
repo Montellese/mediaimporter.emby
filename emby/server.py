@@ -163,7 +163,7 @@ class Server:
             return False
 
         # the query must contain "static=true"
-        if not parsedUrl.query.contains('{}={}'.format(constants.URL_PLAYBACK_OPTION_STATIC, constants.URL_PLAYBACK_OPTION_STATIC_TRUE)):
+        if not '{}={}'.format(constants.URL_PLAYBACK_OPTION_STATIC, constants.URL_PLAYBACK_OPTION_STATIC_TRUE) in parsedUrl.query:
             return False
 
         return True
