@@ -116,3 +116,25 @@ class Url:
             raise ValueError('invalid url')
 
         return os.path.join(url, '')
+
+try:
+    from datetime import timezone
+    utc = timezone.utc
+except ImportError:
+    from datetime import timedelta, tzinfo
+
+    class UTC(tzinfo):
+        """UTC"""
+
+        ZERO = timedelta(0)
+
+        def utcoffset(self, dt):
+            return UTC.ZERO
+
+        def tzname(self, dt):
+            return "UTC"
+
+        def dst(self, dt):
+            return UTC.ZERO
+
+    utc = UTC()
