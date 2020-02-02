@@ -291,7 +291,7 @@ class Player(xbmc.Player):
             index = stream.get(PROPERTY_ITEM_MEDIA_STREAM_INDEX)
 
             # determine the language and name
-            name = stream.get(PROPERTY_ITEM_MEDIA_STREAM_DispLAY_TITLE) if PROPERTY_ITEM_MEDIA_STREAM_DispLAY_TITLE in stream else ''
+            name = stream.get(PROPERTY_ITEM_MEDIA_STREAM_DISPLAY_TITLE) if PROPERTY_ITEM_MEDIA_STREAM_DISPLAY_TITLE in stream else ''
             language = stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE) if PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE in stream else ''
 
             # determine the stream URL
