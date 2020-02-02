@@ -172,26 +172,14 @@ class Api:
             log('cannot import {} item without identifier'.format(mediaType), xbmc.LOGERROR)
             return None
 
-        itemPath = None
-        isFolder = itemObj.get(PROPERTY_ITEM_IS_FOLDER)
-        if isFolder:
-            itemPath = embyServer.BuildItemUrl(itemId)
-        else:
-            if allowDirectPlay:
-                # get the direct path
-                path = itemObj.get(PROPERTY_ITEM_PATH)
-                # if we can access the direct path we can use Direct Play otherwise we use Direct Stream
-                if path and xbmcvfs.exists(path):
-                    itemPath = path
-
-            # fall back to Direct Stream
-            if not itemPath:
-                itemPath = embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId, itemObj.get(PROPERTY_ITEM_CONTAINER))
+        itemPath = Api.getPlaybackUrl(embyServer, itemId, itemObj, allowDirectPlay=allowDirectPlay)
+        if not itemPath:
+            return None
 
         item = ListItem(
             path = itemPath,
             label = itemObj.get(PROPERTY_ITEM_NAME))
-        item.setIsFolder(isFolder)
+        item.setIsFolder(itemObj.get(PROPERTY_ITEM_IS_FOLDER))
 
         # handle date
         premiereDate = itemObj.get(PROPERTY_ITEM_PREMIERE_DATE)
@@ -207,6 +195,55 @@ class Api:
             item.setArt(artwork)
 
         return item
+
+    @staticmethod
+    def getPlaybackUrl(embyServer, itemId, itemObj, allowDirectPlay=True):
+        isFolder = itemObj.get(PROPERTY_ITEM_IS_FOLDER)
+        if isFolder:
+            return embyServer.BuildItemUrl(itemId)
+
+        itemPath = None
+        if PROPERTY_ITEM_MEDIA_SOURCES in itemObj:
+            mediaSources = itemObj.get(PROPERTY_ITEM_MEDIA_SOURCES)
+            if len(mediaSources) > 0:
+                mediaSource = mediaSources[0]
+                if mediaSource:
+                    itemPath = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_PATH)
+                    protocol = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL)
+                    container = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_CONTAINER)
+                    supportsDirectPlay = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_SUPPORTS_DIRECT_PLAY)
+                    supportsDirectStream = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_SUPPORTS_DIRECT_STREAM)
+                    if not supportsDirectPlay and not supportsDirectStream:
+                        log('cannot import item with ID {} because it neither support Direct Play nor Direct Stream'.format(itemId), xbmc.LOGWARNING)
+                        return None
+                    if not allowDirectPlay and not supportsDirectStream:
+                        log('cannot import item with ID {} because it doesn\'t support Direct Stream'.format(itemId), xbmc.LOGWARNING)
+                        return None
+
+                    # handle direct play for directly accessible or HTTP items
+                    if allowDirectPlay and supportsDirectPlay and (protocol == PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL_HTTP or xbmcvfs.exists(itemPath)):
+                        return itemPath
+
+                    # STRMs require Direct Play
+                    if not allowDirectPlay and (container == 'strm' or itemPath.endswith('.strm')):
+                        log('cannot import item with ID {} because STRMs require Direct Play'.format(itemId), xbmc.LOGWARNING)
+                        return None
+
+                    # let the rest be handled as Direct Stream
+
+        if not itemPath:
+            # get the direct path
+            itemPath = itemObj.get(PROPERTY_ITEM_PATH)
+            if not itemPath:
+                log('cannot import item with ID {} because it doesn\'t have a proper path'.format(itemId), xbmc.LOGWARNING)
+                return None
+
+        # if we can access the direct path we can use Direct Play
+        if allowDirectPlay and xbmcvfs.exists(itemPath):
+            return itemPath
+
+        # fall back to Direct Stream
+        return embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId, itemObj.get(PROPERTY_ITEM_CONTAINER))
 
     @staticmethod
     def fillVideoInfos(itemId, itemObj, mediaType, item, libraryView=''):
