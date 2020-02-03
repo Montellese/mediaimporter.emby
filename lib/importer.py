@@ -32,7 +32,7 @@ from emby.request import Request
 from emby.server import Server
 
 from lib import kodi
-from lib.settings import ImportSettings
+from lib.settings import ImportSettings, SynchronizationSettings
 from lib.utils import __addon__, localise, log, mediaProvider2str, Url, utc
 
 # list of fields to retrieve
@@ -633,10 +633,17 @@ def execImport(handle, options):
     # determine the last sync time and whether we should perform a fast sync
     fastSync = False
     syncUrlOptions = {}
-    lastSync = mediaImport.getLastSynced()
-    if lastSync:
-        # check if we should use the Kodi Companion Emby server plugin
-        if mediaProviderSettings.getBool(emby.constants.SETTING_PROVIDER_SYNCHRONIZATION_USE_KODI_COMPANION):
+
+    # check if synchronization related settings have changed; if yes we have to perform a full synchronization
+    if SynchronizationSettings.HaveChanged(mediaTypes, mediaProviderSettings, importSettings, save=True):
+        log('forcing a full synchronization to import {} items from {} because some related settings have changed' \
+            .format(mediaTypes, mediaProvider2str(mediaProvider)))
+    else:
+        # check if we
+        #   have already performed a (full) synchronization before
+        #   should use the Kodi Companion Emby server plugin
+        lastSync = mediaImport.getLastSynced()
+        if lastSync and mediaProviderSettings.getBool(emby.constants.SETTING_PROVIDER_SYNCHRONIZATION_USE_KODI_COMPANION):
             if KodiCompanion.IsInstalled(embyServer):
                 fastSync = True
 

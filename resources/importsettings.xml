@@ -36,6 +36,14 @@
           </dependencies>
           <control type="toggle" />
         </setting>
+        <setting id="emby.syncsettingshash" type="string">
+          <visible>false</visible>
+          <level>4</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+        </setting>
       </group>
     </category>
   </section>
