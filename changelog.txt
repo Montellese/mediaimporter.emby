@@ -1,5 +1,5 @@
 [B]Version 0.0.6[/B]
--
+- fix playback stopped / ended callback handling
 
 [B]Version 0.0.5[/B]
 - make Direct Play configurable

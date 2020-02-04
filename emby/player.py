@@ -215,8 +215,6 @@ class Player(xbmc.Player):
         return True
 
     def _stopPlayback(self, failed=False):
-        if not self.isPlaying():
-            self._reset()
         if not self._item:
             return
 
