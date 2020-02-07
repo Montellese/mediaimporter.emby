@@ -39,6 +39,7 @@ class Player(xbmc.Player):
         self._playSessionId = None
         self._paused = False
         self._playMethod = None
+        self._lastPlaybackPosition = None
 
     def AddProvider(self, mediaProvider):
         if not mediaProvider:
@@ -127,6 +128,7 @@ class Player(xbmc.Player):
         self._playSessionId = None
         self._paused = False
         self._playMethod = None
+        self._lastPlaybackPosition = None
 
     def _startPlayback(self):
         if not self._file:
@@ -226,11 +228,21 @@ class Player(xbmc.Player):
         self._reset()
 
     def _preparePlayingData(self, stopped=False, event=None, failed=False):
+        try:
+            # try to get the playback position from Kodi
+            self._lastPlaybackPosition = self.getTime()
+        except RuntimeError:
+            # if that fails update it based on the time passed since the last progress report
+            if not self._paused:
+                Player.log('guessing the playback position for "{}" ({})'.format(self._item.getLabel(), self._file), xbmc.LOGDEBUG)
+                self._lastPlaybackPosition += time.time() - self._lastProgressReport
+
         data = {
             'ItemId': self._itemId,
             'PlaySessionId': self._playSessionId,
             'PlaylistIndex': 0,
             'PlaylistLength': 1,
+            'PositionTicks': kodi.Api.secondsToTicks(self._lastPlaybackPosition),
         }
 
         if stopped:
@@ -247,7 +259,6 @@ class Player(xbmc.Player):
 
             try:
                 data.update({
-                    'PositionTicks': kodi.Api.secondsToTicks(self.getTime()),
                     'RunTimeTicks': kodi.Api.secondsToTicks(self.getTotalTime()),
                 })
             except RuntimeError:

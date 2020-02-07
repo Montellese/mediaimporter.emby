@@ -1,5 +1,6 @@
 [B]Version 0.0.6[/B]
 - fix playback stopped / ended callback handling
+- fix reporting of playback resume point when playback stopped 
 
 [B]Version 0.0.5[/B]
 - make Direct Play configurable
