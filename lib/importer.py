@@ -370,7 +370,7 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
     items = []
 
     viewUrl = url
-    viewUrl = Url.addOptions(viewUrl, { 'ParentId': viewId })
+    viewUrl = Url.addOptions(viewUrl, { emby.constants.URL_QUERY_ITEMS_PARENT_ID: viewId })
 
     # retrieve all items matching the current media type
     totalCount = 0
@@ -381,7 +381,7 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
 
         # put together a paged URL
         pagedUrlOptions = {
-            'StartIndex': startIndex
+            emby.constants.URL_QUERY_ITEMS_START_INDEX: startIndex
         }
         pagedUrl = Url.addOptions(viewUrl, pagedUrlOptions)
         resultObj = embyServer.ApiGet(pagedUrl)
@@ -617,10 +617,10 @@ def execImport(handle, options):
     # build the base URL to retrieve items
     baseUrl = embyServer.BuildUserUrl(emby.constants.URL_ITEMS)
     baseUrlOptions = {
-        'Recursive': 'true',
-        'Fields': ','.join(EMBY_ITEM_FIELDS),
-        'ExcludeLocationTypes': 'Virtual,Offline',
-        'Limit': ITEM_REQUEST_LIMIT
+        emby.constants.URL_QUERY_ITEMS_RECURSIVE: 'true',
+        emby.constants.URL_QUERY_ITEMS_FIELDS: ','.join(EMBY_ITEM_FIELDS),
+        emby.constants.URL_QUERY_ITEMS_EXCLUDE_LOCATION_TYPES: 'Virtual,Offline',
+        emby.constants.URL_QUERY_ITEMS_LIMIT: ITEM_REQUEST_LIMIT
     }
     baseUrl = Url.addOptions(baseUrl, baseUrlOptions)
 
@@ -660,12 +660,12 @@ def execImport(handle, options):
         xbmcmediaimport.setProgressStatus(handle, __addon__.getLocalizedString(32001).format(__addon__.getLocalizedString(localizedMediaType)))
 
         urlOptions = {
-            'IncludeItemTypes': embyMediaType
+            emby.constants.URL_QUERY_ITEMS_INCLUDE_ITEM_TYPES: embyMediaType
         }
         url = Url.addOptions(baseUrl, urlOptions)
 
         boxsetUrlOptions = {
-            'IncludeItemTypes': kodi.EMBY_MEDIATYPE_BOXSET
+            emby.constants.URL_QUERY_ITEMS_INCLUDE_ITEM_TYPES: kodi.EMBY_MEDIATYPE_BOXSET
         }
         boxsetUrl = Url.addOptions(baseUrl, boxsetUrlOptions)
 
