@@ -9,6 +9,7 @@
 from datetime import datetime
 from dateutil import parser
 import json
+from six.moves.urllib.parse import urlparse, urlunparse
 
 import xbmc
 from xbmcgui import ListItem
@@ -220,9 +221,14 @@ class Api:
                         log('cannot import item with ID {} because it doesn\'t support Direct Stream'.format(itemId), xbmc.LOGWARNING)
                         return None
 
-                    # handle direct play for directly accessible or HTTP items
-                    if allowDirectPlay and supportsDirectPlay and (protocol == PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL_HTTP or xbmcvfs.exists(itemPath)):
-                        return itemPath
+                    # handle Direct Play for directly accessible or HTTP items
+                    if allowDirectPlay and supportsDirectPlay:
+                        if protocol == PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL_HTTP or xbmcvfs.exists(itemPath):
+                            return itemPath
+
+                        mappedItemPath = Api._mapPath(itemPath, container=container)
+                        if xbmcvfs.exists(mappedItemPath):
+                            return mappedItemPath
 
                     # STRMs require Direct Play
                     if not allowDirectPlay and (container == 'strm' or itemPath.endswith('.strm')):
@@ -239,8 +245,13 @@ class Api:
                 return None
 
         # if we can access the direct path we can use Direct Play
-        if allowDirectPlay and xbmcvfs.exists(itemPath):
-            return itemPath
+        if allowDirectPlay:
+            if xbmcvfs.exists(itemPath):
+                return itemPath
+
+            mappedItemPath = Api._mapPath(itemPath)
+            if xbmcvfs.exists(mappedItemPath):
+                return mappedItemPath
 
         # fall back to Direct Stream
         return embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId, itemObj.get(PROPERTY_ITEM_CONTAINER))
@@ -392,6 +403,35 @@ class Api:
         item.setInfo('video', {
             'set': collectionName
         })
+
+    @staticmethod
+    def _mapPath(path, container=None):
+        if not path:
+            return ''
+
+        # turn UNC paths into Kodi-specific Samba paths
+        if path.startswith('\\\\'):
+            path = path.replace('\\\\', 'smb://', 1).replace('\\\\', '\\').replace('\\', '/')
+
+        # for DVDs and Blue-Ray try to directly access the main playback item
+        if container == 'dvd':
+            path = '{}/VIDEO_TS/VIDEO_TS.IFO'.format(path)
+        elif container == 'bluray':
+            path = '{}/BDMV/index.bdmv'.format(path)
+
+        # get rid of any double backslashes
+        path = path.replace('\\\\', '\\')
+
+        # make sure paths are consistent
+        if '\\' in path:
+            path.replace('/', '\\')
+
+        # Kodi expects protocols in lower case
+        pathParts = urlparse(path)
+        if pathParts.scheme:
+            path = urlunparse(pathParts._replace(scheme=pathParts.scheme.lower()))
+
+        return path
 
     @staticmethod
     def _mapArtwork(embyServer, itemId, itemObj):
