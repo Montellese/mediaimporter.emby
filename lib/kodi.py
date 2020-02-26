@@ -268,7 +268,7 @@ class Api:
             'title': item.getLabel() or '',
             'sorttitle': itemObj.get(PROPERTY_ITEM_SORT_NAME) or '',
             'originaltitle': itemObj.get(PROPERTY_ITEM_ORIGINAL_TITLE) or '',
-            'plot': itemObj.get(PROPERTY_ITEM_OVERVIEW) or '',
+            'plot': Api._mapOverview(itemObj.get(PROPERTY_ITEM_OVERVIEW) or ''),
             'plotoutline': itemObj.get(PROPERTY_ITEM_SHORT_OVERVIEW) or '',
             'dateadded': Api.convertDateTimeToDbDateTime(itemObj.get(PROPERTY_ITEM_DATE_CREATED) or ''),
             'year': itemObj.get(PROPERTY_ITEM_PRODUCTION_YEAR) or 0,
@@ -451,6 +451,16 @@ class Api:
             return Api.MAPPED_STUDIOS[studio]
 
         return studio
+
+    @staticmethod
+    def _mapOverview(overview):
+        if not overview:
+            return ''
+
+        return overview \
+            .replace('\n', '[CR]') \
+            .replace('\r', '') \
+            .replace('<br>', '[CR]')
 
     @staticmethod
     def _mapArtwork(embyServer, itemId, itemObj):
