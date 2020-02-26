@@ -114,3 +114,12 @@ class SynchronizationSettings:
             SynchronizationSettings.SaveHash(importSettings, newHash)
 
         return True
+
+    @staticmethod
+    def ResetHash(importSettings, save=True):
+        if not importSettings:
+            raise ValueError('invalid importSettings')
+
+        importSettings.setString(SETTING_IMPORT_SYNC_SETTINGS_HASH, '')
+        if save:
+            importSettings.save()

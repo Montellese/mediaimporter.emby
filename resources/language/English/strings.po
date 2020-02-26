@@ -148,6 +148,10 @@ msgctxt "#32041"
 msgid "Use Kodi Companion server plugin"
 msgstr ""
 
+msgctxt "#32042"
+msgid "Force full synchronization"
+msgstr ""
+
 #. Titel of the dialog to enter the base URI of the Emby server to lookup
 msgctxt "#32050"
 msgid "Emby server base URI"
@@ -161,6 +165,10 @@ msgstr ""
 #. Text of the notification when an Emby server is restarting
 msgctxt "#32052"
 msgid "{} is restarting."
+
+#. Text of the dialog asking the user if he really wants to force sync
+msgctxt "#32053"
+msgid "Do you really want to force a full synchronization?"
 msgstr ""
 
 #. Titel of the dialog to select the authentication method

@@ -311,6 +311,27 @@ def testAuthentication(handle, options):
         line = 32017
     xbmcgui.Dialog().ok(title, localise(line))
 
+def forceSync(handle, options):
+    # ask the user whether he is sure
+    force = xbmcgui.Dialog().yesno(localise(32042), localise(32053))
+    if not force:
+        return
+
+    # retrieve the media import
+    mediaImport = xbmcmediaimport.getImport(handle)
+    if not mediaImport:
+        log('cannot retrieve media import', xbmc.LOGERROR)
+        return
+
+    # prepare the media provider settings
+    importSettings = mediaImport.prepareSettings()
+    if not importSettings:
+        log('cannot prepare media import settings', xbmc.LOGERROR)
+        return
+
+    # reset the synchronization hash setting to force a full synchronization
+    SynchronizationSettings.ResetHash(importSettings, save=False)
+
 def settingOptionsFillerUsers(handle, options):
     # retrieve the media provider
     mediaProvider = xbmcmediaimport.getProvider(handle)
@@ -549,6 +570,8 @@ def loadImportSettings(handle, options):
     if not settings:
         log('cannot retrieve media import settings', xbmc.LOGERROR)
         return
+
+    settings.registerActionCallback(emby.constants.SETTING_IMPORT_FORCE_SYNC, 'forcesync')
 
     # register a setting options filler for the list of views
     settings.registerOptionsFillerCallback(emby.constants.SETTING_IMPORT_VIEWS_SPECIFIC, 'settingoptionsfillerviews')
@@ -871,6 +894,7 @@ ACTIONS = {
     # custom setting callbacks
     'linkembyconnect': linkEmbyConnect,
     'testauthentication': testAuthentication,
+    'forcesync': forceSync,
 
     # custom setting options fillers
     'settingoptionsfillerusers': settingOptionsFillerUsers,

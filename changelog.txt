@@ -5,6 +5,7 @@
 - fix exceptions / crashes when playing non-imported videos
 - support authentication with Emby Connect
 - support fast synchronization after a successful initial full synchronization
+- add an import-specific setting to force a full synchronization
 
 [B]Version 0.0.6[/B]
 - fix playback stopped / ended callback handling
