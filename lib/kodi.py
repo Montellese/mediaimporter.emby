@@ -314,7 +314,7 @@ class Api:
         embyStudios = itemObj.get(PROPERTY_ITEM_STUDIOS)
         if embyStudios:
             for studio in embyStudios:
-                studios.append(studio['Name'])
+                studios.append(Api._mapStudio(studio['Name']))
         info['studio'] = studios
 
         # handle tvshow, season and episode specific properties
@@ -432,6 +432,25 @@ class Api:
             path = urlunparse(pathParts._replace(scheme=pathParts.scheme.lower()))
 
         return path
+
+    # map the following studios for Kodi
+    MAPPED_STUDIOS = {
+        'abc (us)': 'ABC',
+        'fox (us)': 'FOX',
+        'mtv (us)': 'MTV',
+        'showcase (ca)': 'Showcase',
+        'wgn america': 'WGN',
+        'bravo (us)': 'Bravo',
+        'tnt (us)': 'TNT',
+        'comedy central': 'Comedy Central (US)'
+    }
+
+    @staticmethod
+    def _mapStudio(studio):
+        if studio in Api.MAPPED_STUDIOS:
+            return Api.MAPPED_STUDIOS[studio]
+
+        return studio
 
     @staticmethod
     def _mapArtwork(embyServer, itemId, itemObj):
