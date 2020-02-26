@@ -273,7 +273,7 @@ class Api:
             'dateadded': Api.convertDateTimeToDbDateTime(itemObj.get(PROPERTY_ITEM_DATE_CREATED) or ''),
             'year': itemObj.get(PROPERTY_ITEM_PRODUCTION_YEAR) or 0,
             'rating': itemObj.get(PROPERTY_ITEM_COMMUNITY_RATING) or 0.0,
-            'mpaa': itemObj.get(PROPERTY_ITEM_OFFICIAL_RATING) or '',
+            'mpaa': Api._mapMpaa(itemObj.get(PROPERTY_ITEM_OFFICIAL_RATING) or ''),
             'duration': Api.ticksToSeconds(itemObj.get(PROPERTY_ITEM_RUN_TIME_TICKS)),
             'playcount': userdata.get(PROPERTY_ITEM_USER_DATA_PLAY_COUNT) or 0,
             'lastplayed': Api.convertDateTimeToDbDateTime(userdata.get(PROPERTY_ITEM_USER_DATA_LAST_PLAYED_DATE) or ''),
@@ -461,6 +461,19 @@ class Api:
             .replace('\n', '[CR]') \
             .replace('\r', '') \
             .replace('<br>', '[CR]')
+
+    @staticmethod
+    def _mapMpaa(mpaa):
+        if not mpaa:
+            return ''
+
+        if mpaa in ('NR', 'UR'):
+            return 'Not Rated'
+
+        if 'FSK-' in mpaa:
+            mpaa = mpaa.replace('-', ' ')
+
+        return mpaa
 
     @staticmethod
     def _mapArtwork(embyServer, itemId, itemObj):
