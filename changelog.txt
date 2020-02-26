@@ -2,6 +2,7 @@
 - fix playback stopped / ended callback handling
 - fix reporting of playback resume point when playback stopped 
 - process UNC / DVD / Blu-Ray paths before passing them to Kodi
+- improve mapping of studios, overviews, MPAA and video / audio streams
 
 [B]Version 0.0.5[/B]
 - make Direct Play configurable

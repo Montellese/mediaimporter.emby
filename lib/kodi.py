@@ -382,6 +382,7 @@ class Api:
             elif type == 'Audio':
                 item.addStreamInfo('audio', Api._mapAudioStream({
                     'codec': stream.get(PROPERTY_ITEM_MEDIA_STREAM_CODEC, ''),
+                    'profile': stream.get(PROPERTY_ITEM_MEDIA_STREAM_PROFILE, ''),
                     'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
                     'channels': stream.get(PROPERTY_ITEM_MEDIA_STREAM_CHANNELS, 2)
                     }))
@@ -497,6 +498,16 @@ class Api:
             stream['stereomode'] = 'left_right'
         elif stream['stereomode'] in ('HalfTopAndBottom', 'FullTopAndBottom'):
             stream['stereomode'] = 'top_bottom'
+
+        return stream
+
+    @staticmethod
+    def _mapAudioStream(stream):
+        # fix some audio codecs
+        if 'dts-hd ma' in stream['profile']:
+            stream['codec'] = 'dtshd_ma'
+        elif 'dts-hd hra' in stream['profile']:
+            stream['codec'] = 'dtshd_hra'
 
         return stream
 
