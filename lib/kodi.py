@@ -371,9 +371,12 @@ class Api:
             if type == 'Video':
                 item.addStreamInfo('video', Api._mapVideoStream({
                     'codec': stream.get(PROPERTY_ITEM_MEDIA_STREAM_CODEC, ''),
+                    'profile': stream.get(PROPERTY_ITEM_MEDIA_STREAM_PROFILE, ''),
                     'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
                     'width': stream.get(PROPERTY_ITEM_MEDIA_STREAM_WIDTH, 0),
                     'height': stream.get(PROPERTY_ITEM_MEDIA_STREAM_HEIGHT, 0),
+                    'aspect': stream.get(PROPERTY_ITEM_MEDIA_STREAM_ASPECT_RATIO, '0'),
+                    'stereomode': stream.get(PROPERTY_ITEM_MEDIA_STREAM_VIDEO_3D_FORMAT, 'mono'),
                     'duration': info['duration']
                     }))
             elif type == 'Audio':
@@ -468,6 +471,34 @@ class Api:
             mpaa = mpaa.replace('-', ' ')
 
         return mpaa
+
+    @staticmethod
+    def _mapVideoStream(stream, container=None):
+        # fix some video codecs
+        if 'msmpeg4' in stream['codec']:
+            stream['codec'] = 'divx'
+        elif 'mpeg4' in stream['codec']:
+            if not stream['profile'] or 'simple profile' in stream['profile']:
+                stream['codec'] = 'xvid'
+        elif 'h264' in stream['codec']:
+            if container in ('mp4', 'mov', 'm4v'):
+                stream['codec'] = 'avc1'
+
+        # try to calculate the aspect ratio
+        try:
+            width, height = stream['aspect'].split(':')
+            stream['aspect'] = round(float(width) / float(height), 6)
+        except (ValueError, ZeroDivisionError):
+            if stream['width'] and stream['height']:
+                stream['aspect'] = round(float(stream['width']) / float(stream['height']), 6)
+
+        # map stereoscopic modes
+        if stream['stereomode'] in ('HalfSideBySide', 'FullSideBySide'):
+            stream['stereomode'] = 'left_right'
+        elif stream['stereomode'] in ('HalfTopAndBottom', 'FullTopAndBottom'):
+            stream['stereomode'] = 'top_bottom'
+
+        return stream
 
     @staticmethod
     def _mapArtwork(embyServer, itemId, itemObj):
