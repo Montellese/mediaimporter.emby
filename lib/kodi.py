@@ -263,27 +263,27 @@ class Api:
             userdata = itemObj[PROPERTY_ITEM_USER_DATA]
         info = {
             'mediatype': mediaType,
-            'path': itemObj.get(PROPERTY_ITEM_PATH) or '',
+            'path': itemObj.get(PROPERTY_ITEM_PATH, ''),
             'filenameandpath': item.getPath(),
             'title': item.getLabel() or '',
-            'sorttitle': itemObj.get(PROPERTY_ITEM_SORT_NAME) or '',
-            'originaltitle': itemObj.get(PROPERTY_ITEM_ORIGINAL_TITLE) or '',
-            'plot': Api._mapOverview(itemObj.get(PROPERTY_ITEM_OVERVIEW) or ''),
-            'plotoutline': itemObj.get(PROPERTY_ITEM_SHORT_OVERVIEW) or '',
-            'dateadded': Api.convertDateTimeToDbDateTime(itemObj.get(PROPERTY_ITEM_DATE_CREATED) or ''),
-            'year': itemObj.get(PROPERTY_ITEM_PRODUCTION_YEAR) or 0,
-            'rating': itemObj.get(PROPERTY_ITEM_COMMUNITY_RATING) or 0.0,
-            'mpaa': Api._mapMpaa(itemObj.get(PROPERTY_ITEM_OFFICIAL_RATING) or ''),
-            'duration': Api.ticksToSeconds(itemObj.get(PROPERTY_ITEM_RUN_TIME_TICKS)),
-            'playcount': userdata.get(PROPERTY_ITEM_USER_DATA_PLAY_COUNT) or 0,
-            'lastplayed': Api.convertDateTimeToDbDateTime(userdata.get(PROPERTY_ITEM_USER_DATA_LAST_PLAYED_DATE) or ''),
+            'sorttitle': itemObj.get(PROPERTY_ITEM_SORT_NAME, ''),
+            'originaltitle': itemObj.get(PROPERTY_ITEM_ORIGINAL_TITLE, ''),
+            'plot': Api._mapOverview(itemObj.get(PROPERTY_ITEM_OVERVIEW, '')),
+            'plotoutline': itemObj.get(PROPERTY_ITEM_SHORT_OVERVIEW, ''),
+            'dateadded': Api.convertDateTimeToDbDateTime(itemObj.get(PROPERTY_ITEM_DATE_CREATED, '')),
+            'year': itemObj.get(PROPERTY_ITEM_PRODUCTION_YEAR, 0),
+            'rating': itemObj.get(PROPERTY_ITEM_COMMUNITY_RATING, 0.0),
+            'mpaa': Api._mapMpaa(itemObj.get(PROPERTY_ITEM_OFFICIAL_RATING, '')),
+            'duration': Api.ticksToSeconds(itemObj.get(PROPERTY_ITEM_RUN_TIME_TICKS, 0)),
+            'playcount': userdata.get(PROPERTY_ITEM_USER_DATA_PLAY_COUNT, 0),
+            'lastplayed': Api.convertDateTimeToDbDateTime(userdata.get(PROPERTY_ITEM_USER_DATA_LAST_PLAYED_DATE, '')),
             'director': [],
             'writer': [],
-            'artist': itemObj.get(PROPERTY_ITEM_ARTISTS) or [],
-            'album': itemObj.get(PROPERTY_ITEM_ALBUM) or '',
-            'genre': itemObj.get(PROPERTY_ITEM_GENRES) or [],
-            'country': itemObj.get(PROPERTY_ITEM_PRODUCTION_LOCATIONS) or [],
-            'tag': itemObj.get(PROPERTY_ITEM_TAGS) or []
+            'artist': itemObj.get(PROPERTY_ITEM_ARTISTS, []),
+            'album': itemObj.get(PROPERTY_ITEM_ALBUM, ''),
+            'genre': itemObj.get(PROPERTY_ITEM_GENRES, []),
+            'country': itemObj.get(PROPERTY_ITEM_PRODUCTION_LOCATIONS, []),
+            'tag': itemObj.get(PROPERTY_ITEM_TAGS, []),
         }
 
         # add the library view as a tag
@@ -304,26 +304,24 @@ class Api:
 
         # handle taglines
         tagline = ''
-        embyTaglines = itemObj.get(PROPERTY_ITEM_TAGLINES)
+        embyTaglines = itemObj.get(PROPERTY_ITEM_TAGLINES, [])
         if embyTaglines:
             tagline = embyTaglines[0]
         info['tagline'] = tagline
 
         # handle studios
         studios = []
-        embyStudios = itemObj.get(PROPERTY_ITEM_STUDIOS)
-        if embyStudios:
-            for studio in embyStudios:
-                studios.append(Api._mapStudio(studio['Name']))
+        for studio in itemObj.get(PROPERTY_ITEM_STUDIOS, []):
+            studios.append(Api._mapStudio(studio['Name']))
         info['studio'] = studios
 
         # handle tvshow, season and episode specific properties
         if mediaType == xbmcmediaimport.MediaTypeTvShow:
             info['tvshowtitle'] = item.getLabel()
-            info['status'] = itemObj.get(PROPERTY_ITEM_STATUS) or ''
+            info['status'] = itemObj.get(PROPERTY_ITEM_STATUS, '')
         elif mediaType == xbmcmediaimport.MediaTypeSeason or mediaType == xbmcmediaimport.MediaTypeEpisode:
-            info['tvshowtitle'] = itemObj.get(PROPERTY_ITEM_SERIES_NAME) or ''
-            index = itemObj.get(PROPERTY_ITEM_INDEX_NUMBER) or 0
+            info['tvshowtitle'] = itemObj.get(PROPERTY_ITEM_SERIES_NAME, '')
+            index = itemObj.get(PROPERTY_ITEM_INDEX_NUMBER, 0)
             if mediaType == xbmcmediaimport.MediaTypeSeason:
                 info['season'] = index
 
@@ -332,32 +330,30 @@ class Api:
                 # abusing sorttitle for custom season titles
                 del info['sorttitle']
             else:
-                info['season'] = itemObj.get(PROPERTY_ITEM_PARENT_INDEX_NUMBER) or 0
+                info['season'] = itemObj.get(PROPERTY_ITEM_PARENT_INDEX_NUMBER, 0)
                 info['episode'] = index
 
         # handle actors / cast
         cast = []
-        people = itemObj.get(PROPERTY_ITEM_PEOPLE)
-        if people:
-            for index, person in enumerate(people):
-                name = person.get(PROPERTY_ITEM_PEOPLE_NAME)
-                type = person.get(PROPERTY_ITEM_PEOPLE_TYPE)
-                if type == PROPERTY_ITEM_PEOPLE_TYPE_ACTOR:
-                    cast.append({
-                        'name': name,
-                        'role': person.get(PROPERTY_ITEM_PEOPLE_ROLE),
-                        'order': index
-                    })
-                elif type == PROPERTY_ITEM_PEOPLE_TYPE_WRITER:
-                    info['writer'].append(name)
-                elif type == PROPERTY_ITEM_PEOPLE_TYPE_DIRECTOR:
-                    info['director'].append(name)
+        for index, person in enumerate(itemObj.get(PROPERTY_ITEM_PEOPLE, [])):
+            name = person.get(PROPERTY_ITEM_PEOPLE_NAME, '')
+            type = person.get(PROPERTY_ITEM_PEOPLE_TYPE, '')
+            if type == PROPERTY_ITEM_PEOPLE_TYPE_ACTOR:
+                cast.append({
+                    'name': name,
+                    'role': person.get(PROPERTY_ITEM_PEOPLE_ROLE, ''),
+                    'order': index
+                })
+            elif type == PROPERTY_ITEM_PEOPLE_TYPE_WRITER:
+                info['writer'].append(name)
+            elif type == PROPERTY_ITEM_PEOPLE_TYPE_DIRECTOR:
+                info['director'].append(name)
 
         item.setInfo('video', info)
         item.setCast(cast)
 
         # handle unique / provider IDs
-        uniqueIds = itemObj.get(PROPERTY_ITEM_PROVIDER_IDS) or {}
+        uniqueIds = itemObj.get(PROPERTY_ITEM_PROVIDER_IDS, {})
         # add the item's ID as a unique ID belonging to Emby
         uniqueIds[EMBY_PROTOCOL] = itemId
         item.getVideoInfoTag().setUniqueIDs(uniqueIds, EMBY_PROTOCOL)
@@ -365,33 +361,31 @@ class Api:
         # handle resume point
         resumePoint = {
             'totaltime': info['duration'],
-            'resumetime': Api.ticksToSeconds(userdata.get(PROPERTY_ITEM_USER_DATA_PLAYBACK_POSITION_TICKS))
+            'resumetime': Api.ticksToSeconds(userdata.get(PROPERTY_ITEM_USER_DATA_PLAYBACK_POSITION_TICKS, 0))
         }
         item.setProperties(resumePoint)
 
         # stream details
-        mediaStreams = itemObj.get(PROPERTY_ITEM_MEDIA_STREAMS)
-        if mediaStreams:
-            for stream in mediaStreams:
-                type = stream.get(PROPERTY_ITEM_MEDIA_STREAM_TYPE)
-                if type == 'Video':
-                    item.addStreamInfo('video', {
-                        'codec': stream.get(PROPERTY_ITEM_MEDIA_STREAM_CODEC),
-                        'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE),
-                        'width': stream.get(PROPERTY_ITEM_MEDIA_STREAM_WIDTH),
-                        'height': stream.get(PROPERTY_ITEM_MEDIA_STREAM_HEIGHT),
-                        'duration': info['duration']
-                        })
-                elif type == 'Audio':
-                    item.addStreamInfo('audio', {
-                        'codec': stream.get(PROPERTY_ITEM_MEDIA_STREAM_CODEC),
-                        'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE),
-                        'channels': stream.get(PROPERTY_ITEM_MEDIA_STREAM_CHANNELS)
-                        })
-                elif type == 'Subtitle':
-                    item.addStreamInfo('subtitle', {
-                        'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE)
-                        })
+        for stream in itemObj.get(PROPERTY_ITEM_MEDIA_STREAMS, []):
+            type = stream.get(PROPERTY_ITEM_MEDIA_STREAM_TYPE, '')
+            if type == 'Video':
+                item.addStreamInfo('video', Api._mapVideoStream({
+                    'codec': stream.get(PROPERTY_ITEM_MEDIA_STREAM_CODEC, ''),
+                    'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
+                    'width': stream.get(PROPERTY_ITEM_MEDIA_STREAM_WIDTH, 0),
+                    'height': stream.get(PROPERTY_ITEM_MEDIA_STREAM_HEIGHT, 0),
+                    'duration': info['duration']
+                    }))
+            elif type == 'Audio':
+                item.addStreamInfo('audio', Api._mapAudioStream({
+                    'codec': stream.get(PROPERTY_ITEM_MEDIA_STREAM_CODEC, ''),
+                    'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
+                    'channels': stream.get(PROPERTY_ITEM_MEDIA_STREAM_CHANNELS, 2)
+                    }))
+            elif type == 'Subtitle':
+                item.addStreamInfo('subtitle', {
+                    'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, '')
+                    })
 
     @staticmethod
     def setCollection(item, collectionName):
