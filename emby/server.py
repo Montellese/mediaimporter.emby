@@ -55,25 +55,13 @@ class Server:
         return self._authenticator.UserId()
 
     def ApiGet(self, url):
-        if not self._authenticate():
-            return False
-
-        headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
-        return Request.GetAsJson(url, headers=headers)
+        return self._request(url, lambda url, headers: Request.GetAsJson(url, headers=headers))
 
     def ApiPost(self, url, data=None, json=None):
-        if not self._authenticate():
-            return False
-
-        headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
-        return Request.PostAsJson(url, headers=headers, body=data, json=json)
+        return self._request(url, lambda url, headers, data, json: Request.PostAsJson(url, headers=headers, body=data, json=json), data, json)
 
     def ApiDelete(self, url):
-        if not self._authenticate():
-            return False
-
-        headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
-        return Request.Delete(url, headers=headers)
+        return self._request(url, lambda url, headers: Request.Delete(url, headers=headers))
 
     def BuildUrl(self, endpoint):
         if not endpoint:
@@ -269,6 +257,13 @@ class Server:
             raise ValueError('Invalid baseUrl')
 
         return Url.append(baseUrl, 'web', 'touchicon144.png')
+
+    def _request(self, url, function, *args):
+        if not self._authenticate():
+            return False
+
+        headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
+        return function(url, headers, *args)
 
     def _authenticate(self):
         if not self.Authenticate():
