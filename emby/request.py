@@ -172,4 +172,12 @@ class Request:
         if not url:
             raise ValueError('invalid url')
 
-        log('{} {} ({}): {}'.format(method, url, header, body), xbmc.LOGDEBUG)
+        redactedBody = None
+        if body and isinstance(body, dict):
+            redactedBody = body.copy()
+            # redact the body in case it contains a password
+            for key in redactedBody:
+                if key in (constants.PROPERTY_USER_AUTHENTICATION_PASSWORD):
+                    redactedBody[key] = '****'
+
+        log('{} {} ({}): {}'.format(method, url, header, redactedBody), xbmc.LOGDEBUG)
