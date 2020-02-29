@@ -61,12 +61,12 @@ class Server:
         headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
         return Request.GetAsJson(url, headers=headers)
 
-    def ApiPost(self, url, data={}):
+    def ApiPost(self, url, data=None, json=None):
         if not self._authenticate():
             return False
 
         headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
-        return Request.PostAsJson(url, headers=headers, body=data)
+        return Request.PostAsJson(url, headers=headers, body=data, json=json)
 
     def ApiDelete(self, url):
         if not self._authenticate():

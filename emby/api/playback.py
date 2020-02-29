@@ -19,7 +19,7 @@ class PlaybackCheckin:
             raise ValueError('invalid embyServer')
 
         url = embyServer.BuildSessionsPlayingUrl()
-        embyServer.ApiPost(url, data)
+        embyServer.ApiPost(url, json=data)
 
     @staticmethod
     def PlaybackProgress(embyServer, data):
@@ -27,7 +27,7 @@ class PlaybackCheckin:
             raise ValueError('invalid embyServer')
 
         url = embyServer.BuildSessionsPlayingProgressUrl()
-        embyServer.ApiPost(url, data)
+        embyServer.ApiPost(url, json=data)
 
     @staticmethod
     def StopPlayback(embyServer, data):
@@ -35,4 +35,4 @@ class PlaybackCheckin:
             raise ValueError('invalid embyServer')
 
         url = embyServer.BuildSessionsPlayingStoppedUrl()
-        embyServer.ApiPost(url, data)
+        embyServer.ApiPost(url, json=data)

@@ -111,4 +111,4 @@ class UserData:
             'PlaybackPositionTicks': playbackPositionInTicks
         }
 
-        embyServer.ApiPost(url, body)
+        embyServer.ApiPost(url, json=body)

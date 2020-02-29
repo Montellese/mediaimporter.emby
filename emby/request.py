@@ -61,13 +61,13 @@ class Request:
         return Request._handleRequestAsJson(result, 'GET')
 
     @staticmethod
-    def Post(url, headers={}, body={}, timeout=None):
-        result = Request._post(url, headers=headers, body=body, timeout=timeout)
+    def Post(url, headers={}, body=None, json=None, timeout=None):
+        result = Request._post(url, headers=headers, body=body, json=json, timeout=timeout)
         return Request._handleRequestAsContent(result, 'POST')
 
     @staticmethod
-    def PostAsJson(url, headers={}, body={}, timeout=None):
-        result = Request._post(url, headers=headers, body=body, timeout=timeout)
+    def PostAsJson(url, headers={}, body=None, json=None, timeout=None):
+        result = Request._post(url, headers=headers, body=body, json=json, timeout=timeout)
         return Request._handleRequestAsJson(result, 'POST')
 
     @staticmethod
@@ -91,10 +91,13 @@ class Request:
         return None
 
     @staticmethod
-    def _post(url, headers={}, body={}, timeout=None):
-        Request._logRequest('POST', url, headers, body)
+    def _post(url, headers={}, body=None, json=None, timeout=None):
+        if body and json:
+            raise ValueError('body and json can\'t be combined')
+
+        Request._logRequest('POST', url, headers, body or json)
         try:
-            return requests.post(url, headers=headers, timeout=timeout, data=body, verify=False)
+            return requests.post(url, headers=headers, timeout=timeout, data=body, json=json, verify=False)
         except requests.exceptions.RequestException as err:
             log('error retrieving response from POST {}: {}'.format(url, err.message), xbmc.LOGERROR)
 

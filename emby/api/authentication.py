@@ -6,8 +6,6 @@
 #  See LICENSES/README.md for more information.
 #
 
-import json
-
 from emby import constants
 from emby.request import Request
 
@@ -49,9 +47,8 @@ class Authentication:
 
         headers = Request.PrepareApiCallHeaders(deviceId=deviceId, userId=userId)
         headers['Content-Type'] = constants.EMBY_CONTENT_TYPE
-        content = json.dumps(body)
 
-        resultObj = Request.PostAsJson(authUrl, headers=headers, body=content, timeout=Authentication.REQUEST_TIMEOUT_S)
+        resultObj = Request.PostAsJson(authUrl, headers=headers, json=body, timeout=Authentication.REQUEST_TIMEOUT_S)
         if not resultObj:
             return (False, None, None)
 
