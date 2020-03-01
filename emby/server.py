@@ -256,7 +256,7 @@ class Server:
         if not baseUrl:
             raise ValueError('Invalid baseUrl')
 
-        return Url.append(baseUrl, 'web', 'touchicon144.png')
+        return Url.append(baseUrl, constants.EMBY_PROTOCOL, 'web', 'touchicon144.png')
 
     def _request(self, url, function, *args):
         if not self._authenticate():
