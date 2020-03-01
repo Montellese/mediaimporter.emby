@@ -9,7 +9,10 @@
 from datetime import datetime
 from dateutil import parser
 import json
-from six.moves.urllib.parse import urlparse, urlunparse
+import os
+from six.moves.urllib.request import urlretrieve
+from six.moves.urllib.parse import urlencode, urlparse, urlunparse
+import urllib
 
 import xbmc
 from xbmcgui import ListItem
@@ -17,8 +20,9 @@ import xbmcmediaimport
 import xbmcvfs
 
 from emby.constants import *
+from emby.server import Server
 
-from lib.utils import log
+from lib.utils import __addon__, log, mediaProvider2str
 
 # mapping of Kodi and Emby media types
 EMBY_MEDIATYPE_BOXSET = 'BoxSet'
@@ -401,6 +405,62 @@ class Api:
         item.setInfo('video', {
             'set': collectionName
         })
+
+    @staticmethod
+    def downloadIcon(mediaProvider):
+        if not mediaProvider:
+            raise ValueError('invalid mediaProvider')
+
+        try:
+            basePath = xbmc.translatePath(__addon__.getAddonInfo('profile')).decode('utf-8')
+        except AttributeError:
+            basePath = xbmc.translatePath(__addon__.getAddonInfo('profile'))
+
+        # determine the icon's URL on the media provider
+        iconUrl = Server.BuildIconUrl(mediaProvider.getBasePath())
+
+        # make sure the addon data directory exists
+        if not xbmcvfs.exists(basePath):
+            if not Api._makeDir(basePath):
+                log('failed to create addon data directory at {}'.format(basePath), xbmc.LOGWARNING)
+                return iconUrl
+
+        # generate the icon's local path
+        serverId = Server.GetServerId(mediaProvider.getIdentifier())
+        iconPath = os.path.join(basePath, '{}.png'.format(serverId))
+
+        # try to download the icon (since Emby's webserver doesn't support HEAD requests)
+        try:
+            urlretrieve(iconUrl, iconPath)
+        except IOError as err:
+                log('failed to download icon for {} from {}: {}'.format(mediaProvider2str(mediaProvider), iconUrl, err), xbmc.LOGWARNING)
+                return iconUrl
+
+        return iconPath
+
+    @staticmethod
+    def _makeDir(path):
+        # make sure the path ends with a slash
+        path = os.path.join(path, '')
+
+        path = xbmc.translatePath(path)
+        if xbmcvfs.exists(path):
+            return True
+
+        try:
+            _ = xbmcvfs.mkdirs(path)
+        except:
+            pass
+
+        if xbmcvfs.exists(path):
+            return True
+
+        try:
+            os.makedirs(path)
+        except:
+            pass
+
+        return xbmcvfs.exists(path)
 
     @staticmethod
     def _mapPath(path, container=None):
