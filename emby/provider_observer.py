@@ -314,7 +314,7 @@ class ProviderObserver:
             self._server = Server(self._mediaProvider)
 
             # authenticate with the Emby server
-            authenticated = self._server.Authenticate()
+            authenticated = self._server.Authenticate(force=True)
         except:
             authenticated = False
 

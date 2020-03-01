@@ -19,6 +19,9 @@ from lib.utils import log
 # set this to True to get debug logs for calls to the Emby API
 EMBY_API_DEBUG_ENABLED = True  # TODO(Montellese)
 
+class NotAuthenticatedError(Exception):
+    pass
+
 class Request:
     _initialized = False
     _device = 'Kodi'
@@ -115,12 +118,15 @@ class Request:
 
     @staticmethod
     def _handleRequest(result, requestType):
-        if not result:
-            raise ValueError('invalid result')
+        if not isinstance(result, requests.Response):
+            raise ValueError('invalid result: {}'.format(result))
         if not requestType:
             raise ValueError('invalid requestType')
 
         if not result.ok:
+            if result.status_code == 401:
+                raise NotAuthenticatedError()
+
             log('failed to retrieve response from {} {}: HTTP {}'.format(requestType, result.url, result.status_code), xbmc.LOGERROR)
             return None
 
@@ -128,8 +134,8 @@ class Request:
 
     @staticmethod
     def _handleRequestAsContent(result, requestType):
-        if not result:
-            raise ValueError('invalid result')
+        if not isinstance(result, requests.Response):
+            raise ValueError('invalid result: {}'.format(result))
         if not requestType:
             raise ValueError('invalid requestType')
 
@@ -140,8 +146,8 @@ class Request:
 
     @staticmethod
     def _handleRequestAsJson(result, requestType):
-        if not result:
-            raise ValueError('invalid result')
+        if not isinstance(result, requests.Response):
+            raise ValueError('invalid result: {}'.format(result))
         if not requestType:
             raise ValueError('invalid requestType')
 

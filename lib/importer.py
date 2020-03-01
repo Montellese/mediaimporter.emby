@@ -108,7 +108,7 @@ def testAuthentication(handle, options):
     log('testing authentication with {}...'.format(mediaProvider2str(mediaProvider)))
     success = False
     try:
-        success = Server(mediaProvider).Authenticate()
+        success = Server(mediaProvider).Authenticate(force=True)
     except:
         pass
 
@@ -154,9 +154,6 @@ def settingOptionsFillerViews(handle, options):
         return
 
     embyServer = Server(mediaProvider)
-    if not embyServer.Authenticate():
-        log('failed to authenticate on media provider {}'.format(mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
-        return
 
     libraryViews = Library.GetViews(embyServer, mediaImport.getMediaTypes())
     views = []
@@ -284,11 +281,10 @@ def isProviderReady(handle, options):
         return
 
     # check if authentication works with the current provider settings
-    providerReady = False
     try:
-        providerReady = Server(mediaProvider).Authenticate()
+        providerReady = Server(mediaProvider).Authenticate(force=True)
     except:
-        pass
+        providerReady = False
 
     xbmcmediaimport.setProviderReady(handle, providerReady)
 
@@ -315,21 +311,16 @@ def isImportReady(handle, options):
         log('cannot prepare media provider settings', xbmc.LOGERROR)
         return
 
-    embyServer = None
     try:
         embyServer = Server(mediaProvider)
     except:
         return
 
-    importReady = False
-    # check if authentication works with the current provider settings
-    if embyServer.Authenticate():
-        # check if the chosen library views exist
-        selectedViews = getLibraryViewsFromSettings(importSettings)
-        matchingViews = getMatchingLibraryViews(embyServer, mediaImport.getMediaTypes(), selectedViews)
-        importReady = len(matchingViews) > 0
+    # check if the chosen library views exist
+    selectedViews = getLibraryViewsFromSettings(importSettings)
+    matchingViews = getMatchingLibraryViews(embyServer, mediaImport.getMediaTypes(), selectedViews)
 
-    xbmcmediaimport.setImportReady(handle, importReady)
+    xbmcmediaimport.setImportReady(handle, len(matchingViews) > 0)
 
 def loadProviderSettings(handle, options):
     # retrieve the media provider
@@ -422,9 +413,6 @@ def execImport(handle, options):
 
     # create an Emby server instance
     embyServer = Server(mediaProvider)
-    if not embyServer.Authenticate():
-        log('failed to authenticate on media provider {}'.format(mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
-        return
 
     # build the base URL to retrieve items
     baseUrl = embyServer.BuildUserUrl(emby.constants.URL_ITEMS)
@@ -563,9 +551,6 @@ def updateOnProvider(handle, options):
 
     # create an Emby server instance
     embyServer = Server(mediaProvider)
-    if not embyServer.Authenticate():
-        log('failed to authenticate on media provider {}'.format(mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
-        return
 
     # retrieve all details of the item
     itemObj = Library.GetItem(embyServer, itemId)

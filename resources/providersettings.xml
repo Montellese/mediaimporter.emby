@@ -52,6 +52,14 @@
           </dependencies>
           <control type="button" format="action" />
         </setting>
+        <setting id="emby.token" type="string">
+          <visible>false</visible>
+          <level>4</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+        </setting>
         <setting id="emby.deviceid" type="string">
           <visible>false</visible>
           <level>4</level>

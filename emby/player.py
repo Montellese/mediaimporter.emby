@@ -183,7 +183,7 @@ class Player(xbmc.Player):
         except:
             pass
 
-        if not self._server or not self._server.Authenticate():
+        if not self._server or not self._server.Authenticate(force=True):
             Player.log('cannot connect to media provider {} to report playback progress of "{}" ({})' \
                 .format(mediaProvider2str(self._mediaProvider), self._item.getLabel(), self._file), xbmc.LOGWARNING)
             self._reset()

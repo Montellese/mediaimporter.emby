@@ -12,7 +12,7 @@ import xbmc
 
 from emby import constants
 from emby.authenticator import Authenticator
-from emby.request import Request
+from emby.request import NotAuthenticatedError, Request
 
 from lib.utils import log, splitall, Url
 
@@ -25,22 +25,23 @@ class Server:
         self._url = Url.append(self._baseUrl, constants.EMBY_PROTOCOL)
         self._id = provider.getIdentifier()
 
-        settings = provider.getSettings()
-        if not settings:
+        self._settings = provider.getSettings()
+        if not self._settings:
             raise ValueError('Invalid provider without settings')
 
-        self._devideId = settings.getString(constants.SETTING_PROVIDER_DEVICEID)
+        self._devideId = self._settings.getString(constants.SETTING_PROVIDER_DEVICEID)
 
-        userId = settings.getString(constants.SETTING_PROVIDER_USER)
-        username = settings.getString(constants.SETTING_PROVIDER_USERNAME)
-        password = settings.getString(constants.SETTING_PROVIDER_PASSWORD)
+        userId = self._settings.getString(constants.SETTING_PROVIDER_USER)
+        username = self._settings.getString(constants.SETTING_PROVIDER_USERNAME)
+        password = self._settings.getString(constants.SETTING_PROVIDER_PASSWORD)
+        token = self._settings.getString(constants.SETTING_PROVIDER_TOKEN)
         if userId == constants.SETTING_PROVIDER_USER_OPTION_MANUAL:
-            self._authenticator = Authenticator.WithUsername(self._url, self._devideId, username, password)
+            self._authenticator = Authenticator.WithUsername(self._url, self._devideId, username, password, token)
         else:
-            self._authenticator = Authenticator.WithUserId(self._url, self._devideId, userId, password)
+            self._authenticator = Authenticator.WithUserId(self._url, self._devideId, userId, password, token)
 
-    def Authenticate(self):
-        return self._authenticator.IsAuthenticated() or self._authenticator.Authenticate()
+    def Authenticate(self, force=False):
+        return self._authenticate(force=force)
 
     def Url(self):
         return self._baseUrl
@@ -73,7 +74,8 @@ class Server:
     def BuildUserUrl(self, endpoint):
         if not endpoint:
             raise ValueError('Invalid endpoint')
-        self._assertAuthentication()
+        if not self._authenticate():
+            raise RuntimeError('media provider {} has not yet been authenticated'.format(self._id))
 
         url = self._url
         userId = self.UserId()
@@ -266,19 +268,27 @@ class Server:
         return Url.append(baseUrl, constants.EMBY_PROTOCOL, 'web', 'touchicon144.png')
 
     def _request(self, url, function, *args):
-        if not self._authenticate():
-            return False
-
         headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
-        return function(url, headers, *args)
+        try:
+            return function(url, headers, *args)
+        except NotAuthenticatedError:
+            # try to authenticate
+            if not self._authenticate(force=True):
+                return False
 
-    def _authenticate(self):
-        if not self.Authenticate():
+            # retrieve the headers again because the access token has changed
+            headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
+
+            # execute the actual request again
+            return function(url, headers, *args)
+
+    def _authenticate(self, force=False):
+        if not self._authenticator.Authenticate(force=force):
             log('user authentication failed on media provider {}'.format(self._id))
             return False
 
-        return True
+        # update the access token in the settings
+        self._settings.setString(constants.SETTING_PROVIDER_TOKEN, self.AccessToken())
+        self._settings.save()
 
-    def _assertAuthentication(self):
-        if not self._authenticator.IsAuthenticated():
-            raise RuntimeError('media provider {} has not yet been authenticated'.format(self._id))
+        return True
