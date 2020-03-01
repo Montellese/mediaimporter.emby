@@ -230,6 +230,7 @@ def discoverProvider(handle, options):
     providerId = Server.BuildProviderId(serverInfo.id)
     providerIconUrl = Server.BuildIconUrl(baseUrl)
     mediaProvider = xbmcmediaimport.MediaProvider(providerId, baseUrl, serverInfo.name, providerIconUrl, emby.constants.SUPPORTED_MEDIA_TYPES)
+    mediaProvider.setIconUrl(kodi.Api.downloadIcon(mediaProvider))
 
     log('Emby server {} successfully discovered at {}'.format(mediaProvider2str(mediaProvider), baseUrl))
 

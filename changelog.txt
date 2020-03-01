@@ -4,6 +4,7 @@
 - process UNC / DVD / Blu-Ray paths before passing them to Kodi
 - improve mapping of studios, overviews, MPAA and video / audio streams
 - redact HTTP request bodies that might contain a password
+- download the server's icon to avoid unsupported HTTP HEAD requests
 
 [B]Version 0.0.5[/B]
 - make Direct Play configurable
