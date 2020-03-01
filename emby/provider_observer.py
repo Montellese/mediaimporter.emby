@@ -12,6 +12,7 @@ from six.moves.urllib.parse import urlparse, urlunparse
 import websocket
 
 import xbmc
+import xbmcgui
 import xbmcmediaimport
 
 from emby.api.library import Library
@@ -19,7 +20,7 @@ from emby.constants import *
 from emby.server import Server
 
 from lib import kodi
-from lib.utils import log, mediaImport2str, mediaProvider2str, Url
+from lib.utils import localise, log, mediaImport2str, mediaProvider2str, Url
 
 class ProviderObserver:
     class Action:
@@ -141,6 +142,8 @@ class ProviderObserver:
             self._ProcessMessageLibraryChanged(data)
         elif messageType == WS_MESSAGE_TYPE_USER_DATA_CHANGED:
             self._ProcessMessageUserDataChanged(data)
+        elif messageType in (WS_MESSAGE_TYPE_SERVER_SHUTTING_DOWN, WS_MESSAGE_TYPE_SERVER_RESTARTING):
+            self._ProcessMessageServer(messageType, data)
         else:
             ProviderObserver.log('ignoring "{}" message from {}'.format(messageType, mediaProvider2str(self._mediaProvider)), xbmc.LOGDEBUG)
 
@@ -226,6 +229,19 @@ class ProviderObserver:
 
         self._ChangeItems(changedItems)
 
+    def _ProcessMessageServer(self, messageType, data):
+        if not self._settings.getBool(SETTING_PROVIDER_INTERFACE_SHOW_SERVER_MESSAGES):
+            return
+
+        if messageType == WS_MESSAGE_TYPE_SERVER_SHUTTING_DOWN:
+            message = 32051
+        elif messageType == WS_MESSAGE_TYPE_SERVER_RESTARTING:
+            message = 32052
+        else:
+            return
+
+        xbmcgui.Dialog().notification('Emby Media Importer', localise(message).format(self._mediaProvider.getFriendlyName()), self._mediaProvider.getIconUrl())
+
     def _ChangeItems(self, changedItems):
          # map the changed items to their media import
         changedItemsMap = {}
@@ -280,6 +296,9 @@ class ProviderObserver:
         # if we are already connected check if something important changed in the media provider
         if self._connected:
             if kodi.Api.compareMediaProviders(self._mediaProvider, mediaProvider):
+                # update the media provider and settings anyway
+                self._mediaProvider = mediaProvider
+                self._settings = self._mediaProvider.prepareSettings()
                 return True
 
         self._StopAction(restart=True)

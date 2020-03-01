@@ -55,6 +55,8 @@ WS_MESSAGE_TYPE = 'MessageType'
 WS_DATA = 'Data'
 WS_MESSAGE_TYPE_LIBRARY_CHANGED = 'LibraryChanged'
 WS_MESSAGE_TYPE_USER_DATA_CHANGED = 'UserDataChanged'
+WS_MESSAGE_TYPE_SERVER_SHUTTING_DOWN = 'ServerShuttingDown'
+WS_MESSAGE_TYPE_SERVER_RESTARTING = 'ServerRestarting'
 WS_LIBRARY_CHANGED_ITEMS_ADDED = 'ItemsAdded'
 WS_LIBRARY_CHANGED_ITEMS_UPDATED = 'ItemsUpdated'
 WS_LIBRARY_CHANGED_ITEMS_REMOVED = 'ItemsRemoved'
@@ -185,6 +187,8 @@ SETTING_PROVIDER_DEVICEID = 'emby.deviceid'
 
 SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY = 'emby.allowdirectplay'
 SETTING_PROVIDER_PLAYBACK_ENABLE_EXTERNAL_SUBTITLES = 'emby.enableexternalsubtitles'
+
+SETTING_PROVIDER_INTERFACE_SHOW_SERVER_MESSAGES = 'emby.showservermessages'
 
 # media import setting identifiers and values
 SETTING_IMPORT_VIEWS = 'emby.importviews'

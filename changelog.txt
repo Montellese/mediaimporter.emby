@@ -5,6 +5,7 @@
 - improve mapping of studios, overviews, MPAA and video / audio streams
 - redact HTTP request bodies that might contain a password
 - download the server's icon to avoid unsupported HTTP HEAD requests
+- support displaying server messages as notifications
 
 [B]Version 0.0.5[/B]
 - make Direct Play configurable

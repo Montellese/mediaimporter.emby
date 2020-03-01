@@ -116,7 +116,25 @@ msgctxt "#32032"
 msgid "Enable external subtitles"
 msgstr ""
 
+msgctxt "#32033"
+msgid "Interface"
+msgstr ""
+
+msgctxt "#32034"
+msgid "Show server messages as notifications"
+msgstr ""
+
 #. Titel of the dialog to enter the base URI of the Emby server to lookup
 msgctxt "#32050"
 msgid "Emby server base URI"
+msgstr ""
+
+#. Text of the notification when an Emby server is shutting down
+msgctxt "#32051"
+msgid "{} is shutting down."
+msgstr ""
+
+#. Text of the notification when an Emby server is restarting
+msgctxt "#32052"
+msgid "{} is restarting."
 msgstr ""

@@ -76,5 +76,14 @@
         </setting>
       </group>
     </category>
+    <category id="interface" label="32033">
+      <group id="1">
+        <setting id="emby.showservermessages" type="boolean" label="32034">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle" />
+        </setting>
+      </group>
+    </category>
   </section>
 </settings>
