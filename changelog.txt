@@ -1,5 +1,5 @@
 [B]Version 0.0.7[/B]
--
+- convert all unique ID keys to lowercase
 
 [B]Version 0.0.6[/B]
 - fix playback stopped / ended callback handling

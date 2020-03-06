@@ -10,6 +10,7 @@ from datetime import datetime
 from dateutil import parser
 import json
 import os
+from six import iteritems
 from six.moves.urllib.request import urlretrieve
 from six.moves.urllib.parse import urlencode, urlparse, urlunparse
 import urllib
@@ -357,7 +358,7 @@ class Api:
         item.setCast(cast)
 
         # handle unique / provider IDs
-        uniqueIds = itemObj.get(PROPERTY_ITEM_PROVIDER_IDS, {})
+        uniqueIds = { key.lower(): value for key, value in iteritems(itemObj.get(PROPERTY_ITEM_PROVIDER_IDS, {})) }
         # add the item's ID as a unique ID belonging to Emby
         uniqueIds[EMBY_PROTOCOL] = itemId
         item.getVideoInfoTag().setUniqueIDs(uniqueIds, EMBY_PROTOCOL)
