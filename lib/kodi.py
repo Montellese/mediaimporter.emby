@@ -23,7 +23,7 @@ import xbmcvfs
 from emby.constants import *
 from emby.server import Server
 
-from lib.utils import __addon__, log, mediaProvider2str
+from lib.utils import __addon__, log, mediaProvider2str, Url
 
 # mapping of Kodi and Emby media types
 EMBY_MEDIATYPE_BOXSET = 'BoxSet'
@@ -447,7 +447,7 @@ class Api:
     @staticmethod
     def _makeDir(path):
         # make sure the path ends with a slash
-        path = os.path.join(path, '')
+        path = Url.addTrailingSlash(path)
 
         path = xbmc.translatePath(path)
         if xbmcvfs.exists(path):

@@ -109,3 +109,10 @@ class Url:
         urlQuery.update(options)
         urlParts[4] = urlencode(urlQuery)
         return urlunparse(urlParts)
+
+    @staticmethod
+    def addTrailingSlash(url):
+        if not url:
+            raise ValueError('invalid url')
+
+        return os.path.join(url, '')
