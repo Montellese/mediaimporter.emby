@@ -205,9 +205,6 @@ class Api:
     @staticmethod
     def getPlaybackUrl(embyServer, itemId, itemObj, allowDirectPlay=True):
         isFolder = itemObj.get(PROPERTY_ITEM_IS_FOLDER)
-        if isFolder:
-            return embyServer.BuildItemUrl(itemId)
-
         itemPath = None
         if PROPERTY_ITEM_MEDIA_SOURCES in itemObj:
             mediaSources = itemObj.get(PROPERTY_ITEM_MEDIA_SOURCES)
@@ -246,8 +243,15 @@ class Api:
             # get the direct path
             itemPath = itemObj.get(PROPERTY_ITEM_PATH)
             if not itemPath:
+                if isFolder:
+                    return embyServer.BuildItemUrl(itemId)
+
                 log('cannot import item with ID {} because it doesn\'t have a proper path'.format(itemId), xbmc.LOGWARNING)
                 return None
+
+        if isFolder:
+            # make sure folders have a trailing slash
+            itemPath = Url.addTrailingSlash(itemPath)
 
         # if we can access the direct path we can use Direct Play
         if allowDirectPlay:
@@ -257,6 +261,9 @@ class Api:
             mappedItemPath = Api._mapPath(itemPath)
             if xbmcvfs.exists(mappedItemPath):
                 return mappedItemPath
+
+        if isFolder:
+            return embyServer.BuildItemUrl(itemId)
 
         # fall back to Direct Stream
         return embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId, itemObj.get(PROPERTY_ITEM_CONTAINER))
