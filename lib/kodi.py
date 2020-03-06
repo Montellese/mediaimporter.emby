@@ -363,6 +363,11 @@ class Api:
         uniqueIds[EMBY_PROTOCOL] = itemId
         item.getVideoInfoTag().setUniqueIDs(uniqueIds, EMBY_PROTOCOL)
 
+        # handle critic rating as rotten tomato rating
+        if PROPERTY_ITEM_CRITIC_RATING in itemObj:
+            criticRating = float(itemObj.get(PROPERTY_ITEM_CRITIC_RATING)) / 10.0
+            item.setRating('tomatometerallcritics', criticRating)
+
         # handle resume point
         resumePoint = {
             'totaltime': info['duration'],

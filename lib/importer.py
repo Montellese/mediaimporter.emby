@@ -42,6 +42,7 @@ EMBY_ITEM_FIELDS = [
     emby.constants.PROPERTY_ITEM_COMMUNITY_RATING,
     emby.constants.PROPERTY_ITEM_VOTE_COUNT,
     emby.constants.PROPERTY_ITEM_OFFICIAL_RATING,
+    emby.constants.PROPERTY_ITEM_CRITIC_RATING,
     emby.constants.PROPERTY_ITEM_OVERVIEW,
     emby.constants.PROPERTY_ITEM_SHORT_OVERVIEW,
     emby.constants.PROPERTY_ITEM_TAGLINES,
