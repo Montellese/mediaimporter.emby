@@ -46,18 +46,18 @@ class Player(xbmc.Player):
             raise ValueError('invalid mediaProvider')
 
         with self._lock:
+            if not mediaProvider.getIdentifier() in self._providers:
+                Player.log('{} added'.format(mediaProvider2str(mediaProvider)))
             self._providers[mediaProvider.getIdentifier()] = mediaProvider
-
-        Player.log('{} added'.format(mediaProvider2str(mediaProvider)))
 
     def RemoveProvider(self, mediaProvider):
         if not mediaProvider:
             raise ValueError('invalid mediaProvider')
 
         with self._lock:
+            if mediaProvider.getIdentifier() in self._providers:
+                Player.log('{} removed'.format(mediaProvider2str(mediaProvider)))
             del self._providers[mediaProvider.getIdentifier()]
-
-        Player.log('{} removed'.format(mediaProvider2str(mediaProvider)))
 
     def Process(self):
         with self._lock:
