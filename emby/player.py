@@ -129,32 +129,39 @@ class Player(xbmc.Player):
 
     def _startPlayback(self):
         if not self._file:
+            self._reset()
             return
 
         if not self.isPlayingVideo():
+            self._reset()
             return
 
         self._item = self.getPlayingItem()
         if not self._item:
+            self._reset()
             return
 
         # check if the item has been imported from a media provider
         mediaProviderId = self._item.getMediaProviderId()
         if not mediaProviderId:
+            self._reset()
             return
 
         if not mediaProviderId in self._providers:
             Player.log('currently playing item {} ({}) has been imported from an unknown media provider {}' \
                 .format(self._item.getLabel(), self._file, mediaProviderId), xbmc.LOGWARNING)
+            self._reset()
             return
         self._mediaProvider = self._providers[mediaProviderId]
 
         videoInfoTag = self.getVideoInfoTag()
         if not videoInfoTag:
+            self._reset()
             return
 
         self._itemId = kodi.Api.getEmbyItemIdFromVideoInfoTag(videoInfoTag)
         if not self._itemId:
+            self._reset()
             return
 
         settings = self._mediaProvider.prepareSettings()
@@ -230,7 +237,7 @@ class Player(xbmc.Player):
             self._lastPlaybackPosition = self.getTime()
         except RuntimeError:
             # if that fails update it based on the time passed since the last progress report
-            if not self._paused:
+            if not self._paused and self._lastProgressReport:
                 Player.log('guessing the playback position for "{}" ({})'.format(self._item.getLabel(), self._file), xbmc.LOGDEBUG)
                 self._lastPlaybackPosition += time.time() - self._lastProgressReport
 
