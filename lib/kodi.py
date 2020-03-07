@@ -20,6 +20,7 @@ from xbmcgui import ListItem
 import xbmcmediaimport
 import xbmcvfs
 
+from emby.api.library import Library
 from emby.constants import *
 from emby.server import Server
 
@@ -193,7 +194,8 @@ class Api:
             item.setDateTime(premiereDate)
 
         # fill video details
-        Api.fillVideoInfos(itemId, itemObj, mediaType, item, libraryView=libraryView)
+        Api.fillVideoInfos(embyServer, itemId, itemObj, mediaType, item, \
+            libraryView=libraryView, allowDirectPlay=allowDirectPlay)
 
         # handle artwork
         artwork = Api._mapArtwork(embyServer, itemId, itemObj)
@@ -269,7 +271,7 @@ class Api:
         return embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId, itemObj.get(PROPERTY_ITEM_CONTAINER))
 
     @staticmethod
-    def fillVideoInfos(itemId, itemObj, mediaType, item, libraryView=''):
+    def fillVideoInfos(embyServer, itemId, itemObj, mediaType, item, libraryView='', allowDirectPlay=True):
         userdata = {}
         if PROPERTY_ITEM_USER_DATA in itemObj:
             userdata = itemObj[PROPERTY_ITEM_USER_DATA]
@@ -313,6 +315,12 @@ class Api:
                 info['aired'] = date
             else:
                 info['premiered'] = date
+
+        # handle trailers
+        trailerUrl = Api.getTrailer(embyServer, itemId, itemObj, allowDirectPlay=allowDirectPlay)
+        if trailerUrl:
+            log('importing trailer at {} for {}'.format(trailerUrl, item.getLabel()))
+            info['trailer'] = trailerUrl
 
         # handle taglines
         tagline = ''
@@ -407,6 +415,26 @@ class Api:
                 item.addStreamInfo('subtitle', {
                     'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, '')
                     })
+
+    @staticmethod
+    def getTrailer(embyServer, itemId, itemObj, allowDirectPlay=True):
+        # prefer local trailers if direct play is allowed
+        if allowDirectPlay and itemObj.get(PROPERTY_ITEM_LOCAL_TRAILER_COUNT, 0):
+            localTrailers = Library.GetLocalTrailers(embyServer, itemId)
+            if not localTrailers:
+                log('failed to retrieve local trailers for item with ID {}'.format(itemId))
+            else:
+                localTrailerUrl = Api.getPlaybackUrl(embyServer, itemId, localTrailers[0], allowDirectPlay=allowDirectPlay)
+                if localTrailerUrl:
+                    return localTrailerUrl
+
+        # otherwise use the first remote trailer
+        if PROPERTY_ITEM_REMOTE_TRAILERS in itemObj:
+            remoteTrailers = itemObj.get(PROPERTY_ITEM_REMOTE_TRAILERS)
+            if remoteTrailers:
+                return remoteTrailers[0].get(PROPERTY_ITEM_REMOTE_TRAILERS_URL, None)
+
+        return None
 
     @staticmethod
     def setCollection(item, collectionName):

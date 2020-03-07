@@ -214,6 +214,13 @@ class Server:
 
         return url
 
+    def BuildLocalTrailersUrl(self, itemId):
+        if not itemId:
+            raise ValueError('Invalid itemId')
+
+        url = self.BuildUserItemUrl(itemId)
+        return Url.append(url, constants.URL_LOCAL_TRAILERS)
+
     def BuildSessionsPlayingUrl(self):
         url = self._url
         return Url.append(url, constants.URL_SESSIONS, constants.URL_SESSIONS_PLAYING)

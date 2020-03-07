@@ -75,3 +75,13 @@ class Library:
 
         itemUrl = embyServer.BuildUserItemUrl(itemId)
         return embyServer.ApiGet(itemUrl)
+
+    @staticmethod
+    def GetLocalTrailers(embyServer, itemId):
+        if not embyServer:
+            raise ValueError('invalid embyServer')
+        if not itemId:
+            raise ValueError('invalid itemId')
+
+        localTrailersUrl = embyServer.BuildLocalTrailersUrl(itemId)
+        return embyServer.ApiGet(localTrailersUrl)

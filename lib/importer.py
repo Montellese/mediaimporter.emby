@@ -45,6 +45,8 @@ EMBY_ITEM_FIELDS = [
     emby.constants.PROPERTY_ITEM_CRITIC_RATING,
     emby.constants.PROPERTY_ITEM_OVERVIEW,
     emby.constants.PROPERTY_ITEM_SHORT_OVERVIEW,
+    emby.constants.PROPERTY_ITEM_LOCAL_TRAILER_COUNT,
+    emby.constants.PROPERTY_ITEM_REMOTE_TRAILERS,
     emby.constants.PROPERTY_ITEM_TAGLINES,
     emby.constants.PROPERTY_ITEM_GENRES,
     emby.constants.PROPERTY_ITEM_STUDIOS,
