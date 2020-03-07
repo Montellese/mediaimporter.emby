@@ -89,9 +89,6 @@ class Player(xbmc.Player):
 
     def onPlayBackSeekChapter(self, chapter):
         with self._lock:
-            if not self._item:
-                return
-
             if self._reportPlaybackProgress():
                 Player.log('playback seek chapter for "{}" ({}) on {} reported'.format(self._item.getLabel(), self._file, mediaProvider2str(self._mediaProvider)))
 
