@@ -319,7 +319,6 @@ class Api:
         # handle trailers
         trailerUrl = Api.getTrailer(embyServer, itemId, itemObj, allowDirectPlay=allowDirectPlay)
         if trailerUrl:
-            log('importing trailer at {} for {}'.format(trailerUrl, item.getLabel()))
             info['trailer'] = trailerUrl
 
         # handle taglines
