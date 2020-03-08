@@ -3,12 +3,33 @@
   <section id="emby" label="32010">
     <category id="access" label="32011">
       <group id="1">
+        <setting id="emby.authentication" type="string" label="32035">
+          <level>0</level>
+          <default>local</default>
+          <constraints>
+            <options>
+              <option label="32036">local</option>
+              <option label="32037">embyconnect</option>
+            </options>
+          </constraints>
+          <control type="list" format="string" />
+        </setting>
+        <setting id="emby.linkembyconnect" type="action" label="32038">
+          <level>0</level>
+          <dependencies>
+            <dependency type="visible" on="setting" setting="emby.authentication" operator="is">embyconnect</dependency>
+          </dependencies>
+          <control type="button" format="action" />
+        </setting>
         <setting id="emby.user" type="string" label="32012">
           <level>0</level>
           <default>manual</default>
           <constraints>
             <allowempty>true</allowempty>
           </constraints>
+          <dependencies>
+            <dependency type="visible" on="setting" setting="emby.authentication" operator="is">local</dependency>
+          </dependencies>
           <control type="list" format="string" />
         </setting>
         <setting id="emby.username" type="string" label="32013">
@@ -18,7 +39,12 @@
             <allowempty>true</allowempty>
           </constraints>
           <dependencies>
-            <dependency type="visible" setting="emby.user" operator="is">manual</dependency>
+            <dependency type="visible">
+              <and>
+                <condition on="setting" setting="emby.authentication" operator="is">local</condition>
+                <condition on="setting" setting="emby.user" operator="is">manual</condition>
+              </and>
+            </dependency>
           </dependencies>
           <control type="edit" format="string" />
         </setting>
@@ -29,6 +55,7 @@
             <allowempty>true</allowempty>
           </constraints>
           <dependencies>
+            <dependency type="visible" on="setting" setting="emby.authentication" operator="is">local</dependency>
             <dependency type="enable">
               <or>
                 <condition on="setting" setting="emby.user" operator="!is">manual</condition>
@@ -45,12 +72,38 @@
           <dependencies>
             <dependency type="enable">
               <or>
-                <condition on="setting" setting="emby.user" operator="!is">manual</condition>
-                <condition on="setting" setting="emby.username" operator="!is"></condition>
+                <and>
+                  <condition on="setting" setting="emby.authentication" operator="is">embyconnect</condition>
+                  <condition on="setting" setting="emby.connectuserid" operator="!is"></condition>
+                  <condition on="setting" setting="emby.connectaccesskey" operator="!is"></condition>
+                </and>
+                <and>
+                  <condition on="setting" setting="emby.authentication" operator="is">local</condition>
+                  <or>
+                    <condition on="setting" setting="emby.user" operator="!is">manual</condition>
+                    <condition on="setting" setting="emby.username" operator="!is"></condition>
+                  </or>
+                </and>
               </or>
             </dependency>
           </dependencies>
           <control type="button" format="action" />
+        </setting>
+        <setting id="emby.connectuserid" type="string">
+          <visible>false</visible>
+          <level>4</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+        </setting>
+        <setting id="emby.connectaccesskey" type="string">
+          <visible>false</visible>
+          <level>4</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
         </setting>
         <setting id="emby.token" type="string">
           <visible>false</visible>

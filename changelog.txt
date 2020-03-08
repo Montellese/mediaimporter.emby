@@ -3,6 +3,7 @@
 - import critic rating as tomatometerallcritics
 - import local or remote trailer
 - fix exceptions / crashes when playing non-imported videos
+- support authentication with Emby Connect
 
 [B]Version 0.0.6[/B]
 - fix playback stopped / ended callback handling

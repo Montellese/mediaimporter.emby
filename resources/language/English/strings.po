@@ -124,6 +124,22 @@ msgctxt "#32034"
 msgid "Show server messages as notifications"
 msgstr ""
 
+msgctxt "#32035"
+msgid "Authentication"
+msgstr ""
+
+msgctxt "#32036"
+msgid "Local"
+msgstr ""
+
+msgctxt "#32037"
+msgid "Emby Connect"
+msgstr ""
+
+msgctxt "#32038"
+msgid "Link to Emby Connect"
+msgstr ""
+
 #. Titel of the dialog to enter the base URI of the Emby server to lookup
 msgctxt "#32050"
 msgid "Emby server base URI"
@@ -137,4 +153,45 @@ msgstr ""
 #. Text of the notification when an Emby server is restarting
 msgctxt "#32052"
 msgid "{} is restarting."
+msgstr ""
+
+#. Titel of the dialog to select the authentication method
+msgctxt "#32053"
+msgid "Emby Server authentication method"
+msgstr ""
+
+msgctxt "#32054"
+msgid "Failed to retrieve PIN to link to Emby Connect!"
+msgstr ""
+
+msgctxt "#32055"
+msgid "Visit [COLOR FF52B54B]https://emby.media/pin[/COLOR] and enter the following PIN:"
+msgstr ""
+
+msgctxt "#32056"
+msgid "Linking to Emby Connect has expired!"
+msgstr ""
+
+msgctxt "#32057"
+msgid "Choose an Emby server"
+msgstr ""
+
+msgctxt "#32058"
+msgid "Emby server access"
+msgstr ""
+
+msgctxt "#32059"
+msgid "Is the Emby server \"{}\" accessible on the local network?"
+msgstr ""
+
+msgctxt "#32060"
+msgid "Failed to connect to Emby server \"{}\"."
+msgstr ""
+
+msgctxt "#32061"
+msgid "Linking to Emby Connect failed!"
+msgstr ""
+
+msgctxt "#32062"
+msgid "Successfully linked to Emby Connect."
 msgstr ""

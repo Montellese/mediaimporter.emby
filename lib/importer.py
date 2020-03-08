@@ -13,6 +13,7 @@ import posixpath
 import sys
 from six import iteritems
 from six.moves.urllib.parse import parse_qs, unquote, urlparse
+import time
 import uuid
 
 import xbmc
@@ -22,6 +23,7 @@ from xbmcgui import ListItem
 import xbmcmediaimport
 
 import emby
+from emby.api.embyconnect import EmbyConnect
 from emby.api.library import Library
 from emby.api.user import User
 from emby.api.userdata import UserData
@@ -97,6 +99,204 @@ def getMatchingLibraryViews(embyServer, mediaTypes, selectedViews):
         matchingLibraryViews = [ libraryView for libraryView in libraryViews if libraryView.id in selectedViews ]
 
     return matchingLibraryViews
+
+def discoverProviderLocally(handle, options):
+    baseUrl = xbmcgui.Dialog().input(localise(32050), 'http://')
+    if not baseUrl:
+        return None
+
+    log('trying to discover an Emby server at {}...'.format(baseUrl))
+    try:
+        serverInfo = emby.api.server.Server.GetInfo(baseUrl)
+        if not serverInfo:
+            return None
+    except:
+        return None
+
+    providerId = Server.BuildProviderId(serverInfo.id)
+    providerIconUrl = Server.BuildIconUrl(baseUrl)
+    provider = xbmcmediaimport.MediaProvider(providerId, baseUrl, serverInfo.name, providerIconUrl, emby.constants.SUPPORTED_MEDIA_TYPES)
+    provider.setIconUrl(kodi.Api.downloadIcon(provider))
+
+    # store local authentication in settings
+    providerSettings = provider.prepareSettings()
+    if not providerSettings:
+        return None
+
+    providerSettings.setString(emby.constants.SETTING_PROVIDER_AUTHENTICATION, emby.constants.SETTING_PROVIDER_AUTHENTICATION_OPTION_LOCAL)
+    providerSettings.save()
+
+    log('Local Emby server {} successfully discovered at {}'.format(mediaProvider2str(provider), baseUrl))
+
+    return provider
+
+def linkToEmbyConnect(deviceId):
+    dialog = xbmcgui.Dialog()
+
+    pinLogin = EmbyConnect.PinLogin(deviceId=deviceId)
+    if not pinLogin.pin:
+        dialog.ok(localise(32038), localise(32054))
+        log('failed to get PIN to link to Emby Connect', xbmc.LOGWARNING)
+        return None
+
+    # show the user the pin
+    dialog.ok(localise(32038), localise(32055), '[COLOR FF52B54B]{}[/COLOR]'.format(pinLogin.pin))
+
+    # check the status of the authentication
+    while not pinLogin.finished:
+        if pinLogin.checkLogin():
+            break
+
+        time.sleep(0.25)
+
+    if pinLogin.expired:
+        dialog.ok(localise(32038), localise(32056))
+        log('linking to Emby Connect has expiried', xbmc.LOGWARNING)
+        return None
+
+    authResult = pinLogin.exchange()
+    if not authResult:
+        log('no valid access token received from the linked Emby Connect account', xbmc.LOGWARNING)
+        return None
+
+    return authResult
+
+def linkEmbyConnect(handle, options):
+    # retrieve the media provider
+    mediaProvider = xbmcmediaimport.getProvider(handle)
+    if not mediaProvider:
+        log('cannot retrieve media provider', xbmc.LOGERROR)
+        return
+
+    # get the media provider settings
+    providerSettings = mediaProvider.prepareSettings()
+    if not providerSettings:
+        return
+
+    # make sure we have a valid device ID
+    deviceId = providerSettings.getString(emby.constants.SETTING_PROVIDER_DEVICEID)
+    if not deviceId:
+        deviceId = Request.GenerateDeviceId()
+        providerSettings.setString(emby.constants.SETTING_PROVIDER_DEVICEID, deviceId)
+
+    embyConnect = linkToEmbyConnect(deviceId)
+    if not embyConnect:
+        return None
+
+    # make sure the configured Emby server is still accessible
+    serverUrl = mediaProvider.getBasePath()
+    matchingServer = None
+    serverId = Server.GetServerId(mediaProvider.getIdentifier())
+
+    # get all connected servers
+    servers = EmbyConnect.GetServers(embyConnect.accessToken, embyConnect.userId)
+    if not servers:
+        log('no servers available for Emby Connect user id {}'.format(embyConnect.userId), xbmc.LOGWARNING)
+        return None
+
+    for server in servers:
+        if server.systemId == serverId:
+            matchingServer = server
+            break
+
+    if not matchingServer:
+        log('no Emby server matching {} found'.format(serverUrl), xbmc.LOGWARNING)
+        xbmcgui.Dialog().ok(localise(32038), localise(32061))
+        return
+
+    # change the settings
+    providerSettings.setString(emby.constants.SETTING_PROVIDER_EMBY_CONNECT_USER_ID, embyConnect.userId)
+    providerSettings.setString(emby.constants.SETTING_PROVIDER_EMBY_CONNECT_ACCESS_KEY, server.accessKey)
+
+    success = False
+    try:
+        success = Server(mediaProvider).Authenticate(force=True)
+    except:
+        pass
+
+    if success:
+        xbmcgui.Dialog().ok(localise(32038), localise(32062))
+        log('successfully linked to Emby Connect server {} ({}) {}'.format(server.name, serverId, serverUrl))
+    else:
+        xbmcgui.Dialog().ok(localise(32038), localise(32061))
+        log('failed to link to Emby Connect server {} ({}) {}'.format(server.name, serverId, serverUrl), xbmc.LOGWARNING)
+
+
+def discoverProviderWithEmbyConnect(handle, options):
+    deviceId = Request.GenerateDeviceId()
+
+    embyConnect = linkToEmbyConnect(deviceId)
+    if not embyConnect:
+        return None
+
+    dialog = xbmcgui.Dialog()
+
+    # get all connected servers
+    servers = EmbyConnect.GetServers(embyConnect.accessToken, embyConnect.userId)
+    if not servers:
+        log('no servers available for Emby Connect user id {}'.format(embyConnect.userId), xbmc.LOGWARNING)
+        return None
+
+    if len(servers) == 1:
+        server = servers[0]
+    else:
+        # ask the user which server to use
+        serverChoices = [ server.name for server in servers ]
+        serverChoice = dialog.select(localise(32057), serverChoices)
+        if serverChoice < 0 or serverChoice >= len(serverChoices):
+            return None
+
+        server = server[serverChoice]
+
+    if not server:
+        return None
+
+    urls = []
+    if server.localUrl:
+        # ask the user whether to use a local or remote connection
+        isLocal = dialog.yesno(localise(32058), localise(32059).format(server.name))
+        if isLocal:
+            urls.append(server.localUrl)
+
+    if server.remoteUrl:
+        urls.append(server.remoteUrl)
+
+    baseUrl = None
+    # find a working connection / base URL
+    for url in urls:
+        try:
+            _ = emby.api.server.Server.GetInfo(url)
+        except:
+            log('failed to connect to "{}" at {}'.format(server.name, url), xbmc.LOGDEBUG)
+            continue
+
+        baseUrl = url
+        break
+
+    if not baseUrl:
+        dialog.ok(localise(32058), localise(32060).format(server.name))
+        log('failed to connect to Emby server "{}" with Emby Connect user ID {}'.format(server.name, embyConnect.userId), xbmc.LOGWARNING)
+        return None
+
+    providerId = Server.BuildProviderId(server.systemId)
+    providerIconUrl = Server.BuildIconUrl(baseUrl)
+    provider = xbmcmediaimport.MediaProvider(providerId, baseUrl, server.name, providerIconUrl, emby.constants.SUPPORTED_MEDIA_TYPES)
+    provider.setIconUrl(kodi.Api.downloadIcon(provider))
+
+    # store Emby connect authentication in settings
+    providerSettings = provider.prepareSettings()
+    if not providerSettings:
+        return None
+
+    providerSettings.setString(emby.constants.SETTING_PROVIDER_AUTHENTICATION, emby.constants.SETTING_PROVIDER_AUTHENTICATION_OPTION_EMBY_CONNECT)
+    providerSettings.setString(emby.constants.SETTING_PROVIDER_EMBY_CONNECT_USER_ID, embyConnect.userId)
+    providerSettings.setString(emby.constants.SETTING_PROVIDER_EMBY_CONNECT_ACCESS_KEY, server.accessKey)
+    providerSettings.setString(emby.constants.SETTING_PROVIDER_DEVICEID, deviceId)
+    providerSettings.save()
+
+    log('Emby Connect server {} successfully discovered at {}'.format(mediaProvider2str(provider), baseUrl))
+
+    return provider
 
 def testAuthentication(handle, options):
     # retrieve the media provider
@@ -215,26 +415,25 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
     return items
 
 def discoverProvider(handle, options):
-    baseUrl = xbmcgui.Dialog().input(localise(32050), 'http://')
-    if not baseUrl:
+    dialog = xbmcgui.Dialog()
+
+    authenticationChoices = [
+        localise(32036),  # local
+        localise(32037)   # Emby Connect
+    ]
+    authenticationChoice = dialog.select(localise(32053), authenticationChoices)
+
+    if authenticationChoice == 0:  # local
+        provider = discoverProviderLocally(handle, options)
+    elif authenticationChoice == 1:  # Emby Connect
+        provider = discoverProviderWithEmbyConnect(handle, options)
+    else:
         return
 
-    log('trying to discover an Emby server at {}...'.format(baseUrl))
-    try:
-        serverInfo = emby.api.server.Server.GetInfo(baseUrl)
-        if not serverInfo:
-            return
-    except:
+    if not provider:
         return
 
-    providerId = Server.BuildProviderId(serverInfo.id)
-    providerIconUrl = Server.BuildIconUrl(baseUrl)
-    mediaProvider = xbmcmediaimport.MediaProvider(providerId, baseUrl, serverInfo.name, providerIconUrl, emby.constants.SUPPORTED_MEDIA_TYPES)
-    mediaProvider.setIconUrl(kodi.Api.downloadIcon(mediaProvider))
-
-    log('Emby server {} successfully discovered at {}'.format(mediaProvider2str(mediaProvider), baseUrl))
-
-    xbmcmediaimport.setDiscoveredProvider(handle, True, mediaProvider)
+    xbmcmediaimport.setDiscoveredProvider(handle, True, provider)
 
 def lookupProvider(handle, options):
     # retrieve the media provider
@@ -338,6 +537,7 @@ def loadProviderSettings(handle, options):
     if not settings.getString(emby.constants.SETTING_PROVIDER_DEVICEID):
         settings.setString(emby.constants.SETTING_PROVIDER_DEVICEID, str(uuid.uuid4()))
 
+    settings.registerActionCallback(emby.constants.SETTING_PROVIDER_LINK_EMBY_CONNECT, 'linkembyconnect')
     settings.registerActionCallback(emby.constants.SETTING_PROVIDER_TEST_AUTHENTICATION, 'testauthentication')
 
     # register a setting options filler for the list of users
@@ -618,6 +818,7 @@ ACTIONS = {
     'updateonprovider': updateOnProvider,
 
     # custom setting callbacks
+    'linkembyconnect': linkEmbyConnect,
     'testauthentication': testAuthentication,
 
     # custom setting options fillers

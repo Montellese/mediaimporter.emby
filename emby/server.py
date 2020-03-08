@@ -31,14 +31,24 @@ class Server:
 
         self._devideId = self._settings.getString(constants.SETTING_PROVIDER_DEVICEID)
 
-        userId = self._settings.getString(constants.SETTING_PROVIDER_USER)
-        username = self._settings.getString(constants.SETTING_PROVIDER_USERNAME)
-        password = self._settings.getString(constants.SETTING_PROVIDER_PASSWORD)
         token = self._settings.getString(constants.SETTING_PROVIDER_TOKEN)
-        if userId == constants.SETTING_PROVIDER_USER_OPTION_MANUAL:
-            self._authenticator = AuthenticatorFactory.WithUsername(self._url, self._devideId, username, password, token)
+        authMethod = self._settings.getString(constants.SETTING_PROVIDER_AUTHENTICATION)
+
+        if authMethod == constants.SETTING_PROVIDER_AUTHENTICATION_OPTION_LOCAL:
+            userId = self._settings.getString(constants.SETTING_PROVIDER_USER)
+            password = self._settings.getString(constants.SETTING_PROVIDER_PASSWORD)
+
+            if userId == constants.SETTING_PROVIDER_USER_OPTION_MANUAL:
+                username = self._settings.getString(constants.SETTING_PROVIDER_USERNAME)
+                self._authenticator = AuthenticatorFactory.WithUsername(self._url, self._devideId, username, password, token=token)
+            else:
+                self._authenticator = AuthenticatorFactory.WithUserId(self._url, self._devideId, userId, password, token=token)
+        elif authMethod == constants.SETTING_PROVIDER_AUTHENTICATION_OPTION_EMBY_CONNECT:
+            userId = self._settings.getString(constants.SETTING_PROVIDER_EMBY_CONNECT_USER_ID)
+            accessKey = self._settings.getString(constants.SETTING_PROVIDER_EMBY_CONNECT_ACCESS_KEY)
+            self._authenticator = AuthenticatorFactory.WithEmbyConnect(self._baseUrl, self._devideId, userId, accessKey, token=token)
         else:
-            self._authenticator = AuthenticatorFactory.WithUserId(self._url, self._devideId, userId, password, token)
+            raise ValueError('invalid authentication method: {}'.format(authMethod))
 
     def Authenticate(self, force=False):
         return self._authenticate(force=force)
