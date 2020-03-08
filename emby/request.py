@@ -28,6 +28,10 @@ class Request:
     _version = ''
 
     @staticmethod
+    def GenerateDeviceId():
+        return str(uuid.uuid4())
+
+    @staticmethod
     def PrepareApiCallHeaders(authToken='', deviceId='', userId=''):
         if not Request._initialized:
             Request._device = xbmc.getInfoLabel('System.FriendlyName')
@@ -42,7 +46,7 @@ class Request:
             headers[constants.EMBY_API_KEY_HEADER] = authToken
 
         if not deviceId:
-            deviceId = str(uuid.uuid4())
+            deviceId = Request.GenerateDeviceId()
 
         embyAuthorizationHeader = \
             'MediaBrowser Client="{}", Device="{}", DeviceId="{}", Version="{}"'.format( \
