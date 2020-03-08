@@ -11,7 +11,7 @@ from six.moves.urllib.parse import urlparse
 import xbmc
 
 from emby import constants
-from emby.authenticator import Authenticator
+from emby.authenticator import AuthenticatorFactory
 from emby.request import NotAuthenticatedError, Request
 
 from lib.utils import log, splitall, Url
@@ -36,9 +36,9 @@ class Server:
         password = self._settings.getString(constants.SETTING_PROVIDER_PASSWORD)
         token = self._settings.getString(constants.SETTING_PROVIDER_TOKEN)
         if userId == constants.SETTING_PROVIDER_USER_OPTION_MANUAL:
-            self._authenticator = Authenticator.WithUsername(self._url, self._devideId, username, password, token)
+            self._authenticator = AuthenticatorFactory.WithUsername(self._url, self._devideId, username, password, token)
         else:
-            self._authenticator = Authenticator.WithUserId(self._url, self._devideId, userId, password, token)
+            self._authenticator = AuthenticatorFactory.WithUserId(self._url, self._devideId, userId, password, token)
 
     def Authenticate(self, force=False):
         return self._authenticate(force=force)

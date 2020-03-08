@@ -18,6 +18,12 @@ class Authentication:
         UserId = 0
         Username = 1
 
+    class Result:
+        def __init__(self, result=False, accessToken=None, userId=None):
+            self.result = result
+            self.accessToken = accessToken
+            self.userId = userId
+
     @staticmethod
     def Authenticate(baseUrl, authenticationMethod, username=None, userId=None, password=None, deviceId=None):
         if not password:
@@ -50,18 +56,21 @@ class Authentication:
 
         resultObj = Request.PostAsJson(authUrl, headers=headers, json=body, timeout=Authentication.REQUEST_TIMEOUT_S)
         if not resultObj:
-            return (False, None, None)
+            return Authentication.Result()
 
         if not constants.PROPERTY_USER_AUTHENTICATION_ACCESS_TOKEN in resultObj:
-            return (False, None, None)
+            return Authentication.Result()
         accessToken = resultObj[constants.PROPERTY_USER_AUTHENTICATION_ACCESS_TOKEN]
 
         if not constants.PROPERTY_USER_AUTHENTICATION_USER in resultObj:
-            return (False, None, None)
+            return Authentication.Result()
         userObj = resultObj[constants.PROPERTY_USER_AUTHENTICATION_USER]
         if not constants.PROPERTY_USER_AUTHENTICATION_USER_ID in userObj:
-            return (False, None, None)
+            return Authentication.Result()
 
         userId = userObj[constants.PROPERTY_USER_AUTHENTICATION_USER_ID]
 
-        return (True, accessToken, userId)
+        return Authentication.Result(
+            result=True,
+            accessToken=accessToken,
+            userId=userId)

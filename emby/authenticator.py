@@ -7,50 +7,42 @@
 #
 
 from emby.api.authentication import Authentication
+from emby.api.embyconnect import EmbyConnect
 
 from lib.utils import Url
 
-class Authenticator:
-    def __init__(self, url, deviceId='', userId='', username='', password='', token=''):
-        self._url = url
-        self._deviceId = deviceId
-        self._userId = userId
-        self._username = username
-        self._password = password
-        self._accessToken = token or str()
-
-        if not self._url:
-            raise ValueError('url must not be empty')
-
-        if self._userId:
-            self._authMethod = Authentication.Method.UserId
-        elif self._username:
-            self._authMethod = Authentication.Method.Username
-        else:
-            raise ValueError('Either userId or username must not be empty')
-
+class AuthenticatorFactory:
     @staticmethod
     def WithUserId(url, deviceId, userId, password='', token=''):
-        return Authenticator(url, deviceId, userId=userId, password=password, token=token)
+        return UserIdAuthenticator(url, deviceId=deviceId, userId=userId, password=password, token=token)
 
     @staticmethod
     def WithUsername(url, deviceId, username, password='', token=''):
-        return Authenticator(url, deviceId, username=username, password=password, token=token)
+        return UsernameAuthenticator(url, deviceId=deviceId, username=username, password=password, token=token)
+
+class BaseAuthenticator:
+    def __init__(self, url, deviceId='', token=''):
+        if not url:
+            raise ValueError('invalid url')
+
+        self._url = url
+        self._deviceId = deviceId
+        self._accessToken = token or str()
+        self._userId = None
 
     def Authenticate(self, force=False):
         if not force and self.IsAuthenticated():
             return True
 
-        (result, accessToken, userId) = \
-            Authentication.Authenticate(self._url, self._authMethod, \
-                username=self._username, userId=self._userId, password=self._password, \
-                deviceId=self._deviceId)
+        authResult = self._authenticate()
 
-        if not result:
+        if not authResult.result or \
+           not authResult.accessToken or \
+           not authResult.userId:
             return False
 
-        self._accessToken = accessToken
-        self._userId = userId
+        self._userId = authResult.userId
+        self._accessToken = authResult.accessToken
 
         return self.IsAuthenticated()
 
@@ -65,3 +57,42 @@ class Authenticator:
 
     def UserId(self):
         return self._userId
+
+    def _authenticate(self):
+        raise NotImplementedError()
+
+class UsernameAuthenticator(BaseAuthenticator):
+    def __init__(self, url, deviceId='', username='', password='', token=''):
+        super(UsernameAuthenticator, self).__init__(url, deviceId=deviceId, token=token)
+
+        if not username:
+            raise ValueError('invalid username')
+
+        self._username = username
+        self._password = password
+
+    def _authenticate(self):
+        return Authentication.Authenticate(
+            self._url,
+            Authentication.Method.Username,
+            username=self._username,
+            password=self._password,
+            deviceId=self._deviceId)
+
+class UserIdAuthenticator(BaseAuthenticator):
+    def __init__(self, url, deviceId='', userId='', password='', token=''):
+        super(UserIdAuthenticator, self).__init__(url, deviceId=deviceId, token=token)
+
+        if not userId:
+            raise ValueError('invalid userId')
+
+        self._userId = userId
+        self._password = password
+
+    def _authenticate(self):
+        return Authentication.Authenticate(
+            self._url,
+            Authentication.Method.UserId,
+            userId=self._userId,
+            password=self._password,
+            deviceId=self._deviceId)
