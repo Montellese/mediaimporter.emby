@@ -22,7 +22,7 @@ class Server:
             raise ValueError('Invalid provider')
 
         self._baseUrl = provider.getBasePath()
-        self._url = Url.append(self._baseUrl, constants.EMBY_PROTOCOL)
+        self._url = Server._buildBaseUrl(self._baseUrl)
         self._id = provider.getIdentifier()
 
         self._settings = provider.getSettings()
@@ -258,14 +258,18 @@ class Server:
         if not baseUrl:
             raise ValueError('Invalid baseUrl')
 
-        return Url.append(baseUrl, constants.EMBY_PROTOCOL, constants.URL_SYSTEM, constants.URL_SYSTEM_INFO, constants.URL_SYSTEM_INFO_PUBLIC)
+        return Url.append(Server._buildBaseUrl(baseUrl), constants.URL_SYSTEM, constants.URL_SYSTEM_INFO, constants.URL_SYSTEM_INFO_PUBLIC)
 
     @staticmethod
     def BuildIconUrl(baseUrl):
         if not baseUrl:
             raise ValueError('Invalid baseUrl')
 
-        return Url.append(baseUrl, constants.EMBY_PROTOCOL, 'web', 'touchicon144.png')
+        return Url.append(Server._buildBaseUrl(baseUrl), 'web', 'touchicon144.png')
+
+    @staticmethod
+    def _buildBaseUrl(baseUrl):
+        return Url.append(baseUrl, constants.EMBY_PROTOCOL)
 
     def _request(self, url, function, *args):
         headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
