@@ -89,7 +89,7 @@ class Request:
         try:
             return requests.get(url, headers=headers, timeout=timeout, verify=False)
         except requests.exceptions.RequestException as err:
-            log('error retrieving response from GET {}: {}'.format(url, err.message), xbmc.LOGERROR)
+            log('error retrieving response from GET {}: {}'.format(url, err), xbmc.LOGERROR)
 
         return None
 
@@ -102,7 +102,7 @@ class Request:
         try:
             return requests.post(url, headers=headers, timeout=timeout, data=body, json=json, verify=False)
         except requests.exceptions.RequestException as err:
-            log('error retrieving response from POST {}: {}'.format(url, err.message), xbmc.LOGERROR)
+            log('error retrieving response from POST {}: {}'.format(url, err), xbmc.LOGERROR)
 
         return None
 
@@ -112,7 +112,7 @@ class Request:
         try:
             return requests.delete(url, headers=headers, timeout=timeout, verify=False)
         except requests.exceptions.RequestException as err:
-            log('error retrieving response from DELETE {}: {}'.format(url, err.message), xbmc.LOGERROR)
+            log('error retrieving response from DELETE {}: {}'.format(url, err), xbmc.LOGERROR)
 
         return None
 
@@ -164,7 +164,7 @@ class Request:
 
             log('invalid response from {} {}'.format(requestType, result.url), xbmc.LOGERROR)
         except ValueError as err:
-            log('response from {} {} is not a JSON object: {}'.format(requestType, result.url, str(err)), xbmc.LOGERROR)
+            log('response from {} {} is not a JSON object: {}'.format(requestType, result.url, err), xbmc.LOGERROR)
 
         return None
 
