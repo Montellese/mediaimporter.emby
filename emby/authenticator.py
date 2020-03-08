@@ -20,6 +20,10 @@ class AuthenticatorFactory:
     def WithUsername(url, deviceId, username, password='', token=''):
         return UsernameAuthenticator(url, deviceId=deviceId, username=username, password=password, token=token)
 
+    @staticmethod
+    def WithEmbyConnect(url, deviceId, userId, accessKey, token=''):
+        return EmbyConnectAuthenticator(url, deviceId=deviceId, userId=userId, accessKey=accessKey, token=token)
+
 class BaseAuthenticator:
     def __init__(self, url, deviceId='', token=''):
         if not url:
@@ -96,3 +100,32 @@ class UserIdAuthenticator(BaseAuthenticator):
             userId=self._userId,
             password=self._password,
             deviceId=self._deviceId)
+
+class EmbyConnectAuthenticator(BaseAuthenticator):
+    def __init__(self, url, deviceId='', userId='', accessKey='', token=''):
+        super(EmbyConnectAuthenticator, self).__init__(url, deviceId=deviceId, token=token)
+
+        if not userId:
+            raise ValueError('invalid userId')
+        if not accessKey:
+            raise ValueError('invalid accessKey')
+
+        self._userId = userId
+        self._accessKey = accessKey
+
+    def _authenticate(self):
+        authResult = EmbyConnect.Exchange(
+            self._url,
+            self._accessKey,
+            self._userId,
+            deviceId=self._deviceId)
+
+        if not authResult or \
+           not authResult.accessToken or \
+           not authResult.userId:
+            return Authentication.Result()
+
+        return Authentication.Result(
+            result=True,
+            accessToken=authResult.accessToken,
+            userId=authResult.userId)
