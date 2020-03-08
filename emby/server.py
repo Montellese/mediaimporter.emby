@@ -268,6 +268,21 @@ class Server:
         return Url.append(Server._buildBaseUrl(baseUrl), 'web', 'touchicon144.png')
 
     @staticmethod
+    def BuildConnectExchangeUrl(baseUrl, userId):
+        if not baseUrl:
+            raise ValueError('Invalid baseUrl')
+        if not userId:
+            raise ValueError('Invalid userId')
+
+        url = Url.append(Server._buildBaseUrl(baseUrl), constants.URL_CONNECT, constants.URL_CONNECT_EXCHANGE)
+        url = Url.addOptions(url, {
+            constants.URL_QUERY_CONNECT_EXCHANGE_FORMAT: constants.URL_QUERY_CONNECT_EXCHANGE_FORMAT_JSON,
+            constants.URL_QUERY_CONNECT_EXCHANGE_USER_ID: userId,
+        })
+
+        return url
+
+    @staticmethod
     def _buildBaseUrl(baseUrl):
         return Url.append(baseUrl, constants.EMBY_PROTOCOL)
 

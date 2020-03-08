@@ -187,7 +187,9 @@ class Request:
             redactedBody = body.copy()
             # redact the body in case it contains a password
             for key in redactedBody:
-                if key in (constants.PROPERTY_USER_AUTHENTICATION_PASSWORD):
+                if key in (constants.PROPERTY_USER_AUTHENTICATION_PASSWORD, \
+                           constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_PASSWORD, \
+                           constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_PASSWORD_RAW):
                     redactedBody[key] = '****'
 
         log('{} {} ({}): {}'.format(method, url, header, redactedBody), xbmc.LOGDEBUG)
