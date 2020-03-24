@@ -1,3 +1,6 @@
+[B]Version 0.0.8[/B]
+-
+
 [B]Version 0.0.7[/B]
 - convert all unique ID keys to lowercase
 - import critic rating as tomatometerallcritics
