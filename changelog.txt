@@ -1,5 +1,5 @@
 [B]Version 0.0.8[/B]
--
+-  don't attach the container type to direct stream URLs
 
 [B]Version 0.0.7[/B]
 - convert all unique ID keys to lowercase

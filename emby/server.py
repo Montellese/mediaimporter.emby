@@ -123,11 +123,6 @@ class Server:
 
         url = self.BuildUrl(embyMediaType)
         url = Url.append(url, itemId, constants.URL_PLAYBACK_STREAM)
-        if container:
-            containers = container.split(',')
-            # TODO(Montellese): for now pick the first container but maybe we
-            # need some sanity checking / priorization
-            url = '{}.{}'.format(url, containers[0])
 
         url = Url.addOptions(url, {
             constants.URL_PLAYBACK_OPTION_STATIC: constants.URL_PLAYBACK_OPTION_STATIC_TRUE,
