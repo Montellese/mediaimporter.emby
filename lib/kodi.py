@@ -299,6 +299,61 @@ class Api:
         return embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId)
 
     @staticmethod
+    def getDirectPlayUrl(embyServer, itemId, itemObj):
+        if itemObj.get(PROPERTY_ITEM_IS_FOLDER):
+            return (False, None)
+
+        itemPath = None
+        if PROPERTY_ITEM_MEDIA_SOURCES in itemObj:
+            mediaSources = itemObj.get(PROPERTY_ITEM_MEDIA_SOURCES)
+            if len(mediaSources) > 0:
+                mediaSource = mediaSources[0]
+                if mediaSource:
+                    supportsDirectPlay = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_SUPPORTS_DIRECT_PLAY)
+                    if not supportsDirectPlay:
+                        return (False, None)
+
+                    itemPath = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_PATH)
+                    protocol = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL)
+
+                    # handle Direct Play for directly accessible or HTTP items
+                    if protocol == PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL_HTTP or xbmcvfs.exists(itemPath):
+                        return (True, itemPath)
+
+                    container = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_CONTAINER)
+
+                    mappedItemPath = Api._mapPath(itemPath, container=container)
+                    if xbmcvfs.exists(mappedItemPath):
+                        return (True, mappedItemPath)
+
+                    # STRMs require Direct Play
+                    if container == 'strm' or itemPath.endswith('.strm'):
+                        return (False, None)
+
+        # get the direct path
+        itemPath = itemObj.get(PROPERTY_ITEM_PATH)
+        if not itemPath:
+            return (False, None)
+
+        # if we can access the direct path we can use Direct Play
+        if xbmcvfs.exists(itemPath):
+            return (True, itemPath)
+
+        mappedItemPath = Api._mapPath(itemPath)
+        if xbmcvfs.exists(mappedItemPath):
+            return (True, mappedItemPath)
+
+        return (False, None)
+
+    @staticmethod
+    def getDirectStreamUrl(embyServer, itemId, itemObj):
+        if itemObj.get(PROPERTY_ITEM_IS_FOLDER):
+            return (False, None)
+
+        # fall back to Direct Stream
+        return (True, embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId))
+
+    @staticmethod
     def fillVideoInfos(embyServer, itemId, itemObj, mediaType, item, libraryView='', allowDirectPlay=True):
         userdata = {}
         if PROPERTY_ITEM_USER_DATA in itemObj:

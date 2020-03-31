@@ -3,6 +3,7 @@
 - move lib/semantic_version to script.module.semantic_version 2.8.4
 - fix authentication by username (manual)
 - adjust kodi.mediaimporter extension point to changes in Kodi
+- support "Emby Media Importer > Play ... > Direct Play / Direct Stream" context menu item
 
 [B]Version 0.0.7[/B]
 - convert all unique ID keys to lowercase

@@ -14,6 +14,17 @@
         <providersettings>providersettings.xml</providersettings>
         <importsettings>importsettings.xml</importsettings>
     </extension>
+    <extension point="kodi.context.item">
+        <menu id="kodi.core.main">
+            <menu>
+                <label>Emby Media Importer</label>
+                <item library="context.py" args="?action=play">
+                    <label>32100</label>
+                    <visible>!ListItem.IsFolder + ListItem.IsImported + ListItem.IsEnabled + String.IsEqual(ListItem.MediaImporter,mediaimporter.emby)</visible>
+                </item>
+            </menu>
+        </menu>
+    </extension>
     <extension point="xbmc.addon.metadata">
         <summary lang="en_GB">Import and play media items from an Emby Media Server or Jellyfin</summary>
         <description lang="en_GB">Emby Media Importer allows you to import and play media libraries, for movies, tv shows and music videos, from Emby Media Server or Jellyfin. Thus using Emby / Jellyfin as a metadata manager (server) and Kodi as player (client). In addition playback data can be synced across multiple clients, for each user on Emby / Jellyfin.</description>

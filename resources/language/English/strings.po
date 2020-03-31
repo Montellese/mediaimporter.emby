@@ -211,3 +211,18 @@ msgstr ""
 msgctxt "#32062"
 msgid "Successfully linked to Emby Connect."
 msgstr ""
+
+#. Label of the play context menu item
+msgctxt "#32100"
+msgid "Play ..."
+msgstr ""
+
+#. Label of the play context menu item for Direct Play
+msgctxt "#32101"
+msgid "Direct Play"
+msgstr ""
+
+#. Label of the play context menu item for Direct Stream
+msgctxt "#32102"
+msgid "Direct Stream"
+msgstr ""
