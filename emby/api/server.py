@@ -7,6 +7,7 @@
 #
 
 import json
+import semantic_version
 from six import ensure_str
 import time
 
@@ -16,7 +17,6 @@ from emby import constants
 from emby.request import Request
 from emby import server
 
-import lib.semantic_version as semantic_version
 from lib.utils import log
 
 class Server:
