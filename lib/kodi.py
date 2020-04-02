@@ -296,7 +296,7 @@ class Api:
             return embyServer.BuildItemUrl(itemId)
 
         # fall back to Direct Stream
-        return embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId, itemObj.get(PROPERTY_ITEM_CONTAINER))
+        return embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId)
 
     @staticmethod
     def fillVideoInfos(embyServer, itemId, itemObj, mediaType, item, libraryView='', allowDirectPlay=True):
