@@ -77,6 +77,22 @@ class Library:
         return embyServer.ApiGet(itemUrl)
 
     @staticmethod
+    def RefreshItemMetadata(embyServer, itemId):
+        if not embyServer:
+            raise ValueError('invalid embyServer')
+        if not itemId:
+            raise ValueError('invalid itemId')
+
+        itemRefreshUrl = embyServer.BuildItemRefreshUrl(itemId)
+        return embyServer.ApiPost(itemRefreshUrl, json={
+            constants.URL_QUERY_ITEMS_RECURSIVE: True,
+            constants.URL_QUERY_ITEMS_REFRESH_METADATA_MODE: constants.URL_QUERY_ITEMS_REFRESH_MODE_FULL,
+            constants.URL_QUERY_ITEMS_REFRESH_IMAGE_MODE: constants.URL_QUERY_ITEMS_REFRESH_MODE_FULL,
+            constants.URL_QUERY_ITEMS_REFRESH_REPLACE_ALL_METADATA: True,
+            constants.URL_QUERY_ITEMS_REFRESH_REPLACE_ALL_IMAGES: False
+        })
+
+    @staticmethod
     def GetLocalTrailers(embyServer, itemId):
         if not embyServer:
             raise ValueError('invalid embyServer')

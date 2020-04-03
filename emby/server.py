@@ -110,6 +110,13 @@ class Server:
         url = self.BuildUserUrl(constants.URL_ITEMS)
         return Url.append(url, itemId)
 
+    def BuildItemRefreshUrl(self, itemId):
+        if not itemId:
+            raise ValueError('Invalid itemId')
+
+        url = self.BuildItemUrl(itemId)
+        return Url.append(url, constants.URL_ITEMS_REFRESH)
+
     def BuildDirectStreamUrl(self, mediaType, itemId):
         if not itemId:
             raise ValueError('Invalid itemId')
