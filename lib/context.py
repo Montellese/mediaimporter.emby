@@ -20,9 +20,31 @@ from lib.utils import localise, log, mediaProvider2str
 
 class ContextAction:
         Play = 0
+        Synchronize = 1
 
 def listItem2str(item, itemId):
     return '"{}" ({})'.format(item.getLabel(), itemId)
+
+def getMediaImport(mediaProvider, item):
+    videoInfoTag = item.getVideoInfoTag()
+    if not videoInfoTag:
+        return None
+
+    mediaType = videoInfoTag.getMediaType()
+    if not mediaType:
+        return None
+
+    mediaImports = mediaProvider.getImports()
+    return next((mediaImport for mediaImport in mediaImports if mediaType in mediaImport.getMediaTypes()), None)
+
+def synchronizeItem(item, itemId, mediaProvider, mediaImport, embyServer, allowDirectPlay=True):
+    # retrieve all details of the item
+    itemObj = Library.GetItem(embyServer, itemId)
+    if not itemObj:
+        log('[context/sync] cannot retrieve details of {} from {}'.format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
+        return None
+
+    return kodi.Api.toFileItem(embyServer, itemObj, allowDirectPlay=allowDirectPlay)
 
 def play(item, itemId, mediaProvider):
     if item.isFolder():
@@ -86,6 +108,32 @@ def play(item, itemId, mediaProvider):
     item.setDynamicPath(playUrl)
     xbmc.Player().play(playUrl, item)
 
+def synchronize(item, itemId, mediaProvider):
+    # find the matching media import
+    mediaImport = getMediaImport(mediaProvider, item)
+    if not mediaImport:
+        log('[context/sync] cannot find the media import of {} from {}' \
+            .format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
+        return
+
+    # determine whether Direct Play is allowed
+    mediaProviderSettings = mediaProvider.getSettings()
+    allowDirectPlay = mediaProviderSettings.getBool(emby.constants.SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY)
+
+    # create an Emby server instance
+    embyServer = Server(mediaProvider)
+
+    # synchronize the active item
+    syncedItem = synchronizeItem(item, itemId, mediaProvider, mediaImport, embyServer, allowDirectPlay=allowDirectPlay)
+    if not syncedItem:
+        return
+    syncedItems = [(xbmcmediaimport.MediaImportChangesetTypeChanged, syncedItem)]
+
+    if xbmcmediaimport.changeImportedItems(mediaImport, syncedItems):
+        log('[context/sync] synchronized {} from {}'.format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)))
+    else:
+        log('[context/sync] failed to synchronize {} from {}'.format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)), xbmc.LOGWARNING)
+
 def run(action):
     item = sys.listitem
     if not item:
@@ -119,5 +167,7 @@ def run(action):
 
     if action == ContextAction.Play:
         play(item, itemId, mediaProvider)
+    elif action == ContextAction.Synchronize:
+        synchronize(item, itemId, mediaProvider)
     else:
         raise ValueError('unknown action {}'.format(action))

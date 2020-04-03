@@ -18,6 +18,10 @@
         <menu id="kodi.core.main">
             <menu>
                 <label>Emby Media Importer</label>
+                <item library="context.py" args="?action=sync">
+                    <label>32103</label>
+                    <visible>ListItem.IsImported + ListItem.IsEnabled + String.IsEqual(ListItem.MediaImporter,mediaimporter.emby)</visible>
+                </item>
                 <item library="context.py" args="?action=play">
                     <label>32100</label>
                     <visible>!ListItem.IsFolder + ListItem.IsImported + ListItem.IsEnabled + String.IsEqual(ListItem.MediaImporter,mediaimporter.emby)</visible>

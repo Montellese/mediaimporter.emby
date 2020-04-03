@@ -226,3 +226,8 @@ msgstr ""
 msgctxt "#32102"
 msgid "Direct Stream"
 msgstr ""
+
+#. Label of the synchronise context menu item
+msgctxt "#32103"
+msgid "Synchronise"
+msgstr ""

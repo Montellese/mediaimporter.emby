@@ -34,6 +34,8 @@ if __name__ == '__main__':
     action_option = options[OPTION_ACTION][0]
     if action_option == 'play':
         action = context.ContextAction.Play
+    elif action_option == 'sync':
+        action = context.ContextAction.Synchronize
     else:
         log('Emby Media Import Context called with unknown "{}" argument: {}'.format(OPTION_ACTION, action_option))
         sys.exit(1)
