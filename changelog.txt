@@ -5,6 +5,7 @@
 - adjust kodi.mediaimporter extension point to changes in Kodi
 - support "Emby Media Importer > Play ... > Direct Play / Direct Stream" context menu item
 - support "Emby Media Importer > Synchronize" context menu item
+- support "Emby Media Importer > Refresh metadata" context menu item
 
 [B]Version 0.0.7[/B]
 - convert all unique ID keys to lowercase

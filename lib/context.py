@@ -21,6 +21,7 @@ from lib.utils import localise, log, mediaProvider2str
 class ContextAction:
         Play = 0
         Synchronize = 1
+        RefreshMetadata = 2
 
 def listItem2str(item, itemId):
     return '"{}" ({})'.format(item.getLabel(), itemId)
@@ -134,6 +135,14 @@ def synchronize(item, itemId, mediaProvider):
     else:
         log('[context/sync] failed to synchronize {} from {}'.format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)), xbmc.LOGWARNING)
 
+def refreshMetadata(item, itemId, mediaProvider):
+    # create an Emby server instance
+    embyServer = Server(mediaProvider)
+
+    # trigger a metadata refresh on the Emby server
+    Library.RefreshItemMetadata(embyServer, itemId)
+    log('[context/refresh] triggered metadata refresh for {} on {}'.format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)))
+
 def run(action):
     item = sys.listitem
     if not item:
@@ -169,5 +178,7 @@ def run(action):
         play(item, itemId, mediaProvider)
     elif action == ContextAction.Synchronize:
         synchronize(item, itemId, mediaProvider)
+    elif action == ContextAction.RefreshMetadata:
+        refreshMetadata(item, itemId, mediaProvider)
     else:
         raise ValueError('unknown action {}'.format(action))

@@ -36,6 +36,8 @@ if __name__ == '__main__':
         action = context.ContextAction.Play
     elif action_option == 'sync':
         action = context.ContextAction.Synchronize
+    elif action_option == 'refresh':
+        action = context.ContextAction.RefreshMetadata
     else:
         log('Emby Media Import Context called with unknown "{}" argument: {}'.format(OPTION_ACTION, action_option))
         sys.exit(1)
