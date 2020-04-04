@@ -33,20 +33,21 @@ class Server:
 
         token = self._settings.getString(constants.SETTING_PROVIDER_TOKEN)
         authMethod = self._settings.getString(constants.SETTING_PROVIDER_AUTHENTICATION)
+        userId = self._settings.getString(constants.SETTING_PROVIDER_USER_ID)
 
         if authMethod == constants.SETTING_PROVIDER_AUTHENTICATION_OPTION_LOCAL:
-            userId = self._settings.getString(constants.SETTING_PROVIDER_USER)
+            user = self._settings.getString(constants.SETTING_PROVIDER_USER)
             password = self._settings.getString(constants.SETTING_PROVIDER_PASSWORD)
 
-            if userId == constants.SETTING_PROVIDER_USER_OPTION_MANUAL:
+            if user == constants.SETTING_PROVIDER_USER_OPTION_MANUAL:
                 username = self._settings.getString(constants.SETTING_PROVIDER_USERNAME)
-                self._authenticator = AuthenticatorFactory.WithUsername(self._url, self._devideId, username, password, token=token)
+                self._authenticator = AuthenticatorFactory.WithUsername(self._url, self._devideId, username, userId, password, token=token)
             else:
-                self._authenticator = AuthenticatorFactory.WithUserId(self._url, self._devideId, userId, password, token=token)
+                self._authenticator = AuthenticatorFactory.WithUserId(self._url, self._devideId, user, password, token=token)
         elif authMethod == constants.SETTING_PROVIDER_AUTHENTICATION_OPTION_EMBY_CONNECT:
-            userId = self._settings.getString(constants.SETTING_PROVIDER_EMBY_CONNECT_USER_ID)
+            embyConnectUserId = self._settings.getString(constants.SETTING_PROVIDER_EMBY_CONNECT_USER_ID)
             accessKey = self._settings.getString(constants.SETTING_PROVIDER_EMBY_CONNECT_ACCESS_KEY)
-            self._authenticator = AuthenticatorFactory.WithEmbyConnect(self._baseUrl, self._devideId, userId, accessKey, token=token)
+            self._authenticator = AuthenticatorFactory.WithEmbyConnect(self._baseUrl, self._devideId, embyConnectUserId, accessKey, userId, token=token)
         else:
             raise ValueError('invalid authentication method: {}'.format(authMethod))
 
@@ -314,7 +315,8 @@ class Server:
             log('user authentication failed on media provider {}'.format(self._id))
             return False
 
-        # update the access token in the settings
+        # update the user ID and access token in the settings
+        self._settings.setString(constants.SETTING_PROVIDER_USER_ID, self.UserId())
         self._settings.setString(constants.SETTING_PROVIDER_TOKEN, self.AccessToken())
         self._settings.save()
 
