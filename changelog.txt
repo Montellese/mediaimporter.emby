@@ -2,6 +2,7 @@
 -  don't attach the container type to direct stream URLs
 - move lib/semantic_version to script.module.semantic_version 2.8.4
 - fix authentication by username (manual)
+- adjust kodi.mediaimporter extension point to changes in Kodi
 
 [B]Version 0.0.7[/B]
 - convert all unique ID keys to lowercase
