@@ -380,8 +380,16 @@ class Api:
             'album': itemObj.get(PROPERTY_ITEM_ALBUM, ''),
             'genre': itemObj.get(PROPERTY_ITEM_GENRES, []),
             'country': itemObj.get(PROPERTY_ITEM_PRODUCTION_LOCATIONS, []),
-            'tag': itemObj.get(PROPERTY_ITEM_TAGS, []),
+            'tag': [],
         }
+
+        # process tags
+        if PROPERTY_ITEM_TAG_ITEMS in itemObj:
+            info['tag'] = [
+                    tag.get(PROPERTY_ITEM_TAG_ITEMS_NAME)
+                    for tag in itemObj.get(PROPERTY_ITEM_TAG_ITEMS)
+                    if PROPERTY_ITEM_TAG_ITEMS_NAME in tag
+                ]
 
         # add the library view as a tag
         if libraryView:
