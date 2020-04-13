@@ -449,11 +449,16 @@ class Api:
             name = person.get(PROPERTY_ITEM_PEOPLE_NAME, '')
             type = person.get(PROPERTY_ITEM_PEOPLE_TYPE, '')
             if type == PROPERTY_ITEM_PEOPLE_TYPE_ACTOR:
-                cast.append({
+                actor = {
                     'name': name,
                     'role': person.get(PROPERTY_ITEM_PEOPLE_ROLE, ''),
                     'order': index
-                })
+                }
+                personId = person.get(PROPERTY_ITEM_PEOPLE_ID, None)
+                primaryImageTag = person.get(PROPERTY_ITEM_PEOPLE_PRIMARY_IMAGE_TAG, '')
+                if personId and primaryImageTag:
+                    actor['thumbnail'] = embyServer.BuildImageUrl(personId, PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, primaryImageTag)
+                cast.append(actor)
             elif type == PROPERTY_ITEM_PEOPLE_TYPE_WRITER:
                 info['writer'].append(name)
             elif type == PROPERTY_ITEM_PEOPLE_TYPE_DIRECTOR:
