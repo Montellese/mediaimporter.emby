@@ -464,9 +464,10 @@ class Api:
 
         # handle unique / provider IDs
         uniqueIds = { key.lower(): value for key, value in iteritems(itemObj.get(PROPERTY_ITEM_PROVIDER_IDS, {})) }
+        defaultUniqueId = Api._mapDefaultUniqueId(uniqueIds, mediaType)
         # add the item's ID as a unique ID belonging to Emby
         uniqueIds[EMBY_PROTOCOL] = itemId
-        item.getVideoInfoTag().setUniqueIDs(uniqueIds)
+        item.getVideoInfoTag().setUniqueIDs(uniqueIds, defaultUniqueId)
 
         # handle critic rating as rotten tomato rating
         if PROPERTY_ITEM_CRITIC_RATING in itemObj:
@@ -663,6 +664,31 @@ class Api:
             mpaa = mpaa.replace('-', ' ')
 
         return mpaa
+
+    UNIQUE_ID_IMDB = 'imdb'
+    UNIQUE_ID_TMDB = 'tmdb'
+    UNIQUE_ID_TVDB = 'tvdb'
+
+    @staticmethod
+    def _mapDefaultUniqueId(uniqueIds, mediaType):
+        if not uniqueIds or not mediaType:
+            return ''
+
+        uniqueIdKeys = uniqueIds.keys()
+
+        # for tvshows, seasons and episodes prefer TVDB
+        if mediaType in (xbmcmediaimport.MediaTypeTvShow, xbmcmediaimport.MediaTypeSeason, xbmcmediaimport.MediaTypeEpisode):
+            if Api.UNIQUE_ID_TVDB in uniqueIdKeys:
+                return Api.UNIQUE_ID_TVDB
+
+        # otherwise prefer IMDd over TMDd
+        if Api.UNIQUE_ID_IMDB in uniqueIdKeys:
+            return Api.UNIQUE_ID_IMDB
+        if Api.UNIQUE_ID_TMDB in uniqueIdKeys:
+            return Api.UNIQUE_ID_TMDB
+
+        # last but not least fall back to the first key
+        return uniqueIdKeys[0]
 
     @staticmethod
     def _mapVideoStream(stream, container=None):
