@@ -1,6 +1,7 @@
 [B]Version 0.0.9[/B]
 - don't set the custom "emby" unique ID as the default (fixes #13)
 - properly import tags from "TagItems" instead of "Tags" (fixes #19)
+- map "primary" artwork to "thumb" for episodes and musicvideos (fixes #16)
 
 [B]Version 0.0.8[/B]
 -  don't attach the container type to direct stream URLs
@@ -22,7 +23,7 @@
 
 [B]Version 0.0.6[/B]
 - fix playback stopped / ended callback handling
-- fix reporting of playback resume point when playback stopped 
+- fix reporting of playback resume point when playback stopped
 - process UNC / DVD / Blu-Ray paths before passing them to Kodi
 - improve mapping of studios, overviews, MPAA and video / audio streams
 - redact HTTP request bodies that might contain a password

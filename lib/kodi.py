@@ -226,7 +226,7 @@ class Api:
             libraryView=libraryView, allowDirectPlay=allowDirectPlay)
 
         # handle artwork
-        artwork = Api._mapArtwork(embyServer, itemId, itemObj)
+        artwork = Api._mapArtwork(embyServer, itemId, itemObj, mediaType)
         if artwork:
             item.setArt(artwork)
 
@@ -729,11 +729,14 @@ class Api:
         return stream
 
     @staticmethod
-    def _mapArtwork(embyServer, itemId, itemObj):
+    def _mapArtwork(embyServer, itemId, itemObj, mediaType):
         artwork = {}
         images = itemObj.get(PROPERTY_ITEM_IMAGE_TAGS)
         if images:
-            Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, 'poster')
+            if mediaType in (xbmcmediaimport.MediaTypeEpisode, xbmcmediaimport.MediaTypeMusicVideo):
+                Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, 'thumb')
+            else:
+                Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, 'poster')
             Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_LOGO, 'clearlogo')
             Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_ART, 'clearart')
             Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_BANNER, 'banner')
