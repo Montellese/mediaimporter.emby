@@ -6,22 +6,21 @@
 #  See LICENSES/README.md for more information.
 #
 
-from datetime import datetime
-from dateutil import parser
 import json
 import os
+
+from dateutil import parser
 from six import iteritems
 from six.moves.urllib.request import urlretrieve
-from six.moves.urllib.parse import urlencode, urlparse, urlunparse
-import urllib
+from six.moves.urllib.parse import urlparse, urlunparse
 
-import xbmc
-from xbmcgui import ListItem
-import xbmcmediaimport
-import xbmcvfs
+import xbmc  # pylint: disable=import-error
+from xbmcgui import ListItem  # pylint: disable=import-error
+import xbmcmediaimport  # pylint: disable=import-error
+import xbmcvfs  # pylint: disable=import-error
 
 from emby.api.library import Library
-from emby.constants import *
+from emby import constants
 from emby.server import Server
 
 from lib.utils import __addon__, log, mediaProvider2str, Url
@@ -37,8 +36,10 @@ EMBY_MEDIATYPES = [
     (xbmcmediaimport.MediaTypeMusicVideo, 'MusicVideo', 32006)
 ]
 
+
 class Api:
     @staticmethod
+    # pylint: disable=too-many-return-statements
     def compareMediaProviders(lhs, rhs):
         if not lhs or not rhs:
             return False
@@ -60,18 +61,21 @@ class Api:
         if not rhsSettings:
             return False
 
-        if lhsSettings.getString(SETTING_PROVIDER_DEVICEID) != rhsSettings.getString(SETTING_PROVIDER_DEVICEID):
+        if lhsSettings.getString(constants.SETTING_PROVIDER_DEVICEID) != \
+           rhsSettings.getString(constants.SETTING_PROVIDER_DEVICEID):
             return False
 
-        lhsSettingsUser = lhsSettings.getString(SETTING_PROVIDER_USER)
-        if lhsSettingsUser != rhsSettings.getString(SETTING_PROVIDER_USER):
+        lhsSettingsUser = lhsSettings.getString(constants.SETTING_PROVIDER_USER)
+        if lhsSettingsUser != rhsSettings.getString(constants.SETTING_PROVIDER_USER):
             return False
 
-        if lhsSettingsUser == SETTING_PROVIDER_USER_OPTION_MANUAL:
-            if lhsSettings.getString(SETTING_PROVIDER_USERNAME) != rhsSettings.getString(SETTING_PROVIDER_USERNAME):
+        if lhsSettingsUser == constants.SETTING_PROVIDER_USER_OPTION_MANUAL:
+            if lhsSettings.getString(constants.SETTING_PROVIDER_USERNAME) != \
+               rhsSettings.getString(constants.SETTING_PROVIDER_USERNAME):
                 return False
 
-        if lhsSettings.getString(SETTING_PROVIDER_PASSWORD) != rhsSettings.getString(SETTING_PROVIDER_PASSWORD):
+        if lhsSettings.getString(constants.SETTING_PROVIDER_PASSWORD) != \
+           rhsSettings.getString(constants.SETTING_PROVIDER_PASSWORD):
             return False
 
         return True
@@ -81,7 +85,7 @@ class Api:
         if not mediaType:
             raise ValueError('invalid mediaType')
 
-        mappedMediaType = [ x for x in EMBY_MEDIATYPES if x[0] == mediaType ]
+        mappedMediaType = [x for x in EMBY_MEDIATYPES if x[0] == mediaType]
         if not mappedMediaType:
             return None
 
@@ -92,7 +96,7 @@ class Api:
         if not embyMediaType:
             raise ValueError('invalid embyMediaType')
 
-        mappedMediaType = [ x for x in EMBY_MEDIATYPES if x[1] == embyMediaType ]
+        mappedMediaType = [x for x in EMBY_MEDIATYPES if x[1] == embyMediaType]
         if not mappedMediaType:
             return None
 
@@ -142,7 +146,7 @@ class Api:
         if not videoInfoTag:
             raise ValueError('invalid videoInfoTag')
 
-        embyItemId = videoInfoTag.getUniqueID(EMBY_PROTOCOL)
+        embyItemId = videoInfoTag.getUniqueID(constants.EMBY_PROTOCOL)
         if not embyItemId:
             return None
 
@@ -158,7 +162,7 @@ class Api:
 
         for localItem in localItems:
             # abort if there are no more items to process
-            if all(len (itemIdsToProcess) == 0 for itemIdsToProcess in itemIdsToProcessLists):
+            if all(len(itemIdsToProcess) == 0 for itemIdsToProcess in itemIdsToProcessLists):
                 break
 
             # retrieve the local item's Emby ID
@@ -168,7 +172,7 @@ class Api:
 
             # check if it matches one of the imported item IDs
             for index, importedItemIds in enumerate(importedItemIdLists):
-                if not localItemId in itemIdsToProcessLists[index]:
+                if localItemId not in itemIdsToProcessLists[index]:
                     continue
 
                 matchedItemLists[index].append(localItem)
@@ -177,6 +181,7 @@ class Api:
         return tuple(matchedItemLists)
 
     @staticmethod
+    # pylint: disable=too-many-arguments
     def toFileItem(embyServer, itemObj, mediaType='', embyMediaType='', libraryView='', allowDirectPlay=True):
         # determine the matching Emby media type if possible
         checkMediaType = len(mediaType) > 0
@@ -188,13 +193,14 @@ class Api:
 
             embyMediaType = mappedMediaType[1]
 
-        if not PROPERTY_ITEM_TYPE in itemObj or (checkMediaType and itemObj.get(PROPERTY_ITEM_TYPE) != embyMediaType):
+        if constants.PROPERTY_ITEM_TYPE not in itemObj or \
+           (checkMediaType and itemObj.get(constants.PROPERTY_ITEM_TYPE) != embyMediaType):
             log('cannot import {} item from invalid object: {}'.format(mediaType, json.dumps(itemObj)), xbmc.LOGERROR)
             return None
 
         # determine the Kodi media type based on the Emby media type
         if not checkMediaType:
-            embyMediaType = itemObj.get(PROPERTY_ITEM_TYPE)
+            embyMediaType = itemObj.get(constants.PROPERTY_ITEM_TYPE)
             mappedMediaType = Api.getKodiMediaType(embyMediaType)
             if not mappedMediaType:
                 log('cannot import unsupported Emby media type "{}"'.format(embyMediaType), xbmc.LOGERROR)
@@ -202,7 +208,7 @@ class Api:
 
             mediaType = mappedMediaType[0]
 
-        itemId = itemObj.get(PROPERTY_ITEM_ID)
+        itemId = itemObj.get(constants.PROPERTY_ITEM_ID)
         if not itemId:
             log('cannot import {} item without identifier'.format(mediaType), xbmc.LOGERROR)
             return None
@@ -212,18 +218,18 @@ class Api:
             return None
 
         item = ListItem(
-            path = itemPath,
-            label = itemObj.get(PROPERTY_ITEM_NAME))
-        item.setIsFolder(itemObj.get(PROPERTY_ITEM_IS_FOLDER))
+            path=itemPath,
+            label=itemObj.get(constants.PROPERTY_ITEM_NAME))
+        item.setIsFolder(itemObj.get(constants.PROPERTY_ITEM_IS_FOLDER))
 
         # handle date
-        premiereDate = itemObj.get(PROPERTY_ITEM_PREMIERE_DATE)
+        premiereDate = itemObj.get(constants.PROPERTY_ITEM_PREMIERE_DATE)
         if premiereDate:
             item.setDateTime(premiereDate)
 
         # fill video details
-        Api.fillVideoInfos(embyServer, itemId, itemObj, mediaType, item, \
-            libraryView=libraryView, allowDirectPlay=allowDirectPlay)
+        Api.fillVideoInfos(embyServer, itemId, itemObj, mediaType, item,
+                           libraryView=libraryView, allowDirectPlay=allowDirectPlay)
 
         # handle artwork
         artwork = Api._mapArtwork(embyServer, itemId, itemObj, mediaType)
@@ -233,29 +239,33 @@ class Api:
         return item
 
     @staticmethod
+    # pylint: disable=too-many-return-statements, too-many-branches
     def getPlaybackUrl(embyServer, itemId, itemObj, allowDirectPlay=True):
-        isFolder = itemObj.get(PROPERTY_ITEM_IS_FOLDER)
+        isFolder = itemObj.get(constants.PROPERTY_ITEM_IS_FOLDER)
         itemPath = None
-        if PROPERTY_ITEM_MEDIA_SOURCES in itemObj:
-            mediaSources = itemObj.get(PROPERTY_ITEM_MEDIA_SOURCES)
+        if constants.PROPERTY_ITEM_MEDIA_SOURCES in itemObj:
+            mediaSources = itemObj.get(constants.PROPERTY_ITEM_MEDIA_SOURCES)
             if len(mediaSources) > 0:
                 mediaSource = mediaSources[0]
                 if mediaSource:
-                    itemPath = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_PATH)
-                    protocol = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL)
-                    container = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_CONTAINER)
-                    supportsDirectPlay = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_SUPPORTS_DIRECT_PLAY)
-                    supportsDirectStream = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_SUPPORTS_DIRECT_STREAM)
+                    itemPath = mediaSource.get(constants.PROPERTY_ITEM_MEDIA_SOURCES_PATH)
+                    protocol = mediaSource.get(constants.PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL)
+                    container = mediaSource.get(constants.PROPERTY_ITEM_MEDIA_SOURCES_CONTAINER)
+                    supportsDirectPlay = mediaSource.get(constants.PROPERTY_ITEM_MEDIA_SOURCES_SUPPORTS_DIRECT_PLAY)
+                    supportsDirectStream = \
+                        mediaSource.get(constants.PROPERTY_ITEM_MEDIA_SOURCES_SUPPORTS_DIRECT_STREAM)
                     if not supportsDirectPlay and not supportsDirectStream:
-                        log('cannot import item with ID {} because it neither support Direct Play nor Direct Stream'.format(itemId), xbmc.LOGWARNING)
+                        log('cannot import item with ID {} because it neither support Direct Play nor Direct Stream'
+                            .format(itemId), xbmc.LOGWARNING)
                         return None
                     if not allowDirectPlay and not supportsDirectStream:
-                        log('cannot import item with ID {} because it doesn\'t support Direct Stream'.format(itemId), xbmc.LOGWARNING)
+                        log('cannot import item with ID {} because it doesn\'t support Direct Stream'.format(itemId),
+                            xbmc.LOGWARNING)
                         return None
 
                     # handle Direct Play for directly accessible or HTTP items
                     if allowDirectPlay and supportsDirectPlay:
-                        if protocol == PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL_HTTP or xbmcvfs.exists(itemPath):
+                        if protocol == constants.PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL_HTTP or xbmcvfs.exists(itemPath):
                             return itemPath
 
                         mappedItemPath = Api._mapPath(itemPath, container=container)
@@ -264,19 +274,21 @@ class Api:
 
                     # STRMs require Direct Play
                     if not allowDirectPlay and (container == 'strm' or itemPath.endswith('.strm')):
-                        log('cannot import item with ID {} because STRMs require Direct Play'.format(itemId), xbmc.LOGWARNING)
+                        log('cannot import item with ID {} because STRMs require Direct Play'.format(itemId),
+                            xbmc.LOGWARNING)
                         return None
 
                     # let the rest be handled as Direct Stream
 
         if not itemPath:
             # get the direct path
-            itemPath = itemObj.get(PROPERTY_ITEM_PATH)
+            itemPath = itemObj.get(constants.PROPERTY_ITEM_PATH)
             if not itemPath:
                 if isFolder:
                     return embyServer.BuildItemUrl(itemId)
 
-                log('cannot import item with ID {} because it doesn\'t have a proper path'.format(itemId), xbmc.LOGWARNING)
+                log('cannot import item with ID {} because it doesn\'t have a proper path'.format(itemId),
+                    xbmc.LOGWARNING)
                 return None
 
         if isFolder:
@@ -296,31 +308,32 @@ class Api:
             return embyServer.BuildItemUrl(itemId)
 
         # fall back to Direct Stream
-        return embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId)
+        return embyServer.BuildDirectStreamUrl(itemObj.get(constants.PROPERTY_ITEM_MEDIA_TYPE), itemId)
 
     @staticmethod
-    def getDirectPlayUrl(embyServer, itemId, itemObj):
-        if itemObj.get(PROPERTY_ITEM_IS_FOLDER):
+    # pylint: disable=too-many-return-statements
+    def getDirectPlayUrl(itemObj):
+        if itemObj.get(constants.PROPERTY_ITEM_IS_FOLDER):
             return (False, None)
 
         itemPath = None
-        if PROPERTY_ITEM_MEDIA_SOURCES in itemObj:
-            mediaSources = itemObj.get(PROPERTY_ITEM_MEDIA_SOURCES)
+        if constants.PROPERTY_ITEM_MEDIA_SOURCES in itemObj:
+            mediaSources = itemObj.get(constants.PROPERTY_ITEM_MEDIA_SOURCES)
             if len(mediaSources) > 0:
                 mediaSource = mediaSources[0]
                 if mediaSource:
-                    supportsDirectPlay = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_SUPPORTS_DIRECT_PLAY)
+                    supportsDirectPlay = mediaSource.get(constants.PROPERTY_ITEM_MEDIA_SOURCES_SUPPORTS_DIRECT_PLAY)
                     if not supportsDirectPlay:
                         return (False, None)
 
-                    itemPath = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_PATH)
-                    protocol = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL)
+                    itemPath = mediaSource.get(constants.PROPERTY_ITEM_MEDIA_SOURCES_PATH)
+                    protocol = mediaSource.get(constants.PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL)
 
                     # handle Direct Play for directly accessible or HTTP items
-                    if protocol == PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL_HTTP or xbmcvfs.exists(itemPath):
+                    if protocol == constants.PROPERTY_ITEM_MEDIA_SOURCES_PROTOCOL_HTTP or xbmcvfs.exists(itemPath):
                         return (True, itemPath)
 
-                    container = mediaSource.get(PROPERTY_ITEM_MEDIA_SOURCES_CONTAINER)
+                    container = mediaSource.get(constants.PROPERTY_ITEM_MEDIA_SOURCES_CONTAINER)
 
                     mappedItemPath = Api._mapPath(itemPath, container=container)
                     if xbmcvfs.exists(mappedItemPath):
@@ -331,7 +344,7 @@ class Api:
                         return (False, None)
 
         # get the direct path
-        itemPath = itemObj.get(PROPERTY_ITEM_PATH)
+        itemPath = itemObj.get(constants.PROPERTY_ITEM_PATH)
         if not itemPath:
             return (False, None)
 
@@ -347,48 +360,50 @@ class Api:
 
     @staticmethod
     def getDirectStreamUrl(embyServer, itemId, itemObj):
-        if itemObj.get(PROPERTY_ITEM_IS_FOLDER):
+        if itemObj.get(constants.PROPERTY_ITEM_IS_FOLDER):
             return (False, None)
 
         # fall back to Direct Stream
-        return (True, embyServer.BuildDirectStreamUrl(itemObj.get(PROPERTY_ITEM_MEDIA_TYPE), itemId))
+        return (True, embyServer.BuildDirectStreamUrl(itemObj.get(constants.PROPERTY_ITEM_MEDIA_TYPE), itemId))
 
     @staticmethod
+     # noqa # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements, too-many-return-statements
     def fillVideoInfos(embyServer, itemId, itemObj, mediaType, item, libraryView='', allowDirectPlay=True):
         userdata = {}
-        if PROPERTY_ITEM_USER_DATA in itemObj:
-            userdata = itemObj[PROPERTY_ITEM_USER_DATA]
+        if constants.PROPERTY_ITEM_USER_DATA in itemObj:
+            userdata = itemObj[constants.PROPERTY_ITEM_USER_DATA]
         info = {
             'mediatype': mediaType,
-            'path': itemObj.get(PROPERTY_ITEM_PATH, ''),
+            'path': itemObj.get(constants.PROPERTY_ITEM_PATH, ''),
             'filenameandpath': item.getPath(),
             'title': item.getLabel() or '',
-            'sorttitle': itemObj.get(PROPERTY_ITEM_SORT_NAME, ''),
-            'originaltitle': itemObj.get(PROPERTY_ITEM_ORIGINAL_TITLE, ''),
-            'plot': Api._mapOverview(itemObj.get(PROPERTY_ITEM_OVERVIEW, '')),
-            'plotoutline': itemObj.get(PROPERTY_ITEM_SHORT_OVERVIEW, ''),
-            'dateadded': Api.convertDateTimeToDbDateTime(itemObj.get(PROPERTY_ITEM_DATE_CREATED, '')),
-            'year': itemObj.get(PROPERTY_ITEM_PRODUCTION_YEAR, 0),
-            'rating': itemObj.get(PROPERTY_ITEM_COMMUNITY_RATING, 0.0),
-            'mpaa': Api._mapMpaa(itemObj.get(PROPERTY_ITEM_OFFICIAL_RATING, '')),
-            'duration': Api.ticksToSeconds(itemObj.get(PROPERTY_ITEM_RUN_TIME_TICKS, 0)),
-            'playcount': userdata.get(PROPERTY_ITEM_USER_DATA_PLAY_COUNT, 0),
-            'lastplayed': Api.convertDateTimeToDbDateTime(userdata.get(PROPERTY_ITEM_USER_DATA_LAST_PLAYED_DATE, '')),
+            'sorttitle': itemObj.get(constants.PROPERTY_ITEM_SORT_NAME, ''),
+            'originaltitle': itemObj.get(constants.PROPERTY_ITEM_ORIGINAL_TITLE, ''),
+            'plot': Api._mapOverview(itemObj.get(constants.PROPERTY_ITEM_OVERVIEW, '')),
+            'plotoutline': itemObj.get(constants.PROPERTY_ITEM_SHORT_OVERVIEW, ''),
+            'dateadded': Api.convertDateTimeToDbDateTime(itemObj.get(constants.PROPERTY_ITEM_DATE_CREATED, '')),
+            'year': itemObj.get(constants.PROPERTY_ITEM_PRODUCTION_YEAR, 0),
+            'rating': itemObj.get(constants.PROPERTY_ITEM_COMMUNITY_RATING, 0.0),
+            'mpaa': Api._mapMpaa(itemObj.get(constants.PROPERTY_ITEM_OFFICIAL_RATING, '')),
+            'duration': Api.ticksToSeconds(itemObj.get(constants.PROPERTY_ITEM_RUN_TIME_TICKS, 0)),
+            'playcount': userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAY_COUNT, 0),
+            'lastplayed': Api.convertDateTimeToDbDateTime(
+                userdata.get(constants.PROPERTY_ITEM_USER_DATA_LAST_PLAYED_DATE, '')),
             'director': [],
             'writer': [],
-            'artist': itemObj.get(PROPERTY_ITEM_ARTISTS, []),
-            'album': itemObj.get(PROPERTY_ITEM_ALBUM, ''),
-            'genre': itemObj.get(PROPERTY_ITEM_GENRES, []),
-            'country': itemObj.get(PROPERTY_ITEM_PRODUCTION_LOCATIONS, []),
+            'artist': itemObj.get(constants.PROPERTY_ITEM_ARTISTS, []),
+            'album': itemObj.get(constants.PROPERTY_ITEM_ALBUM, ''),
+            'genre': itemObj.get(constants.PROPERTY_ITEM_GENRES, []),
+            'country': itemObj.get(constants.PROPERTY_ITEM_PRODUCTION_LOCATIONS, []),
             'tag': [],
         }
 
         # process tags
-        if PROPERTY_ITEM_TAG_ITEMS in itemObj:
+        if constants.PROPERTY_ITEM_TAG_ITEMS in itemObj:
             info['tag'] = [
-                    tag.get(PROPERTY_ITEM_TAG_ITEMS_NAME)
-                    for tag in itemObj.get(PROPERTY_ITEM_TAG_ITEMS)
-                    if PROPERTY_ITEM_TAG_ITEMS_NAME in tag
+                tag.get(constants.PROPERTY_ITEM_TAG_ITEMS_NAME)
+                for tag in itemObj.get(constants.PROPERTY_ITEM_TAG_ITEMS)
+                if constants.PROPERTY_ITEM_TAG_ITEMS_NAME in tag
                 ]
 
         # add the library view as a tag
@@ -414,24 +429,24 @@ class Api:
 
         # handle taglines
         tagline = ''
-        embyTaglines = itemObj.get(PROPERTY_ITEM_TAGLINES, [])
+        embyTaglines = itemObj.get(constants.PROPERTY_ITEM_TAGLINES, [])
         if embyTaglines:
             tagline = embyTaglines[0]
         info['tagline'] = tagline
 
         # handle studios
         studios = []
-        for studio in itemObj.get(PROPERTY_ITEM_STUDIOS, []):
+        for studio in itemObj.get(constants.PROPERTY_ITEM_STUDIOS, []):
             studios.append(Api._mapStudio(studio['Name']))
         info['studio'] = studios
 
         # handle tvshow, season and episode specific properties
         if mediaType == xbmcmediaimport.MediaTypeTvShow:
             info['tvshowtitle'] = item.getLabel()
-            info['status'] = itemObj.get(PROPERTY_ITEM_STATUS, '')
-        elif mediaType == xbmcmediaimport.MediaTypeSeason or mediaType == xbmcmediaimport.MediaTypeEpisode:
-            info['tvshowtitle'] = itemObj.get(PROPERTY_ITEM_SERIES_NAME, '')
-            index = itemObj.get(PROPERTY_ITEM_INDEX_NUMBER, 0)
+            info['status'] = itemObj.get(constants.PROPERTY_ITEM_STATUS, '')
+        elif mediaType in (xbmcmediaimport.MediaTypeSeason, xbmcmediaimport.MediaTypeEpisode):
+            info['tvshowtitle'] = itemObj.get(constants.PROPERTY_ITEM_SERIES_NAME, '')
+            index = itemObj.get(constants.PROPERTY_ITEM_INDEX_NUMBER, 0)
             if mediaType == xbmcmediaimport.MediaTypeSeason:
                 info['season'] = index
 
@@ -440,95 +455,99 @@ class Api:
                 # abusing sorttitle for custom season titles
                 del info['sorttitle']
             else:
-                info['season'] = itemObj.get(PROPERTY_ITEM_PARENT_INDEX_NUMBER, 0)
+                info['season'] = itemObj.get(constants.PROPERTY_ITEM_PARENT_INDEX_NUMBER, 0)
                 info['episode'] = index
 
         # handle actors / cast
         cast = []
-        for index, person in enumerate(itemObj.get(PROPERTY_ITEM_PEOPLE, [])):
-            name = person.get(PROPERTY_ITEM_PEOPLE_NAME, '')
-            type = person.get(PROPERTY_ITEM_PEOPLE_TYPE, '')
-            if type == PROPERTY_ITEM_PEOPLE_TYPE_ACTOR:
+        for index, person in enumerate(itemObj.get(constants.PROPERTY_ITEM_PEOPLE, [])):
+            name = person.get(constants.PROPERTY_ITEM_PEOPLE_NAME, '')
+            castType = person.get(constants.PROPERTY_ITEM_PEOPLE_TYPE, '')
+            if castType == constants.PROPERTY_ITEM_PEOPLE_TYPE_ACTOR:
                 actor = {
                     'name': name,
-                    'role': person.get(PROPERTY_ITEM_PEOPLE_ROLE, ''),
+                    'role': person.get(constants.PROPERTY_ITEM_PEOPLE_ROLE, ''),
                     'order': index
                 }
-                personId = person.get(PROPERTY_ITEM_PEOPLE_ID, None)
-                primaryImageTag = person.get(PROPERTY_ITEM_PEOPLE_PRIMARY_IMAGE_TAG, '')
+                personId = person.get(constants.PROPERTY_ITEM_PEOPLE_ID, None)
+                primaryImageTag = person.get(constants.PROPERTY_ITEM_PEOPLE_PRIMARY_IMAGE_TAG, '')
                 if personId and primaryImageTag:
-                    actor['thumbnail'] = embyServer.BuildImageUrl(personId, PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, primaryImageTag)
+                    actor['thumbnail'] = \
+                        embyServer.BuildImageUrl(personId, constants.PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, primaryImageTag)
                 cast.append(actor)
-            elif type == PROPERTY_ITEM_PEOPLE_TYPE_WRITER:
+            elif castType == constants.PROPERTY_ITEM_PEOPLE_TYPE_WRITER:
                 info['writer'].append(name)
-            elif type == PROPERTY_ITEM_PEOPLE_TYPE_DIRECTOR:
+            elif castType == constants.PROPERTY_ITEM_PEOPLE_TYPE_DIRECTOR:
                 info['director'].append(name)
 
         item.setInfo('video', info)
         item.setCast(cast)
 
         # handle unique / provider IDs
-        uniqueIds = { key.lower(): value for key, value in iteritems(itemObj.get(PROPERTY_ITEM_PROVIDER_IDS, {})) }
+        uniqueIds = \
+            {key.lower(): value for key, value in iteritems(itemObj.get(constants.PROPERTY_ITEM_PROVIDER_IDS, {}))}
         defaultUniqueId = Api._mapDefaultUniqueId(uniqueIds, mediaType)
         # add the item's ID as a unique ID belonging to Emby
-        uniqueIds[EMBY_PROTOCOL] = itemId
+        uniqueIds[constants.EMBY_PROTOCOL] = itemId
         item.getVideoInfoTag().setUniqueIDs(uniqueIds, defaultUniqueId)
 
         # handle critic rating as rotten tomato rating
-        if PROPERTY_ITEM_CRITIC_RATING in itemObj:
-            criticRating = float(itemObj.get(PROPERTY_ITEM_CRITIC_RATING)) / 10.0
+        if constants.PROPERTY_ITEM_CRITIC_RATING in itemObj:
+            criticRating = float(itemObj.get(constants.PROPERTY_ITEM_CRITIC_RATING)) / 10.0
             item.setRating('tomatometerallcritics', criticRating)
 
         # handle resume point
         resumePoint = {
             'totaltime': info['duration'],
-            'resumetime': Api.ticksToSeconds(userdata.get(PROPERTY_ITEM_USER_DATA_PLAYBACK_POSITION_TICKS, 0))
+            'resumetime':
+                Api.ticksToSeconds(userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAYBACK_POSITION_TICKS, 0))
         }
         item.setProperties(resumePoint)
 
         # stream details
-        for stream in itemObj.get(PROPERTY_ITEM_MEDIA_STREAMS, []):
-            type = stream.get(PROPERTY_ITEM_MEDIA_STREAM_TYPE, '')
-            if type == 'Video':
+        for stream in itemObj.get(constants.PROPERTY_ITEM_MEDIA_STREAMS, []):
+            streamType = stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_TYPE, '')
+            if streamType == 'Video':
                 item.addStreamInfo('video', Api._mapVideoStream({
-                    'codec': stream.get(PROPERTY_ITEM_MEDIA_STREAM_CODEC, ''),
-                    'profile': stream.get(PROPERTY_ITEM_MEDIA_STREAM_PROFILE, ''),
-                    'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
-                    'width': stream.get(PROPERTY_ITEM_MEDIA_STREAM_WIDTH, 0),
-                    'height': stream.get(PROPERTY_ITEM_MEDIA_STREAM_HEIGHT, 0),
-                    'aspect': stream.get(PROPERTY_ITEM_MEDIA_STREAM_ASPECT_RATIO, '0'),
-                    'stereomode': stream.get(PROPERTY_ITEM_MEDIA_STREAM_VIDEO_3D_FORMAT, 'mono'),
+                    'codec': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_CODEC, ''),
+                    'profile': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_PROFILE, ''),
+                    'language': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
+                    'width': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_WIDTH, 0),
+                    'height': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_HEIGHT, 0),
+                    'aspect': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_ASPECT_RATIO, '0'),
+                    'stereomode': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_VIDEO_3D_FORMAT, 'mono'),
                     'duration': info['duration']
                     }))
-            elif type == 'Audio':
+            elif streamType == 'Audio':
                 item.addStreamInfo('audio', Api._mapAudioStream({
-                    'codec': stream.get(PROPERTY_ITEM_MEDIA_STREAM_CODEC, ''),
-                    'profile': stream.get(PROPERTY_ITEM_MEDIA_STREAM_PROFILE, ''),
-                    'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
-                    'channels': stream.get(PROPERTY_ITEM_MEDIA_STREAM_CHANNELS, 2)
+                    'codec': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_CODEC, ''),
+                    'profile': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_PROFILE, ''),
+                    'language': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
+                    'channels': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_CHANNELS, 2)
                     }))
-            elif type == 'Subtitle':
+            elif streamType == 'Subtitle':
                 item.addStreamInfo('subtitle', {
-                    'language': stream.get(PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, '')
+                    'language': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, '')
                     })
 
     @staticmethod
     def getTrailer(embyServer, itemId, itemObj, allowDirectPlay=True):
         # prefer local trailers if direct play is allowed
-        if allowDirectPlay and itemObj.get(PROPERTY_ITEM_LOCAL_TRAILER_COUNT, 0):
+        if allowDirectPlay and itemObj.get(constants.PROPERTY_ITEM_LOCAL_TRAILER_COUNT, 0):
             localTrailers = Library.GetLocalTrailers(embyServer, itemId)
             if not localTrailers:
                 log('failed to retrieve local trailers for item with ID {}'.format(itemId))
             else:
-                localTrailerUrl = Api.getPlaybackUrl(embyServer, itemId, localTrailers[0], allowDirectPlay=allowDirectPlay)
+                localTrailerUrl = Api.getPlaybackUrl(embyServer, itemId, localTrailers[0],
+                                                     allowDirectPlay=allowDirectPlay)
                 if localTrailerUrl:
                     return localTrailerUrl
 
         # otherwise use the first remote trailer
-        if PROPERTY_ITEM_REMOTE_TRAILERS in itemObj:
-            remoteTrailers = itemObj.get(PROPERTY_ITEM_REMOTE_TRAILERS)
+        if constants.PROPERTY_ITEM_REMOTE_TRAILERS in itemObj:
+            remoteTrailers = itemObj.get(constants.PROPERTY_ITEM_REMOTE_TRAILERS)
             if remoteTrailers:
-                return remoteTrailers[0].get(PROPERTY_ITEM_REMOTE_TRAILERS_URL, None)
+                return remoteTrailers[0].get(constants.PROPERTY_ITEM_REMOTE_TRAILERS_URL, None)
 
         return None
 
@@ -568,10 +587,11 @@ class Api:
 
         # try to download the icon (since Emby's webserver doesn't support HEAD requests)
         try:
-            urlretrieve(iconUrl, iconPath)
+            urlretrieve(iconUrl, iconPath)  # nosec
         except IOError as err:
-                log('failed to download icon for {} from {}: {}'.format(mediaProvider2str(mediaProvider), iconUrl, err), xbmc.LOGWARNING)
-                return iconUrl
+            log('failed to download icon for {} from {}: {}'.format(mediaProvider2str(mediaProvider), iconUrl, err),
+                xbmc.LOGWARNING)
+            return iconUrl
 
         return iconPath
 
@@ -586,7 +606,7 @@ class Api:
 
         try:
             _ = xbmcvfs.mkdirs(path)
-        except:
+        except:  # noqa: E722 # nosec
             pass
 
         if xbmcvfs.exists(path):
@@ -594,7 +614,7 @@ class Api:
 
         try:
             os.makedirs(path)
-        except:
+        except:  # noqa: E722 # nosec
             pass
 
         return xbmcvfs.exists(path)
@@ -682,7 +702,8 @@ class Api:
         uniqueIdKeys = uniqueIds.keys()
 
         # for tvshows, seasons and episodes prefer TVDB
-        if mediaType in (xbmcmediaimport.MediaTypeTvShow, xbmcmediaimport.MediaTypeSeason, xbmcmediaimport.MediaTypeEpisode):
+        if mediaType in \
+           (xbmcmediaimport.MediaTypeTvShow, xbmcmediaimport.MediaTypeSeason, xbmcmediaimport.MediaTypeEpisode):
             if Api.UNIQUE_ID_TVDB in uniqueIdKeys:
                 return Api.UNIQUE_ID_TVDB
 
@@ -736,25 +757,33 @@ class Api:
     @staticmethod
     def _mapArtwork(embyServer, itemId, itemObj, mediaType):
         artwork = {}
-        images = itemObj.get(PROPERTY_ITEM_IMAGE_TAGS)
+        images = itemObj.get(constants.PROPERTY_ITEM_IMAGE_TAGS)
         if images:
             if mediaType in (xbmcmediaimport.MediaTypeEpisode, xbmcmediaimport.MediaTypeMusicVideo):
-                Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, 'thumb')
+                Api._mapSingleArtwork(embyServer, artwork, itemId, images,
+                                      constants.PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, 'thumb')
             else:
-                Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, 'poster')
-            Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_LOGO, 'clearlogo')
-            Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_ART, 'clearart')
-            Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_BANNER, 'banner')
-            Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_THUMB, 'landscape')
-            Api._mapSingleArtwork(embyServer, artwork, itemId, images, PROPERTY_ITEM_IMAGE_TAGS_DISC, 'discart')
+                Api._mapSingleArtwork(embyServer, artwork, itemId, images,
+                                      constants.PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, 'poster')
+            Api._mapSingleArtwork(embyServer, artwork, itemId, images,
+                                  constants.PROPERTY_ITEM_IMAGE_TAGS_LOGO, 'clearlogo')
+            Api._mapSingleArtwork(embyServer, artwork, itemId, images,
+                                  constants.PROPERTY_ITEM_IMAGE_TAGS_ART, 'clearart')
+            Api._mapSingleArtwork(embyServer, artwork, itemId, images,
+                                  constants.PROPERTY_ITEM_IMAGE_TAGS_BANNER, 'banner')
+            Api._mapSingleArtwork(embyServer, artwork, itemId, images,
+                                  constants.PROPERTY_ITEM_IMAGE_TAGS_THUMB, 'landscape')
+            Api._mapSingleArtwork(embyServer, artwork, itemId, images,
+                                  constants.PROPERTY_ITEM_IMAGE_TAGS_DISC, 'discart')
 
-        images = itemObj.get(PROPERTY_ITEM_BACKDROP_IMAGE_TAGS)
+        images = itemObj.get(constants.PROPERTY_ITEM_BACKDROP_IMAGE_TAGS)
         if images:
             artwork['fanart'] = embyServer.BuildImageUrl(itemId, 'Backdrop/0', images[0])
 
         return artwork
 
     @staticmethod
+    # pylint: disable=too-many-arguments
     def _mapSingleArtwork(embyServer, artwork, itemId, imagesObj, embyArtwork, kodiArtwork):
         if embyArtwork in imagesObj:
             artwork[kodiArtwork] = embyServer.BuildImageUrl(itemId, embyArtwork, imagesObj.get(embyArtwork))

@@ -8,6 +8,7 @@
 
 from uuid import uuid4
 
+
 class PlaybackCheckin:
     @staticmethod
     def GenerateSessionId():

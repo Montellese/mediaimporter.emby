@@ -9,23 +9,27 @@
 from emby.api.authentication import Authentication
 from emby.api.embyconnect import EmbyConnect
 
-from lib.utils import Url
 
 class AuthenticatorFactory:
     @staticmethod
-    def WithUserId(url, deviceId, userId, password='', token=''):
+    def WithUserId(url, deviceId, userId, password='', token=''):  # nosec
         return UserIdAuthenticator(url, deviceId=deviceId, userId=userId, password=password, token=token)
 
     @staticmethod
-    def WithUsername(url, deviceId, username, userId, password='', token=''):
-        return UsernameAuthenticator(url, deviceId=deviceId, username=username, userId=userId, password=password, token=token)
+    # pylint: disable=too-many-arguments
+    def WithUsername(url, deviceId, username, userId, password='', token=''):  # nosec
+        return UsernameAuthenticator(url, deviceId=deviceId, username=username, userId=userId, password=password,
+                                     token=token)
 
     @staticmethod
-    def WithEmbyConnect(url, deviceId, embyConnectUserId, accessKey, userId, token=''):
-        return EmbyConnectAuthenticator(url, deviceId=deviceId, embyConnectUserId=embyConnectUserId, accessKey=accessKey, userId=userId, token=token)
+    # pylint: disable=too-many-arguments
+    def WithEmbyConnect(url, deviceId, embyConnectUserId, accessKey, userId, token=''):  # nosec
+        return EmbyConnectAuthenticator(url, deviceId=deviceId, embyConnectUserId=embyConnectUserId,
+                                        accessKey=accessKey, userId=userId, token=token)
+
 
 class BaseAuthenticator:
-    def __init__(self, url, deviceId='', token=''):
+    def __init__(self, url, deviceId='', token=''):  # nosec
         if not url:
             raise ValueError('invalid url')
 
@@ -65,8 +69,10 @@ class BaseAuthenticator:
     def _authenticate(self):
         raise NotImplementedError()
 
+
 class UsernameAuthenticator(BaseAuthenticator):
-    def __init__(self, url, deviceId='', username='', userId='', password='', token=''):
+    # pylint: disable=too-many-arguments
+    def __init__(self, url, deviceId='', username='', userId='', password='', token=''):  # nosec
         super(UsernameAuthenticator, self).__init__(url, deviceId=deviceId, token=token)
 
         if not username:
@@ -84,8 +90,10 @@ class UsernameAuthenticator(BaseAuthenticator):
             password=self._password,
             deviceId=self._deviceId)
 
+
 class UserIdAuthenticator(BaseAuthenticator):
-    def __init__(self, url, deviceId='', userId='', password='', token=''):
+    # pylint: disable=too-many-arguments
+    def __init__(self, url, deviceId='', userId='', password='', token=''):  # nosec
         super(UserIdAuthenticator, self).__init__(url, deviceId=deviceId, token=token)
 
         if not userId:
@@ -102,8 +110,10 @@ class UserIdAuthenticator(BaseAuthenticator):
             password=self._password,
             deviceId=self._deviceId)
 
+
 class EmbyConnectAuthenticator(BaseAuthenticator):
-    def __init__(self, url, deviceId='', embyConnectUserId='', accessKey='', userId='', token=''):
+    # pylint: disable=too-many-arguments
+    def __init__(self, url, deviceId='', embyConnectUserId='', accessKey='', userId='', token=''):  # nosec
         super(EmbyConnectAuthenticator, self).__init__(url, deviceId=deviceId, token=token)
 
         if not embyConnectUserId:

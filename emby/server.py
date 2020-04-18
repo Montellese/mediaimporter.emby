@@ -8,14 +8,14 @@
 
 from six.moves.urllib.parse import urlparse
 
-import xbmc
-
 from emby import constants
 from emby.authenticator import AuthenticatorFactory
 from emby.request import NotAuthenticatedError, Request
 
 from lib.utils import log, splitall, Url
 
+
+# pylint: disable=too-many-public-methods
 class Server:
     def __init__(self, provider):
         if not provider:
@@ -41,13 +41,17 @@ class Server:
 
             if user == constants.SETTING_PROVIDER_USER_OPTION_MANUAL:
                 username = self._settings.getString(constants.SETTING_PROVIDER_USERNAME)
-                self._authenticator = AuthenticatorFactory.WithUsername(self._url, self._devideId, username, userId, password, token=token)
+                self._authenticator = AuthenticatorFactory.WithUsername(self._url, self._devideId, username, userId,
+                                                                        password, token=token)
             else:
-                self._authenticator = AuthenticatorFactory.WithUserId(self._url, self._devideId, user, password, token=token)
+                self._authenticator = AuthenticatorFactory.WithUserId(self._url, self._devideId, user, password,
+                                                                      token=token)
         elif authMethod == constants.SETTING_PROVIDER_AUTHENTICATION_OPTION_EMBY_CONNECT:
             embyConnectUserId = self._settings.getString(constants.SETTING_PROVIDER_EMBY_CONNECT_USER_ID)
             accessKey = self._settings.getString(constants.SETTING_PROVIDER_EMBY_CONNECT_ACCESS_KEY)
-            self._authenticator = AuthenticatorFactory.WithEmbyConnect(self._baseUrl, self._devideId, embyConnectUserId, accessKey, userId, token=token)
+            self._authenticator = AuthenticatorFactory.WithEmbyConnect(self._baseUrl, self._devideId,
+                                                                       embyConnectUserId, accessKey, userId,
+                                                                       token=token)
         else:
             raise ValueError('invalid authentication method: {}'.format(authMethod))
 
@@ -70,7 +74,9 @@ class Server:
         return self._request(url, lambda url, headers: Request.GetAsJson(url, headers=headers))
 
     def ApiPost(self, url, data=None, json=None):
-        return self._request(url, lambda url, headers, data, json: Request.PostAsJson(url, headers=headers, body=data, json=json), data, json)
+        return self._request(url, lambda url, headers, data, json:
+                             Request.PostAsJson(url, headers=headers, body=data, json=json),
+                             data, json)
 
     def ApiDelete(self, url):
         return self._request(url, lambda url, headers: Request.Delete(url, headers=headers))
@@ -140,6 +146,7 @@ class Server:
         return url
 
     @staticmethod
+    # pylint: disable=too-many-return-statements
     def IsDirectStreamUrl(mediaProvider, url):
         if not mediaProvider:
             raise ValueError('Invalid mediaProvider')
@@ -159,14 +166,15 @@ class Server:
         if urlPaths[1] != constants.EMBY_PROTOCOL:
             return False
         # the second part must either be "Videos" or "Audio"
-        if urlPaths[2] not in [ constants.URL_PLAYBACK_MEDIA_TYPE_VIDEO, constants.URL_PLAYBACK_MEDIA_TYPE_AUDIO ]:
+        if urlPaths[2] not in [constants.URL_PLAYBACK_MEDIA_TYPE_VIDEO, constants.URL_PLAYBACK_MEDIA_TYPE_AUDIO]:
             return False
         # the fourth part must start with "stream"
         if not urlPaths[4].startswith(constants.URL_PLAYBACK_STREAM):
             return False
 
         # the query must contain "static=true"
-        if not '{}={}'.format(constants.URL_PLAYBACK_OPTION_STATIC, constants.URL_PLAYBACK_OPTION_STATIC_TRUE) in parsedUrl.query:
+        staticTrue = '{}={}'.format(constants.URL_PLAYBACK_OPTION_STATIC, constants.URL_PLAYBACK_OPTION_STATIC_TRUE)
+        if staticTrue not in parsedUrl.query:
             return False
 
         return True
@@ -179,18 +187,19 @@ class Server:
 
     def BuildSubtitleStreamUrl(self, itemId, sourceId, index, codec):
         if not itemId:
-            raise('invalid itemId')
+            raise ValueError('invalid itemId')
         if not sourceId:
-            raise('invalid sourceId')
+            raise ValueError('invalid sourceId')
         if not index:
-            raise('invalid index')
+            raise ValueError('invalid index')
         if not codec:
-            raise('invalid codec')
+            raise ValueError('invalid codec')
 
         # <url>/Videos/<itemId>/<sourceId>/Subtitles/<index>/Stream.<codec>?api_key=<token>
-        url = Url.append(self._url, constants.URL_VIDEOS, itemId, sourceId, constants.URL_VIDEOS_SUBTITLES, str(index), constants.URL_VIDEOS_SUBTITLES_STREAM)
+        url = Url.append(self._url, constants.URL_VIDEOS, itemId, sourceId, constants.URL_VIDEOS_SUBTITLES, str(index),
+                         constants.URL_VIDEOS_SUBTITLES_STREAM)
         url = '{}.{}'.format(url, codec)
-        return Url.addOptions(url, { constants.URL_QUERY_API_KEY: self._authenticator.AccessToken() })
+        return Url.addOptions(url, {constants.URL_QUERY_API_KEY: self._authenticator.AccessToken()})
 
     def BuildUserPlayingItemUrl(self, itemId):
         if not itemId:
@@ -216,7 +225,7 @@ class Server:
     def BuildFolderItemUrl(self, itemId):
         return self.BuildUserItemUrl(itemId)
 
-    def BuildImageUrl(self, itemId, imageType, imageTag = ''):
+    def BuildImageUrl(self, itemId, imageType, imageTag=''):
         if not itemId:
             raise ValueError('Invalid itemId')
         if not imageType:
@@ -225,7 +234,7 @@ class Server:
         url = self.BuildItemUrl(itemId)
         url = Url.append(url, constants.URL_IMAGES, imageType)
         if imageTag:
-            url = Url.addOptions(url, { constants.URL_QUERY_TAG: imageTag })
+            url = Url.addOptions(url, {constants.URL_QUERY_TAG: imageTag})
 
         return url
 
@@ -271,7 +280,8 @@ class Server:
         if not baseUrl:
             raise ValueError('Invalid baseUrl')
 
-        return Url.append(Server._buildBaseUrl(baseUrl), constants.URL_SYSTEM, constants.URL_SYSTEM_INFO, constants.URL_SYSTEM_INFO_PUBLIC)
+        return Url.append(Server._buildBaseUrl(baseUrl), constants.URL_SYSTEM, constants.URL_SYSTEM_INFO,
+                          constants.URL_SYSTEM_INFO_PUBLIC)
 
     @staticmethod
     def BuildIconUrl(baseUrl):
@@ -300,7 +310,8 @@ class Server:
         return Url.append(baseUrl, constants.EMBY_PROTOCOL)
 
     def _request(self, url, function, *args):
-        headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
+        headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(),
+                                                deviceId=self._devideId)
         try:
             return function(url, headers, *args)
         except NotAuthenticatedError:
@@ -309,7 +320,8 @@ class Server:
                 return False
 
             # retrieve the headers again because the access token has changed
-            headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(), deviceId=self._devideId)
+            headers = Request.PrepareApiCallHeaders(authToken=self.AccessToken(), userId=self.UserId(),
+                                                    deviceId=self._devideId)
 
             # execute the actual request again
             return function(url, headers, *args)

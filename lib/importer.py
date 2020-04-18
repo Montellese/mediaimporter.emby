@@ -6,21 +6,17 @@
 #  See LICENSES/README.md for more information.
 #
 
-from datetime import datetime
-from dateutil import parser
-import json
-import posixpath
 import sys
-from six import iteritems
-from six.moves.urllib.parse import parse_qs, unquote, urlparse
 import time
 import uuid
 
-import xbmc
-import xbmcaddon
-import xbmcgui
-from xbmcgui import ListItem
-import xbmcmediaimport
+from dateutil import parser
+from six import iteritems
+from six.moves.urllib.parse import parse_qs, unquote, urlparse
+
+import xbmc  # pylint: disable=import-error
+import xbmcgui  # pylint: disable=import-error
+import xbmcmediaimport  # pylint: disable=import-error
 
 import emby
 from emby.api.embyconnect import EmbyConnect
@@ -65,8 +61,9 @@ EMBY_ITEM_FIELDS = [
 # general constants
 ITEM_REQUEST_LIMIT = 100
 
+
 def mediaTypesFromOptions(options):
-    if not 'mediatypes' in options and not 'mediatypes[]' in options:
+    if 'mediatypes' not in options and 'mediatypes[]' not in options:
         return None
 
     mediaTypes = None
@@ -76,6 +73,7 @@ def mediaTypesFromOptions(options):
         mediaTypes = options['mediatypes[]']
 
     return mediaTypes
+
 
 def getMatchingLibraryViews(embyServer, mediaTypes, selectedViews):
     if not embyServer:
@@ -89,11 +87,12 @@ def getMatchingLibraryViews(embyServer, mediaTypes, selectedViews):
     if not selectedViews:
         matchingLibraryViews = libraryViews
     else:
-        matchingLibraryViews = [ libraryView for libraryView in libraryViews if libraryView.id in selectedViews ]
+        matchingLibraryViews = [libraryView for libraryView in libraryViews if libraryView.id in selectedViews]
 
     return matchingLibraryViews
 
-def discoverProviderLocally(handle, options):
+
+def discoverProviderLocally(handle, options):  # pylint: disable=unused-argument
     baseUrl = xbmcgui.Dialog().input(localise(32050), 'http://')
     if not baseUrl:
         return None
@@ -108,7 +107,8 @@ def discoverProviderLocally(handle, options):
 
     providerId = Server.BuildProviderId(serverInfo.id)
     providerIconUrl = Server.BuildIconUrl(baseUrl)
-    provider = xbmcmediaimport.MediaProvider(providerId, baseUrl, serverInfo.name, providerIconUrl, emby.constants.SUPPORTED_MEDIA_TYPES)
+    provider = xbmcmediaimport.MediaProvider(providerId, baseUrl, serverInfo.name, providerIconUrl,
+                                             emby.constants.SUPPORTED_MEDIA_TYPES)
     provider.setIconUrl(kodi.Api.downloadIcon(provider))
 
     # store local authentication in settings
@@ -116,12 +116,14 @@ def discoverProviderLocally(handle, options):
     if not providerSettings:
         return None
 
-    providerSettings.setString(emby.constants.SETTING_PROVIDER_AUTHENTICATION, emby.constants.SETTING_PROVIDER_AUTHENTICATION_OPTION_LOCAL)
+    providerSettings.setString(emby.constants.SETTING_PROVIDER_AUTHENTICATION,
+                               emby.constants.SETTING_PROVIDER_AUTHENTICATION_OPTION_LOCAL)
     providerSettings.save()
 
     log('Local Emby server {} successfully discovered at {}'.format(mediaProvider2str(provider), baseUrl))
 
     return provider
+
 
 def linkToEmbyConnect(deviceId):
     dialog = xbmcgui.Dialog()
@@ -154,7 +156,8 @@ def linkToEmbyConnect(deviceId):
 
     return authResult
 
-def linkEmbyConnect(handle, options):
+
+def linkEmbyConnect(handle, _):
     # retrieve the media provider
     mediaProvider = xbmcmediaimport.getProvider(handle)
     if not mediaProvider:
@@ -174,7 +177,7 @@ def linkEmbyConnect(handle, options):
 
     embyConnect = linkToEmbyConnect(deviceId)
     if not embyConnect:
-        return None
+        return
 
     # make sure the configured Emby server is still accessible
     serverUrl = mediaProvider.getBasePath()
@@ -185,7 +188,7 @@ def linkEmbyConnect(handle, options):
     servers = EmbyConnect.GetServers(embyConnect.accessToken, embyConnect.userId)
     if not servers:
         log('no servers available for Emby Connect user id {}'.format(embyConnect.userId), xbmc.LOGWARNING)
-        return None
+        return
 
     for server in servers:
         if server.systemId == serverId:
@@ -199,7 +202,7 @@ def linkEmbyConnect(handle, options):
 
     # change the settings
     providerSettings.setString(emby.constants.SETTING_PROVIDER_EMBY_CONNECT_USER_ID, embyConnect.userId)
-    providerSettings.setString(emby.constants.SETTING_PROVIDER_EMBY_CONNECT_ACCESS_KEY, server.accessKey)
+    providerSettings.setString(emby.constants.SETTING_PROVIDER_EMBY_CONNECT_ACCESS_KEY, matchingServer.accessKey)
 
     success = False
     try:
@@ -209,13 +212,15 @@ def linkEmbyConnect(handle, options):
 
     if success:
         xbmcgui.Dialog().ok(localise(32038), localise(32062))
-        log('successfully linked to Emby Connect server {} ({}) {}'.format(server.name, serverId, serverUrl))
+        log('successfully linked to Emby Connect server {} ({}) {}'.format(matchingServer.name, serverId, serverUrl))
     else:
         xbmcgui.Dialog().ok(localise(32038), localise(32061))
-        log('failed to link to Emby Connect server {} ({}) {}'.format(server.name, serverId, serverUrl), xbmc.LOGWARNING)
+        log('failed to link to Emby Connect server {} ({}) {}'.format(matchingServer.name, serverId, serverUrl),
+            xbmc.LOGWARNING)
 
 
-def discoverProviderWithEmbyConnect(handle, options):
+# pylint: disable=too-many-locals, too-many-branches, too-many-return-statements
+def discoverProviderWithEmbyConnect(handle, options):  # pylint: disable=unused-argument
     deviceId = Request.GenerateDeviceId()
 
     embyConnect = linkToEmbyConnect(deviceId)
@@ -234,7 +239,7 @@ def discoverProviderWithEmbyConnect(handle, options):
         server = servers[0]
     else:
         # ask the user which server to use
-        serverChoices = [ server.name for server in servers ]
+        serverChoices = [server.name for server in servers]
         serverChoice = dialog.select(localise(32057), serverChoices)
         if serverChoice < 0 or serverChoice >= len(serverChoices):
             return None
@@ -268,12 +273,14 @@ def discoverProviderWithEmbyConnect(handle, options):
 
     if not baseUrl:
         dialog.ok(localise(32058), localise(32060).format(server.name))
-        log('failed to connect to Emby server "{}" with Emby Connect user ID {}'.format(server.name, embyConnect.userId), xbmc.LOGWARNING)
+        log('failed to connect to Emby server "{}" with Emby Connect user ID {}'
+            .format(server.name, embyConnect.userId), xbmc.LOGWARNING)
         return None
 
     providerId = Server.BuildProviderId(server.systemId)
     providerIconUrl = Server.BuildIconUrl(baseUrl)
-    provider = xbmcmediaimport.MediaProvider(providerId, baseUrl, server.name, providerIconUrl, emby.constants.SUPPORTED_MEDIA_TYPES)
+    provider = xbmcmediaimport.MediaProvider(providerId, baseUrl, server.name, providerIconUrl,
+                                             emby.constants.SUPPORTED_MEDIA_TYPES)
     provider.setIconUrl(kodi.Api.downloadIcon(provider))
 
     # store Emby connect authentication in settings
@@ -281,7 +288,8 @@ def discoverProviderWithEmbyConnect(handle, options):
     if not providerSettings:
         return None
 
-    providerSettings.setString(emby.constants.SETTING_PROVIDER_AUTHENTICATION, emby.constants.SETTING_PROVIDER_AUTHENTICATION_OPTION_EMBY_CONNECT)
+    providerSettings.setString(emby.constants.SETTING_PROVIDER_AUTHENTICATION,
+                               emby.constants.SETTING_PROVIDER_AUTHENTICATION_OPTION_EMBY_CONNECT)
     providerSettings.setString(emby.constants.SETTING_PROVIDER_EMBY_CONNECT_USER_ID, embyConnect.userId)
     providerSettings.setString(emby.constants.SETTING_PROVIDER_EMBY_CONNECT_ACCESS_KEY, server.accessKey)
     providerSettings.setString(emby.constants.SETTING_PROVIDER_DEVICEID, deviceId)
@@ -291,7 +299,8 @@ def discoverProviderWithEmbyConnect(handle, options):
 
     return provider
 
-def testAuthentication(handle, options):
+
+def testAuthentication(handle, _):
     # retrieve the media provider
     mediaProvider = xbmcmediaimport.getProvider(handle)
     if not mediaProvider:
@@ -311,7 +320,8 @@ def testAuthentication(handle, options):
         line = 32017
     xbmcgui.Dialog().ok(title, localise(line))
 
-def forceSync(handle, options):
+
+def forceSync(handle, _):
     # ask the user whether he is sure
     force = xbmcgui.Dialog().yesno(localise(32042), localise(32053))
     if not force:
@@ -332,7 +342,8 @@ def forceSync(handle, options):
     # reset the synchronization hash setting to force a full synchronization
     SynchronizationSettings.ResetHash(importSettings, save=False)
 
-def settingOptionsFillerUsers(handle, options):
+
+def settingOptionsFillerUsers(handle, _):
     # retrieve the media provider
     mediaProvider = xbmcmediaimport.getProvider(handle)
     if not mediaProvider:
@@ -342,14 +353,16 @@ def settingOptionsFillerUsers(handle, options):
     # get the provider's settings
     settings = mediaProvider.getSettings()
 
-    users = [ (__addon__.getLocalizedString(32015), emby.constants.SETTING_PROVIDER_USER_OPTION_MANUAL) ]
-    publicUsers = User.GetPublicUsers(mediaProvider.getBasePath(), deviceId=settings.getString(emby.constants.SETTING_PROVIDER_DEVICEID))
-    users.extend([ (user.name, user.id) for user in publicUsers ])
+    users = [(__addon__.getLocalizedString(32015), emby.constants.SETTING_PROVIDER_USER_OPTION_MANUAL)]
+    publicUsers = User.GetPublicUsers(mediaProvider.getBasePath(),
+                                      deviceId=settings.getString(emby.constants.SETTING_PROVIDER_DEVICEID))
+    users.extend([(user.name, user.id) for user in publicUsers])
 
     # pass the list of users back to Kodi
     settings.setStringOptions(emby.constants.SETTING_PROVIDER_USER, users)
 
-def settingOptionsFillerViews(handle, options):
+
+def settingOptionsFillerViews(handle, _):
     # retrieve the media provider
     mediaProvider = xbmcmediaimport.getProvider(handle)
     if not mediaProvider:
@@ -380,18 +393,21 @@ def settingOptionsFillerViews(handle, options):
     # pass the list of views back to Kodi
     settings.setStringOptions(emby.constants.SETTING_IMPORT_VIEWS_SPECIFIC, views)
 
-def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, viewName=None, raw=False, allowDirectPlay=True):
+
+# pylint: disable=too-many-locals, too-many-arguments
+def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, viewName=None, raw=False,
+                allowDirectPlay=True):
     items = []
 
     viewUrl = url
-    viewUrl = Url.addOptions(viewUrl, { emby.constants.URL_QUERY_ITEMS_PARENT_ID: viewId })
+    viewUrl = Url.addOptions(viewUrl, {emby.constants.URL_QUERY_ITEMS_PARENT_ID: viewId})
 
     # retrieve all items matching the current media type
     totalCount = 0
     startIndex = 0
     while True:
         if xbmcmediaimport.shouldCancel(handle, startIndex, max(totalCount, 1)):
-            return
+            return None
 
         # put together a paged URL
         pagedUrlOptions = {
@@ -399,9 +415,10 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
         }
         pagedUrl = Url.addOptions(viewUrl, pagedUrlOptions)
         resultObj = embyServer.ApiGet(pagedUrl)
-        if not resultObj or not emby.constants.PROPERTY_ITEM_ITEMS in resultObj or not emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT in resultObj:
+        if not resultObj or emby.constants.PROPERTY_ITEM_ITEMS not in resultObj or \
+           emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT not in resultObj:
             log('invalid response for items of media type "{}" from {}'.format(mediaType, pagedUrl), xbmc.LOGERROR)
-            return
+            return None
 
         # retrieve the total number of items
         totalCount = int(resultObj[emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT])
@@ -411,12 +428,13 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
         for itemObj in itemsObj:
             startIndex = startIndex + 1
             if xbmcmediaimport.shouldCancel(handle, startIndex, totalCount):
-                return
+                return None
 
             if raw:
                 items.append(itemObj)
             else:
-                item = kodi.Api.toFileItem(embyServer, itemObj, mediaType, embyMediaType, viewName, allowDirectPlay=allowDirectPlay)
+                item = kodi.Api.toFileItem(embyServer, itemObj, mediaType, embyMediaType, viewName,
+                                           allowDirectPlay=allowDirectPlay)
                 if not item:
                     continue
 
@@ -427,6 +445,7 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
             break
 
     return items
+
 
 def discoverProvider(handle, options):
     dialog = xbmcgui.Dialog()
@@ -449,7 +468,8 @@ def discoverProvider(handle, options):
 
     xbmcmediaimport.setDiscoveredProvider(handle, True, provider)
 
-def lookupProvider(handle, options):
+
+def lookupProvider(handle, _):
     # retrieve the media provider
     mediaProvider = xbmcmediaimport.getProvider(handle)
     if not mediaProvider:
@@ -467,21 +487,23 @@ def lookupProvider(handle, options):
 
     xbmcmediaimport.setProviderFound(handle, providerFound)
 
+
 def canImport(handle, options):
-    if not 'path' in options:
+    if 'path' not in options:
         log('cannot execute "canimport" without path')
         return
 
     path = unquote(options['path'][0])
 
     # try to get the emby server's identifier from the path
-    id = Server.GetServerId(path)
-    if not id:
-      return
+    identifier = Server.GetServerId(path)
+    if not identifier:
+        return
 
     xbmcmediaimport.setCanImport(handle, True)
 
-def isProviderReady(handle, options):
+
+def isProviderReady(handle, _):
     # retrieve the media provider
     mediaProvider = xbmcmediaimport.getProvider(handle)
     if not mediaProvider:
@@ -501,7 +523,8 @@ def isProviderReady(handle, options):
 
     xbmcmediaimport.setProviderReady(handle, providerReady)
 
-def isImportReady(handle, options):
+
+def isImportReady(handle, _):
     # retrieve the media import
     mediaImport = xbmcmediaimport.getImport(handle)
     if not mediaImport:
@@ -535,7 +558,8 @@ def isImportReady(handle, options):
 
     xbmcmediaimport.setImportReady(handle, len(matchingViews) > 0)
 
-def loadProviderSettings(handle, options):
+
+def loadProviderSettings(handle, _):
     # retrieve the media provider
     mediaProvider = xbmcmediaimport.getProvider(handle)
     if not mediaProvider:
@@ -559,7 +583,8 @@ def loadProviderSettings(handle, options):
 
     settings.setLoaded()
 
-def loadImportSettings(handle, options):
+
+def loadImportSettings(handle, _):
     # retrieve the media import
     mediaImport = xbmcmediaimport.getImport(handle)
     if not mediaImport:
@@ -578,20 +603,26 @@ def loadImportSettings(handle, options):
 
     settings.setLoaded()
 
-def canUpdateMetadataOnProvider(handle, options):
+
+def canUpdateMetadataOnProvider(handle, options):  # pylint: disable=unused-argument
     xbmcmediaimport.setCanUpdateMetadataOnProvider(True)
 
-def canUpdatePlaycountOnProvider(handle, options):
+
+def canUpdatePlaycountOnProvider(handle, options):  # pylint: disable=unused-argument
     xbmcmediaimport.setCanUpdatePlaycountOnProvider(True)
 
-def canUpdateLastPlayedOnProvider(handle, options):
+
+def canUpdateLastPlayedOnProvider(handle, options):  # pylint: disable=unused-argument
     xbmcmediaimport.setCanUpdateLastPlayedOnProvider(True)
 
-def canUpdateResumePositionOnProvider(handle, options):
+
+def canUpdateResumePositionOnProvider(handle, options):  # pylint: disable=unused-argument
     xbmcmediaimport.setCanUpdateResumePositionOnProvider(True)
 
+
+# noqa pylint: disable=too-many-locals, too-many-statements, too-many-nested-blocks, too-many-branches, too-many-return-statements
 def execImport(handle, options):
-    if not 'path' in options:
+    if 'path' not in options:
         log('cannot execute "import" without path', xbmc.LOGERROR)
         return
 
@@ -659,14 +690,15 @@ def execImport(handle, options):
 
     # check if synchronization related settings have changed; if yes we have to perform a full synchronization
     if SynchronizationSettings.HaveChanged(mediaTypes, mediaProviderSettings, importSettings, save=True):
-        log('forcing a full synchronization to import {} items from {} because some related settings have changed' \
+        log('forcing a full synchronization to import {} items from {} because some related settings have changed'
             .format(mediaTypes, mediaProvider2str(mediaProvider)))
     else:
         # check if we
         #   have already performed a (full) synchronization before
         #   should use the Kodi Companion Emby server plugin
         lastSync = mediaImport.getLastSynced()
-        if lastSync and mediaProviderSettings.getBool(emby.constants.SETTING_PROVIDER_SYNCHRONIZATION_USE_KODI_COMPANION):
+        if lastSync and \
+           mediaProviderSettings.getBool(emby.constants.SETTING_PROVIDER_SYNCHRONIZATION_USE_KODI_COMPANION):
             if KodiCompanion.IsInstalled(embyServer):
                 fastSync = True
 
@@ -676,16 +708,17 @@ def execImport(handle, options):
                 syncUrlOptions.update({
                     # only set MinDateLastSavedForUser because it already covers DateLastSaved, RatingLastModified
                     # and PlaystateLastModified. Setting both MinDateLastSaved and MinDateLastSavedForUser will
-                    # cause issues, see https://emby.media/community/index.php?/topic/82258-retrieving-changeset-when-client-returns-online-mediaimport/
+                    # cause issues, see
+                    # https://emby.media/community/index.php?/topic/82258-retrieving-changeset-when-client-returns-online-mediaimport/
                     emby.constants.URL_QUERY_ITEMS_MIN_DATE_LAST_SAVED_FOR_USER: lastSync
                 })
-                log('using fast synchronization to import {} items from {} with Kodi companion plugin' \
+                log('using fast synchronization to import {} items from {} with Kodi companion plugin'
                     .format(mediaTypes, mediaProvider2str(mediaProvider)), xbmc.LOGDEBUG)
 
                 # retrieving the sync queue from Kodi companion
                 syncQueue = KodiCompanion.SyncQueue.GetItems(embyServer, lastSync)
             else:
-                log('Kodi companion usage is enabled to import {} items from {} but the server plugin is not installed' \
+                log('Kodi companion usage is enabled to import {} items from {} but the server plugin is not installed'
                     .format(mediaTypes, mediaProvider2str(mediaProvider)), xbmc.LOGWARNING)
 
     # loop over all media types to be imported
@@ -697,7 +730,8 @@ def execImport(handle, options):
         progress += 1
 
         if mediaType == xbmcmediaimport.MediaTypeVideoCollection and not importCollections:
-            log('importing {} items from {} is disabled'.format(mediaType, mediaProvider2str(mediaProvider)), xbmc.LOGDEBUG)
+            log('importing {} items from {} is disabled'.format(mediaType, mediaProvider2str(mediaProvider)),
+                xbmc.LOGDEBUG)
             continue
 
         log('importing {} items from {}...'.format(mediaType, mediaProvider2str(mediaProvider)))
@@ -708,7 +742,8 @@ def execImport(handle, options):
             continue
         (_, embyMediaType, localizedMediaType) = mappedMediaType
 
-        xbmcmediaimport.setProgressStatus(handle, __addon__.getLocalizedString(32001).format(__addon__.getLocalizedString(localizedMediaType)))
+        xbmcmediaimport.setProgressStatus(
+            handle, __addon__.getLocalizedString(32001).format(__addon__.getLocalizedString(localizedMediaType)))
 
         urlOptions = syncUrlOptions.copy()
         urlOptions.update({
@@ -726,14 +761,18 @@ def execImport(handle, options):
 
         # handle library views
         for view in views:
-            log('importing {} items from "{}" view from {}...'.format(mediaType, view.name, mediaProvider2str(mediaProvider)))
-            items.extend(importItems(handle, embyServer, url, mediaType, view.id, embyMediaType=embyMediaType, viewName=view.name, allowDirectPlay=allowDirectPlay))
+            log('importing {} items from "{}" view from {}...'
+                .format(mediaType, view.name, mediaProvider2str(mediaProvider)))
+            items.extend(importItems(handle, embyServer, url, mediaType, view.id, embyMediaType=embyMediaType,
+                                     viewName=view.name, allowDirectPlay=allowDirectPlay))
 
             if importCollections and items and mediaType == xbmcmediaimport.MediaTypeMovie:
                 # retrieve all BoxSets / collections matching the current media type
-                boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view.id, raw=True, allowDirectPlay=allowDirectPlay)
+                boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view.id, raw=True,
+                                         allowDirectPlay=allowDirectPlay)
                 for boxsetObj in boxsetObjs:
-                    if not emby.constants.PROPERTY_ITEM_ID in boxsetObj or not emby.constants.PROPERTY_ITEM_NAME in boxsetObj:
+                    if emby.constants.PROPERTY_ITEM_ID not in boxsetObj or \
+                       emby.constants.PROPERTY_ITEM_NAME not in boxsetObj:
                         continue
 
                     boxsetId = boxsetObj[emby.constants.PROPERTY_ITEM_ID]
@@ -744,7 +783,8 @@ def execImport(handle, options):
         if importCollections and items:
             for (boxsetId, boxsetName) in iteritems(boxsets):
                 # get all items belonging to the BoxSet
-                boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId, embyMediaType=embyMediaType, viewName=boxsetName, allowDirectPlay=allowDirectPlay)
+                boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId, embyMediaType=embyMediaType,
+                                          viewName=boxsetName, allowDirectPlay=allowDirectPlay)
                 for boxsetItem in boxsetItems:
                     # find the matching retrieved item
                     for index, item in enumerate(items):
@@ -756,22 +796,27 @@ def execImport(handle, options):
         # in a fast sync we need to get the removed items from Kodi companion
         if fastSync:
             if items:
-                log('{} changed {} items imported from {}'.format(len(items), mediaType, mediaProvider2str(mediaProvider)))
+                log('{} changed {} items imported from {}'
+                    .format(len(items), mediaType, mediaProvider2str(mediaProvider)))
 
             # handle removed items through Kodi companion's sync queue
             if syncQueue.itemsRemoved:
-                # retrieve all local items matching the current media type from the current import 
+                # retrieve all local items matching the current media type from the current import
                 localItems = xbmcmediaimport.getImportedItems(handle, mediaType)
 
                 # match the local items against the changed items
-                removedItems, = kodi.Api.matchImportedItemIdsToLocalItems(localItems, syncQueue.itemsRemoved)  # pylint: disable=unbalanced-tuple-unpacking
+                removedItems, = kodi.Api.matchImportedItemIdsToLocalItems(  # noqa: E501 # pylint: disable=unbalanced-tuple-unpacking
+                    localItems, syncQueue.itemsRemoved)
 
                 # erase all removed items matching the current media type from the sync queue
-                syncQueue.itemsRemoved = [ removedItem for removedItem in syncQueue.itemsRemoved if removedItem in removedItems ]
+                syncQueue.itemsRemoved = \
+                    [removedItem for removedItem in syncQueue.itemsRemoved if removedItem in removedItems]
 
                 if removedItems:
-                    log('{} previously imported {} items removed from {}'.format(len(removedItems), mediaType, mediaProvider2str(mediaProvider)))
-                    xbmcmediaimport.addImportItems(handle, removedItems, mediaType, xbmcmediaimport.MediaImportChangesetTypeRemoved)
+                    log('{} previously imported {} items removed from {}'
+                        .format(len(removedItems), mediaType, mediaProvider2str(mediaProvider)))
+                    xbmcmediaimport.addImportItems(handle, removedItems, mediaType,
+                                                   xbmcmediaimport.MediaImportChangesetTypeRemoved)
         else:
             log('{} {} items imported from {}'.format(len(items), mediaType, mediaProvider2str(mediaProvider)))
 
@@ -781,7 +826,9 @@ def execImport(handle, options):
 
     xbmcmediaimport.finishImport(handle, fastSync)
 
-def updateOnProvider(handle, options):
+
+# pylint: disable=too-many-locals, too-many-branches, too-many-return-statements
+def updateOnProvider(handle, _):
     # retrieve the media import
     mediaImport = xbmcmediaimport.getImport(handle)
     if not mediaImport:
@@ -815,7 +862,8 @@ def updateOnProvider(handle, options):
     # determine the item's identifier
     itemId = kodi.Api.getEmbyItemIdFromVideoInfoTag(itemVideoInfoTag)
     if not itemId:
-        log('cannot determine the identifier of the updated item: "{}"'.format(itemVideoInfoTag.getPath()), xbmc.LOGERROR)
+        log('cannot determine the identifier of the updated item: "{}"'
+            .format(itemVideoInfoTag.getPath()), xbmc.LOGERROR)
         return
 
     # prepare the media provider settings
@@ -832,7 +880,7 @@ def updateOnProvider(handle, options):
         log('cannot retrieve details of updated item with id {}'.format(itemId), xbmc.LOGERROR)
         return
 
-    if not emby.constants.PROPERTY_ITEM_USER_DATA in itemObj:
+    if emby.constants.PROPERTY_ITEM_USER_DATA not in itemObj:
         log('cannot update item with id {} because it has no userdata'.format(itemId), xbmc.LOGERROR)
         return
 
@@ -866,14 +914,19 @@ def updateOnProvider(handle, options):
 
     # nothing to do if no playback related properties have been changed
     if not updateItemPlayed and not updatePlaybackPosition:
-        log('no playback related properties of "{}" ({}) have changed => nothing to update on {}'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
+        log('no playback related properties of "{}" ({}) have changed => nothing to update on {}'
+            .format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
         return
 
-    log('updating playback related properties of "{}" ({}) on {}...'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
-    if not UserData.Update(embyServer, itemId, updateItemPlayed, updatePlaybackPosition, watched, playcount, lastPlayed, playbackPositionInTicks):
-        log('updating playback related properties of "{}" ({}) on {} failed'.format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
+    log('updating playback related properties of "{}" ({}) on {}...'
+        .format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)))
+    if not UserData.Update(embyServer, itemId, updateItemPlayed, updatePlaybackPosition, watched, playcount,
+                           lastPlayed, playbackPositionInTicks):
+        log('updating playback related properties of "{}" ({}) on {} failed'
+            .format(item.getLabel(), item.getPath(), mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
 
     xbmcmediaimport.finishUpdateOnProvider(handle)
+
 
 ACTIONS = {
     # official media import callbacks
@@ -901,14 +954,15 @@ ACTIONS = {
     'settingoptionsfillerviews': settingOptionsFillerViews
 }
 
+
 def run(argv):
-    path = sys.argv[0]
-    handle = int(sys.argv[1])
+    path = argv[0]
+    handle = int(argv[1])
 
     options = None
-    if len(sys.argv) > 2:
+    if len(argv) > 2:
         # get the options but remove the leading ?
-        params = sys.argv[2][1:]
+        params = argv[2][1:]
         if params:
             options = parse_qs(params)
 
@@ -919,7 +973,7 @@ def run(argv):
     if action[0] == '/':
         action = action[1:]
 
-    if not action in ACTIONS:
+    if action not in ACTIONS:
         log('cannot process unknown action: {}'.format(action), xbmc.LOGERROR)
         sys.exit(0)
 

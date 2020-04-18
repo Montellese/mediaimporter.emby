@@ -13,6 +13,7 @@ from emby.api.server import Server
 
 from lib.utils import Url
 
+
 class UserData:
     @staticmethod
     def PreprocessLastPlayed(lastPlayed):
@@ -25,7 +26,9 @@ class UserData:
         return lastPlayedDate
 
     @staticmethod
-    def Update(embyServer, itemId, updateItemPlayed, updatePlaybackPosition, watched, playcount, lastPlayed, playbackPositionInTicks):
+    # pylint: disable=too-many-arguments
+    def Update(embyServer, itemId, updateItemPlayed, updatePlaybackPosition, watched, playcount, lastPlayed,
+               playbackPositionInTicks):
         if not embyServer:
             raise ValueError('invalid embyServer')
         if not itemId:
@@ -46,10 +49,9 @@ class UserData:
 
             if updatePlaybackPosition:
                 if not UserData.UpdateResumePoint(embyServer, itemId, playbackPositionInTicks):
-                        result = False
+                    result = False
 
         return result
-
 
     @staticmethod
     def MarkAsWatched(embyServer, itemId, lastPlayed):
@@ -61,7 +63,7 @@ class UserData:
         lastPlayedDate = UserData.PreprocessLastPlayed(lastPlayed)
 
         url = embyServer.BuildUserPlayedItemUrl(itemId)
-        url = Url.addOptions(url, { 'DatePlayed': lastPlayedDate.strftime('%Y%m%d%H%M%S') })
+        url = Url.addOptions(url, {'DatePlayed': lastPlayedDate.strftime('%Y%m%d%H%M%S')})
 
         if not embyServer.ApiPost(url):
             return False
@@ -88,12 +90,13 @@ class UserData:
             raise ValueError('invalid itemId')
 
         url = embyServer.BuildUserPlayingItemUrl(itemId)
-        url = Url.addOptions(url, { 'PositionTicks': positionInTicks })
+        url = Url.addOptions(url, {'PositionTicks': positionInTicks})
 
         embyServer.ApiDelete(url)
         return True
 
     @staticmethod
+    # pylint: disable=too-many-arguments
     def UpdateUserData(embyServer, itemId, playcount, watched, lastPlayed, playbackPositionInTicks):
         if not embyServer:
             raise ValueError('invalid embyServer')

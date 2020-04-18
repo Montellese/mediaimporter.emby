@@ -8,9 +8,9 @@
 
 import sys
 
-import xbmc
-import xbmcmediaimport
-from xbmcgui import Dialog
+import xbmc  # pylint: disable=import-error
+import xbmcmediaimport  # pylint: disable=import-error
+from xbmcgui import Dialog  # pylint: disable=import-error
 
 import emby
 from emby.api.library import Library
@@ -18,13 +18,16 @@ from emby.server import Server
 from lib import kodi
 from lib.utils import localise, log, mediaProvider2str
 
+
 class ContextAction:
-        Play = 0
-        Synchronize = 1
-        RefreshMetadata = 2
+    Play = 0
+    Synchronize = 1
+    RefreshMetadata = 2
+
 
 def listItem2str(item, itemId):
     return '"{}" ({})'.format(item.getLabel(), itemId)
+
 
 def getMediaImport(mediaProvider, item):
     videoInfoTag = item.getVideoInfoTag()
@@ -38,14 +41,17 @@ def getMediaImport(mediaProvider, item):
     mediaImports = mediaProvider.getImports()
     return next((mediaImport for mediaImport in mediaImports if mediaType in mediaImport.getMediaTypes()), None)
 
-def synchronizeItem(item, itemId, mediaProvider, mediaImport, embyServer, allowDirectPlay=True):
+
+def synchronizeItem(item, itemId, mediaProvider, embyServer, allowDirectPlay=True):
     # retrieve all details of the item
     itemObj = Library.GetItem(embyServer, itemId)
     if not itemObj:
-        log('[context/sync] cannot retrieve details of {} from {}'.format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
+        log('[context/sync] cannot retrieve details of {} from {}'
+            .format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
         return None
 
     return kodi.Api.toFileItem(embyServer, itemObj, allowDirectPlay=allowDirectPlay)
+
 
 def play(item, itemId, mediaProvider):
     if item.isFolder():
@@ -58,7 +64,7 @@ def play(item, itemId, mediaProvider):
     # retrieve all details of the item
     itemObj = Library.GetItem(embyServer, itemId)
     if not itemObj:
-        log('[context/play] cannot retrieve the details of {} from {}' \
+        log('[context/play] cannot retrieve the details of {} from {}'
             .format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
         return
 
@@ -78,7 +84,7 @@ def play(item, itemId, mediaProvider):
     canDirectPlay = None
     directPlayUrl = None
     if allowDirectPlay:
-        (canDirectPlay, directPlayUrl) = kodi.Api.getDirectPlayUrl(embyServer, itemId, itemObj)
+        (canDirectPlay, directPlayUrl) = kodi.Api.getDirectPlayUrl(itemObj)
 
         if canDirectPlay and directPlayUrl:
             playChoices.append(localise(32101))
@@ -91,7 +97,7 @@ def play(item, itemId, mediaProvider):
 
     # if there are no options something went wrong
     if not playChoices:
-        log('[context/play] cannot play {} from {}' \
+        log('[context/play] cannot play {} from {}'
             .format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
         return
 
@@ -103,17 +109,18 @@ def play(item, itemId, mediaProvider):
     playUrl = playChoicesUrl[playChoice]
 
     # play the item
-    log('[context/play] playing {} using "{}" ({}) from {}' \
+    log('[context/play] playing {} using "{}" ({}) from {}'
         .format(listItem2str(item, itemId), playChoices[playChoice], playUrl, mediaProvider2str(mediaProvider)))
     # overwrite the dynamic path of the ListItem
     item.setDynamicPath(playUrl)
     xbmc.Player().play(playUrl, item)
 
+
 def synchronize(item, itemId, mediaProvider):
     # find the matching media import
     mediaImport = getMediaImport(mediaProvider, item)
     if not mediaImport:
-        log('[context/sync] cannot find the media import of {} from {}' \
+        log('[context/sync] cannot find the media import of {} from {}'
             .format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)), xbmc.LOGERROR)
         return
 
@@ -125,15 +132,18 @@ def synchronize(item, itemId, mediaProvider):
     embyServer = Server(mediaProvider)
 
     # synchronize the active item
-    syncedItem = synchronizeItem(item, itemId, mediaProvider, mediaImport, embyServer, allowDirectPlay=allowDirectPlay)
+    syncedItem = synchronizeItem(item, itemId, mediaProvider, embyServer, allowDirectPlay=allowDirectPlay)
     if not syncedItem:
         return
     syncedItems = [(xbmcmediaimport.MediaImportChangesetTypeChanged, syncedItem)]
 
     if xbmcmediaimport.changeImportedItems(mediaImport, syncedItems):
-        log('[context/sync] synchronized {} from {}'.format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)))
+        log('[context/sync] synchronized {} from {}'
+            .format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)))
     else:
-        log('[context/sync] failed to synchronize {} from {}'.format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)), xbmc.LOGWARNING)
+        log('[context/sync] failed to synchronize {} from {}'
+            .format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)), xbmc.LOGWARNING)
+
 
 def refreshMetadata(item, itemId, mediaProvider):
     # create an Emby server instance
@@ -141,36 +151,38 @@ def refreshMetadata(item, itemId, mediaProvider):
 
     # trigger a metadata refresh on the Emby server
     Library.RefreshItemMetadata(embyServer, itemId)
-    log('[context/refresh] triggered metadata refresh for {} on {}'.format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)))
+    log('[context/refresh] triggered metadata refresh for {} on {}'
+        .format(listItem2str(item, itemId), mediaProvider2str(mediaProvider)))
+
 
 def run(action):
-    item = sys.listitem
+    item = sys.listitem  # pylint: disable=no-member
     if not item:
         log('[context] missing ListItem', xbmc.LOGERROR)
         return
 
     itemId = kodi.Api.getEmbyItemIdFromItem(item)
     if not itemId:
-        log('[context] cannot determine the Emby identifier of "{}"' \
+        log('[context] cannot determine the Emby identifier of "{}"'
             .format(item.getLabel()), xbmc.LOGERROR)
         return
 
     mediaProviderId = item.getMediaProviderId()
     if not mediaProviderId:
-        log('[context] cannot determine the media provider identifier of {}' \
+        log('[context] cannot determine the media provider identifier of {}'
             .format(listItem2str(item, itemId)), xbmc.LOGERROR)
         return
 
     # get the media provider
     mediaProvider = xbmcmediaimport.getProviderById(mediaProviderId)
     if not mediaProvider:
-        log('[context] cannot determine the media provider ({}) of {}' \
+        log('[context] cannot determine the media provider ({}) of {}'
             .format(mediaProviderId, listItem2str(item, itemId)), xbmc.LOGERROR)
         return
 
     # prepare the media provider settings
     if not mediaProvider.prepareSettings():
-        log('[context] cannot prepare media provider ({}) settings of {}' \
+        log('[context] cannot prepare media provider ({}) settings of {}'
             .format(mediaProvider2str(mediaProvider), listItem2str(item, itemId)), xbmc.LOGERROR)
         return
 

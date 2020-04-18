@@ -6,12 +6,14 @@
 #  See LICENSES/README.md for more information.
 #
 
-import xbmcmediaimport
+import xbmcmediaimport  # pylint: disable=import-error
 
 # import related constants
-SUPPORTED_MEDIA_TYPES = set([ xbmcmediaimport.MediaTypeMovie, xbmcmediaimport.MediaTypeVideoCollection,
-    xbmcmediaimport.MediaTypeMusicVideo,
-    xbmcmediaimport.MediaTypeTvShow, xbmcmediaimport.MediaTypeSeason, xbmcmediaimport.MediaTypeEpisode ])
+SUPPORTED_MEDIA_TYPES = set([
+        xbmcmediaimport.MediaTypeMovie, xbmcmediaimport.MediaTypeVideoCollection,
+        xbmcmediaimport.MediaTypeMusicVideo,
+        xbmcmediaimport.MediaTypeTvShow, xbmcmediaimport.MediaTypeSeason, xbmcmediaimport.MediaTypeEpisode
+    ])
 
 # API related constants
 EMBY_PROTOCOL = 'emby'
@@ -233,15 +235,15 @@ PLAYING_PLAY_METHOD_DIRECT_STREAM = 'DirectStream'
 PLAYING_PROGRESS_EVENT_TIME_UPDATE = 'TimeUpdate'
 PLAYING_PROGRESS_EVENT_PAUSE = 'Pause'
 PLAYING_PROGRESS_EVENT_UNPAUSE = 'Unpause'
-#PLAYING_PROGRESS_EVENT_VOLUME_CHANGE = 'VolumeChange'
-#PLAYING_PROGRESS_EVENT_REPEAT_MODE_CHANGE = 'RepeatModeChange'
-#PLAYING_PROGRESS_EVENT_AUDIO_TRACK_CHANGE = 'AudioTrackChange'
-#PLAYING_PROGRESS_EVENT_SUBTITLE_TRACK_CHANGE = 'SubtitleTrackChange'
-#PLAYING_PROGRESS_EVENT_PLAYLIST_ITEM_MOVE = 'PlaylistItemMove'
-#PLAYING_PROGRESS_EVENT_PLAYLIST_ITEM_REMOVE = 'PlaylistItemRemove'
-#PLAYING_PROGRESS_EVENT_PLAYLIST_ITEM_ADD = 'PlaylistItemAdd'
-#PLAYING_PROGRESS_EVENT_QUALITY_CHANGE = 'QualityChange'
-#PLAYING_PROGRESS_EVENT_STATE_CHANGE = 'StateChange'
+# PLAYING_PROGRESS_EVENT_VOLUME_CHANGE = 'VolumeChange'
+# PLAYING_PROGRESS_EVENT_REPEAT_MODE_CHANGE = 'RepeatModeChange'
+# PLAYING_PROGRESS_EVENT_AUDIO_TRACK_CHANGE = 'AudioTrackChange'
+# PLAYING_PROGRESS_EVENT_SUBTITLE_TRACK_CHANGE = 'SubtitleTrackChange'
+# PLAYING_PROGRESS_EVENT_PLAYLIST_ITEM_MOVE = 'PlaylistItemMove'
+# PLAYING_PROGRESS_EVENT_PLAYLIST_ITEM_REMOVE = 'PlaylistItemRemove'
+# PLAYING_PROGRESS_EVENT_PLAYLIST_ITEM_ADD = 'PlaylistItemAdd'
+# PLAYING_PROGRESS_EVENT_QUALITY_CHANGE = 'QualityChange'
+# PLAYING_PROGRESS_EVENT_STATE_CHANGE = 'StateChange'
 
 # media provider setting identifiers and values
 SETTING_PROVIDER_AUTHENTICATION = 'emby.authentication'

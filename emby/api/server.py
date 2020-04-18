@@ -7,17 +7,19 @@
 #
 
 import json
-import semantic_version
-from six import ensure_str
 import time
 
-import xbmc
+import semantic_version
+from six import ensure_str
+
+import xbmc  # pylint: disable=import-error
 
 from emby import constants
 from emby.request import Request
 from emby import server
 
 from lib.utils import log
+
 
 class Server:
     class Discovery:
@@ -43,31 +45,31 @@ class Server:
             data = ensure_str(data)
 
             obj = json.loads(data)
-            if not ServerPropertyId in obj or not ServerPropertyName in obj or not ServerPropertyAddress in obj:
+            if ServerPropertyId not in obj or ServerPropertyName not in obj or ServerPropertyAddress not in obj:
                 log('invalid discovery message received: {}'.format(str(data)), xbmc.LOGWARNING)
                 return None
 
-            server = Server.Discovery()
-            server.id = obj[ServerPropertyId]
-            server.name = obj[ServerPropertyName]
-            server.address = obj[ServerPropertyAddress]
-            server.registered = False
-            server.lastseen = time.time()
+            discoveryServer = Server.Discovery()
+            discoveryServer.id = obj[ServerPropertyId]
+            discoveryServer.name = obj[ServerPropertyName]
+            discoveryServer.address = obj[ServerPropertyAddress]
+            discoveryServer.registered = False
+            discoveryServer.lastseen = time.time()
 
-            if not server.id or not server.name or not server.address:
+            if not discoveryServer.id or not discoveryServer.name or not discoveryServer.address:
                 return None
 
-            return server
+            return discoveryServer
 
     class Info:
         EMBY_SERVER = 'Emby Server'
         JELLYFIN_SERVER = 'Jellyfin Server'
 
-        def __init__(self, id, name, version, product=None):
-            if not id:
-                raise ValueError('invalid id')
+        def __init__(self, identifier, name, version, product=None):
+            if not identifier:
+                raise ValueError('invalid identifier')
 
-            self.id = id
+            self.id = identifier
             self.name = name
             self.version = version
             self.product = product or Server.Info.EMBY_SERVER
@@ -88,9 +90,9 @@ class Server:
         @staticmethod
         def fromPublicInfo(response):
             if not response or \
-               not constants.PROPERTY_SYSTEM_INFO_ID in response or \
-               not constants.PROPERTY_SYSTEM_INFO_SERVER_NAME in response or \
-               not constants.PROPERTY_SYSTEM_INFO_VERSION in response:
+               constants.PROPERTY_SYSTEM_INFO_ID not in response or \
+               constants.PROPERTY_SYSTEM_INFO_SERVER_NAME not in response or \
+               constants.PROPERTY_SYSTEM_INFO_VERSION not in response:
                 return None
 
             versions = response[constants.PROPERTY_SYSTEM_INFO_VERSION].split('.')

@@ -11,6 +11,7 @@ from emby.api.server import Server
 
 from lib.utils import Url
 
+
 class KodiCompanion:
     NAMES = ('Emby.Kodi Sync Queue', 'Kodi Sync Queue', 'Kodi companion')
 
@@ -37,11 +38,11 @@ class KodiCompanion:
         PROPERTY_GET_ITEMS_REMOVED = 'ItemsRemoved'
         PROPERTY_GET_ITEMS_USER_DATA_CHANGED = 'UserDataChanged'
 
-        def __init__(self, itemsAdded=[], itemsUpdated=[], itemsRemoved=[], userDataChanged=[]):
-            self.itemsAdded = itemsAdded
-            self.itemsUpdated = itemsUpdated
-            self.itemsRemoved = itemsRemoved
-            self.userDataChanged = userDataChanged
+        def __init__(self, itemsAdded=None, itemsUpdated=None, itemsRemoved=None, userDataChanged=None):
+            self.itemsAdded = itemsAdded or []
+            self.itemsUpdated = itemsUpdated or []
+            self.itemsRemoved = itemsRemoved or []
+            self.userDataChanged = userDataChanged or []
 
         @staticmethod
         def GetItems(embyServer, date, filters=None):
@@ -81,4 +82,5 @@ class KodiCompanion:
             if KodiCompanion.SyncQueue.PROPERTY_GET_ITEMS_USER_DATA_CHANGED in itemsObj:
                 userDataChanged = itemsObj[KodiCompanion.SyncQueue.PROPERTY_GET_ITEMS_USER_DATA_CHANGED]
 
-            return KodiCompanion.SyncQueue(itemsAdded=itemsAdded, itemsUpdated=itemsUpdated, itemsRemoved=itemsRemoved, userDataChanged=userDataChanged)
+            return KodiCompanion.SyncQueue(itemsAdded=itemsAdded, itemsUpdated=itemsUpdated, itemsRemoved=itemsRemoved,
+                                           userDataChanged=userDataChanged)

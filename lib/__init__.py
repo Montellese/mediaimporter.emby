@@ -6,4 +6,4 @@
 #  See LICENSES/README.md for more information.
 #
 
-from lib.utils import log
+from lib.utils import log  # noqa: F401

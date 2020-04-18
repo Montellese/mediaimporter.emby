@@ -9,7 +9,8 @@
 from emby import constants
 from emby.request import Request
 
-from lib.utils import  Url
+from lib.utils import Url
+
 
 class Authentication:
     REQUEST_TIMEOUT_S = 2
@@ -25,6 +26,7 @@ class Authentication:
             self.userId = userId
 
     @staticmethod
+    # pylint: disable=too-many-arguments
     def Authenticate(baseUrl, authenticationMethod, username=None, userId=None, password=None, deviceId=None):
         if not password:
             raise ValueError('invalid password')
@@ -41,6 +43,7 @@ class Authentication:
                 raise ValueError('invalid userId')
 
             authUrl = Url.append(authUrl, userId, constants.URL_AUTHENTICATE)
+
         elif authenticationMethod == Authentication.Method.Username:
             if not username:
                 raise ValueError('invalid username')
@@ -48,6 +51,7 @@ class Authentication:
             authUrl = Url.append(authUrl, constants.URL_AUTHENTICATE_BY_NAME)
 
             body[constants.PROPERTY_USER_AUTHENTICATION_USERNAME] = username
+
         else:
             raise ValueError('invalid authenticationMethod')
 
@@ -58,14 +62,15 @@ class Authentication:
         if not resultObj:
             return Authentication.Result()
 
-        if not constants.PROPERTY_USER_AUTHENTICATION_ACCESS_TOKEN in resultObj:
+        if constants.PROPERTY_USER_AUTHENTICATION_ACCESS_TOKEN not in resultObj:
             return Authentication.Result()
-        accessToken = resultObj[constants.PROPERTY_USER_AUTHENTICATION_ACCESS_TOKEN]
+        accessToken = \
+            resultObj[constants.PROPERTY_USER_AUTHENTICATION_ACCESS_TOKEN]
 
-        if not constants.PROPERTY_USER_AUTHENTICATION_USER in resultObj:
+        if constants.PROPERTY_USER_AUTHENTICATION_USER not in resultObj:
             return Authentication.Result()
         userObj = resultObj[constants.PROPERTY_USER_AUTHENTICATION_USER]
-        if not constants.PROPERTY_USER_AUTHENTICATION_USER_ID in userObj:
+        if constants.PROPERTY_USER_AUTHENTICATION_USER_ID not in userObj:
             return Authentication.Result()
 
         userId = userObj[constants.PROPERTY_USER_AUTHENTICATION_USER_ID]

@@ -7,15 +7,16 @@
 #
 
 import os
-import sys
+
 from six import PY3
 from six.moves.urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
-import xbmc
-import xbmcaddon
+import xbmc  # pylint: disable=import-error
+import xbmcaddon  # pylint: disable=import-error
 
 __addon__ = xbmcaddon.Addon()
 __addonid__ = __addon__.getAddonInfo('id')
+
 
 def log(message, level=xbmc.LOGINFO):
     if not PY3:
@@ -32,8 +33,8 @@ def string2Unicode(text, encoding='utf-8'):
         if PY3:
             text = str(text)
         else:
-            text = unicode(text, encoding)
-    except:
+            text = unicode(text, encoding)  # noqa: F821
+    except:  # noqa: E722  # nosec
         pass
 
     return text
@@ -41,15 +42,15 @@ def string2Unicode(text, encoding='utf-8'):
 
 def normalizeString(text):
     try:
-        text = unicodedata.normalize('NFKD', string2Unicode(text)).encode('ascii', 'ignore')
-    except:
+        text = unicodedata.normalize('NFKD', string2Unicode(text)).encode('ascii', 'ignore')  # noqa: F821
+    except:  # noqa: E722  # nosec
         pass
 
     return text
 
 
-def localise(id):
-    return normalizeString(__addon__.getLocalizedString(id))
+def localise(identifier):
+    return normalizeString(__addon__.getLocalizedString(identifier))
 
 
 def mediaProvider2str(mediaProvider):
@@ -65,6 +66,7 @@ def mediaImport2str(mediaImport):
 
     return '{} ({})'.format(mediaImport.getPath(), mediaImport.getMediaTypes())
 
+
 # https://www.oreilly.com/library/view/python-cookbook/0596001673/ch04s16.html
 def splitall(path):
     allparts = []
@@ -73,13 +75,15 @@ def splitall(path):
         if parts[0] == path:  # sentinel for absolute paths
             allparts.insert(0, parts[0])
             break
-        elif parts[1] == path: # sentinel for relative paths
+        if parts[1] == path:  # sentinel for relative paths
             allparts.insert(0, parts[1])
             break
-        else:
-            path = parts[0]
-            allparts.insert(0, parts[1])
+
+        path = parts[0]
+        allparts.insert(0, parts[1])
+
     return allparts
+
 
 class Url:
     @staticmethod
@@ -116,6 +120,7 @@ class Url:
             raise ValueError('invalid url')
 
         return os.path.join(url, '')
+
 
 try:
     from datetime import timezone

@@ -6,15 +6,14 @@
 #  See LICENSES/README.md for more information.
 #
 
-import xbmc
-import xbmcmediaimport
+import xbmcmediaimport  # pylint: disable=import-error
 
 from emby.player import Player
 from emby.provider_observer import ProviderObserver
-from emby.server import Server
 
 from lib.monitor import Monitor
-from lib.utils import log, mediaImport2str, mediaProvider2str
+from lib.utils import log, mediaImport2str
+
 
 class EmbyObserverService(xbmcmediaimport.Observer):
     def __init__(self):
@@ -96,10 +95,11 @@ class EmbyObserverService(xbmcmediaimport.Observer):
 
         mediaProvider = mediaImport.getProvider()
         if not mediaProvider:
-            raise ValueError('cannot add media import {} with invalid media provider'.format(mediaImport2str(mediaImport)))
+            raise ValueError('cannot add media import {} with invalid media provider'
+                             .format(mediaImport2str(mediaImport)))
 
         mediaProviderId = mediaProvider.getIdentifier()
-        if not mediaProviderId in self._observers:
+        if mediaProviderId not in self._observers:
             return
 
         self._observers[mediaProviderId].AddImport(mediaImport)
@@ -110,10 +110,11 @@ class EmbyObserverService(xbmcmediaimport.Observer):
 
         mediaProvider = mediaImport.getProvider()
         if not mediaProvider:
-            raise ValueError('cannot remove media import {} with invalid media provider'.format(mediaImport2str(mediaImport)))
+            raise ValueError('cannot remove media import {} with invalid media provider'
+                             .format(mediaImport2str(mediaImport)))
 
         mediaProviderId = mediaProvider.getIdentifier()
-        if not mediaProviderId in self._observers:
+        if mediaProviderId not in self._observers:
             return
 
         self._observers[mediaProviderId].RemoveImport(mediaImport)

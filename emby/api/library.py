@@ -8,10 +8,11 @@
 
 from emby import constants
 
+
 class Library:
     class View:
-        def __init__(self, id, name, mediaType):
-            self.id = id
+        def __init__(self, identifier, name, mediaType):
+            self.id = identifier
             self.name = name
             self.mediaType = mediaType
 
@@ -20,9 +21,9 @@ class Library:
             if not viewObj:
                 raise ValueError('invalid viewObj')
 
-            view = Library.View( \
-                viewObj[constants.PROPERTY_VIEW_ID], \
-                viewObj[constants.PROPERTY_VIEW_NAME], \
+            view = Library.View(
+                viewObj[constants.PROPERTY_VIEW_ID],
+                viewObj[constants.PROPERTY_VIEW_NAME],
                 viewObj[constants.PROPERTY_VIEW_COLLECTION_TYPE])
 
             if not view.id or not view.name or not view.mediaType:
@@ -39,22 +40,22 @@ class Library:
 
         viewsUrl = embyServer.BuildUserUrl(constants.URL_VIEWS)
         resultObj = embyServer.ApiGet(viewsUrl)
-        if not resultObj or not constants.PROPERTY_ITEM_ITEMS in resultObj:
+        if not resultObj or constants.PROPERTY_ITEM_ITEMS not in resultObj:
             return []
 
         viewsObj = resultObj[constants.PROPERTY_ITEM_ITEMS]
         libraryViews = []
         for viewObj in viewsObj:
-            if not constants.PROPERTY_VIEW_ID in viewObj or \
-                not constants.PROPERTY_VIEW_NAME in viewObj or \
-                not constants.PROPERTY_VIEW_COLLECTION_TYPE in viewObj:
+            if constants.PROPERTY_VIEW_ID not in viewObj or \
+               constants.PROPERTY_VIEW_NAME not in viewObj or \
+               constants.PROPERTY_VIEW_COLLECTION_TYPE not in viewObj:
                 continue
 
             mediaType = viewObj[constants.PROPERTY_VIEW_COLLECTION_TYPE]
             if not mediaType:
                 continue
 
-            matchingMediaTypes = [ type for type in mediaTypes if mediaType == type or mediaType == type + 's' ]
+            matchingMediaTypes = [type for type in mediaTypes if mediaType in (type, type + 's')]
             if not matchingMediaTypes:
                 continue
 

@@ -6,7 +6,8 @@
 #  See LICENSES/README.md for more information.
 #
 
-import xbmc
+import xbmc  # pylint: disable=import-error
+
 
 class Monitor(xbmc.Monitor):
     def __init__(self):

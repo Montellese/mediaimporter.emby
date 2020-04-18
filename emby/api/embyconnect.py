@@ -8,12 +8,13 @@
 
 import hashlib
 
-import xbmc
+import xbmc  # pylint: disable=import-error
 
 from emby import constants, server
 from emby.request import Request
 
 from lib.utils import log, Url
+
 
 class EmbyConnect:
     class AuthenticationResult:
@@ -27,9 +28,10 @@ class EmbyConnect:
             self.userId = userId
 
     class Server:
-        def __init__(self, id=None, systemId=None, accessKey=None, name=None, remoteUrl=None, localUrl=None):
-            if not id:
-                raise ValueError('invalid id')
+        # pylint: disable=too-many-arguments
+        def __init__(self, identifier=None, systemId=None, accessKey=None, name=None, remoteUrl=None, localUrl=None):
+            if not identifier:
+                raise ValueError('invalid identifier')
             if not systemId:
                 raise ValueError('invalid systemId')
             if not accessKey:
@@ -39,7 +41,7 @@ class EmbyConnect:
             if not remoteUrl and not localUrl:
                 raise ValueError('either remoteUrl or localUrl must be provided')
 
-            self.id = id
+            self.id = identifier
             self.systemId = systemId
             self.accessKey = accessKey
             self.name = name
@@ -58,18 +60,18 @@ class EmbyConnect:
 
         body = {
             constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_NAME_OR_EMAIL: username,
-            constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_PASSWORD: hashlib.md5(password),
+            constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_PASSWORD: hashlib.md5(password),  # nosec
         }
 
         resultObj = Request.PostAsJson(url, headers=headers, json=body)
         if not resultObj or \
-           not constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_ACCESS_TOKEN in resultObj or \
-           not constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_USER in resultObj:
+           constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_ACCESS_TOKEN not in resultObj or \
+           constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_USER not in resultObj:
             log('invalid response from {}: {}'.format(url, resultObj))
             return None
 
         userObj = resultObj.get(constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_USER)
-        if not constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_USER_ID in userObj:
+        if constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_USER_ID not in userObj:
             log('invalid response from {}: {}'.format(url, resultObj))
             return None
 
@@ -100,20 +102,20 @@ class EmbyConnect:
             return None
 
         servers = []
-        for server in resultObj:
-            id = server.get(constants.PROPERTY_EMBY_CONNECT_SERVER_ID, None)
-            systemId = server.get(constants.PROPERTY_EMBY_CONNECT_SERVER_SYSTEM_ID, None)
-            accessKey = server.get(constants.PROPERTY_EMBY_CONNECT_SERVER_ACCESS_KEY, None)
-            name = server.get(constants.PROPERTY_EMBY_CONNECT_SERVER_NAME, None)
-            remoteUrl = server.get(constants.PROPERTY_EMBY_CONNECT_SERVER_REMOTE_URL, None)
-            localUrl = server.get(constants.PROPERTY_EMBY_CONNECT_SERVER_LOCAL_URL, None)
+        for serverObj in resultObj:
+            identifier = serverObj.get(constants.PROPERTY_EMBY_CONNECT_SERVER_ID, None)
+            systemId = serverObj.get(constants.PROPERTY_EMBY_CONNECT_SERVER_SYSTEM_ID, None)
+            accessKey = serverObj.get(constants.PROPERTY_EMBY_CONNECT_SERVER_ACCESS_KEY, None)
+            name = serverObj.get(constants.PROPERTY_EMBY_CONNECT_SERVER_NAME, None)
+            remoteUrl = serverObj.get(constants.PROPERTY_EMBY_CONNECT_SERVER_REMOTE_URL, None)
+            localUrl = serverObj.get(constants.PROPERTY_EMBY_CONNECT_SERVER_LOCAL_URL, None)
 
-            if None in (id, accessKey, name, remoteUrl, localUrl):
-                log('invalid Emby server received from {}: {}'.format(url, server))
+            if None in (identifier, accessKey, name, remoteUrl, localUrl):
+                log('invalid Emby server received from {}: {}'.format(url, serverObj))
                 continue
 
             servers.append(EmbyConnect.Server(
-                id=id,
+                identifier=identifier,
                 systemId=systemId,
                 accessKey=accessKey,
                 name=name,
@@ -140,8 +142,8 @@ class EmbyConnect:
 
         resultObj = Request.GetAsJson(exchangeUrl, headers=headers)
         if not resultObj or \
-           not constants.PROPERTY_EMBY_CONNECT_EXCHANGE_LOCAL_USER_ID in resultObj or \
-           not constants.PROPERTY_EMBY_CONNECT_EXCHANGE_ACCESS_TOKEN in resultObj:
+           constants.PROPERTY_EMBY_CONNECT_EXCHANGE_LOCAL_USER_ID not in resultObj or \
+           constants.PROPERTY_EMBY_CONNECT_EXCHANGE_ACCESS_TOKEN not in resultObj:
             log('invalid response from {}: {}'.format(exchangeUrl, resultObj))
             return None
 
@@ -153,7 +155,9 @@ class EmbyConnect:
     @staticmethod
     def _getApplicationHeader():
         return {
-            constants.EMBY_APPLICATION_HEADER: '{}/{}'.format(xbmc.getInfoLabel('System.FriendlyName'), xbmc.getInfoLabel('System.BuildVersionShort'))
+            constants.EMBY_APPLICATION_HEADER: '{}/{}'.format(
+                xbmc.getInfoLabel('System.FriendlyName'),
+                xbmc.getInfoLabel('System.BuildVersionShort'))
         }
 
     class PinLogin:
@@ -183,8 +187,8 @@ class EmbyConnect:
 
             resultObj = Request.GetAsJson(url)
             if not resultObj or \
-               not constants.PROPERTY_EMBY_CONNECT_PIN_IS_CONFIRMED in resultObj or \
-               not constants.PROPERTY_EMBY_CONNECT_PIN_IS_EXPIRED in resultObj:
+               constants.PROPERTY_EMBY_CONNECT_PIN_IS_CONFIRMED not in resultObj or \
+               constants.PROPERTY_EMBY_CONNECT_PIN_IS_EXPIRED not in resultObj:
                 log('failed to check status of PIN {} at {}: {}'.format(self.pin, url, resultObj), xbmc.LOGWARNING)
                 self.finished = True
                 self.expired = True
@@ -207,7 +211,8 @@ class EmbyConnect:
             if self._authenticationResult:
                 return self._authenticationResult
 
-            url = Url.append(constants.URL_EMBY_CONNECT_BASE, constants.URL_EMBY_CONNECT_PIN, constants.URL_EMBY_CONNECT_PIN_AUTHENTICATE)
+            url = Url.append(constants.URL_EMBY_CONNECT_BASE, constants.URL_EMBY_CONNECT_PIN,
+                             constants.URL_EMBY_CONNECT_PIN_AUTHENTICATE)
             body = {
                 constants.URL_QUERY_DEVICE_ID: self.deviceId,
                 constants.URL_QUERY_PIN: self.pin,
@@ -215,8 +220,8 @@ class EmbyConnect:
 
             resultObj = Request.PostAsJson(url, json=body)
             if not resultObj or \
-               not constants.PROPERTY_EMBY_CONNECT_PIN_USER_ID in resultObj or \
-               not constants.PROPERTY_EMBY_CONNECT_PIN_ACCESS_TOKEN in resultObj:
+               constants.PROPERTY_EMBY_CONNECT_PIN_USER_ID not in resultObj or \
+               constants.PROPERTY_EMBY_CONNECT_PIN_ACCESS_TOKEN not in resultObj:
                 log('failed to authenticate with PIN {} at {}: {}'.format(self.pin, url, resultObj))
                 return None
 
@@ -236,7 +241,7 @@ class EmbyConnect:
 
             resultObj = Request.PostAsJson(url, json=body)
             if not resultObj or \
-               not constants.PROPERTY_EMBY_CONNECT_PIN in resultObj:
+               constants.PROPERTY_EMBY_CONNECT_PIN not in resultObj:
                 log('failed to get a PIN from {}: {}'.format(url, resultObj))
                 return None
 

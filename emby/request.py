@@ -6,21 +6,23 @@
 #  See LICENSES/README.md for more information.
 #
 
-import json
-import requests
 import uuid
 
-import xbmc
+import requests
+
+import xbmc  # pylint: disable=import-error
 
 from emby import constants
 
 from lib.utils import log
 
 # set this to True to get debug logs for calls to the Emby API
-EMBY_API_DEBUG_ENABLED = True  # TODO(Montellese)
+EMBY_API_DEBUG_ENABLED = True
+
 
 class NotAuthenticatedError(Exception):
     pass
+
 
 class Request:
     _initialized = False
@@ -49,7 +51,7 @@ class Request:
             deviceId = Request.GenerateDeviceId()
 
         embyAuthorizationHeader = \
-            'MediaBrowser Client="{}", Device="{}", DeviceId="{}", Version="{}"'.format( \
+            'MediaBrowser Client="{}", Device="{}", DeviceId="{}", Version="{}"'.format(
                 'Kodi', Request._device, deviceId, Request._version)
         if userId:
             embyAuthorizationHeader += ', UserId="{}"'.format(userId)
@@ -58,37 +60,37 @@ class Request:
         return headers
 
     @staticmethod
-    def Get(url, headers={}, timeout=None):
+    def Get(url, headers=None, timeout=None):
         result = Request._get(url, headers=headers, timeout=timeout)
         return Request._handleRequestAsContent(result, 'GET')
 
     @staticmethod
-    def GetAsJson(url, headers={}, timeout=None):
+    def GetAsJson(url, headers=None, timeout=None):
         result = Request._get(url, headers=headers, timeout=timeout)
         return Request._handleRequestAsJson(result, 'GET')
 
     @staticmethod
-    def Post(url, headers={}, body=None, json=None, timeout=None):
+    def Post(url, headers=None, body=None, json=None, timeout=None):
         result = Request._post(url, headers=headers, body=body, json=json, timeout=timeout)
         return Request._handleRequestAsContent(result, 'POST')
 
     @staticmethod
-    def PostAsJson(url, headers={}, body=None, json=None, timeout=None):
+    def PostAsJson(url, headers=None, body=None, json=None, timeout=None):
         result = Request._post(url, headers=headers, body=body, json=json, timeout=timeout)
         return Request._handleRequestAsJson(result, 'POST')
 
     @staticmethod
-    def Delete(url, headers={}, timeout=None):
+    def Delete(url, headers=None, timeout=None):
         result = Request._delete(url, headers=headers, timeout=timeout)
         return Request._handleRequestAsContent(result, 'DELETE')
 
     @staticmethod
-    def DeleteAsJson(url, headers={}, timeout=None):
+    def DeleteAsJson(url, headers=None, timeout=None):
         result = Request._delete(url, headers=headers, timeout=timeout)
         return Request._handleRequestAsJson(result, 'DELETE')
 
     @staticmethod
-    def _get(url, headers={}, timeout=None):
+    def _get(url, headers=None, timeout=None):
         Request._logRequest('GET', url, headers)
         try:
             return requests.get(url, headers=headers, timeout=timeout, verify=False)
@@ -98,7 +100,7 @@ class Request:
         return None
 
     @staticmethod
-    def _post(url, headers={}, body=None, json=None, timeout=None):
+    def _post(url, headers=None, body=None, json=None, timeout=None):
         if body and json:
             raise ValueError('body and json can\'t be combined')
 
@@ -111,7 +113,7 @@ class Request:
         return None
 
     @staticmethod
-    def _delete(url, headers={}, timeout=None):
+    def _delete(url, headers=None, timeout=None):
         Request._logRequest('DELETE', url, headers)
         try:
             return requests.delete(url, headers=headers, timeout=timeout, verify=False)
@@ -131,7 +133,8 @@ class Request:
             if result.status_code == 401:
                 raise NotAuthenticatedError()
 
-            log('failed to retrieve response from {} {}: HTTP {}'.format(requestType, result.url, result.status_code), xbmc.LOGERROR)
+            log('failed to retrieve response from {} {}: HTTP {}'
+                .format(requestType, result.url, result.status_code), xbmc.LOGERROR)
             return None
 
         return result
@@ -187,8 +190,8 @@ class Request:
             redactedBody = body.copy()
             # redact the body in case it contains a password
             for key in redactedBody:
-                if key in (constants.PROPERTY_USER_AUTHENTICATION_PASSWORD, \
-                           constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_PASSWORD, \
+                if key in (constants.PROPERTY_USER_AUTHENTICATION_PASSWORD,
+                           constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_PASSWORD,
                            constants.PROPERTY_EMBY_CONNECT_AUTHENTICATION_PASSWORD_RAW):
                     redactedBody[key] = '****'
 

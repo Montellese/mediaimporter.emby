@@ -6,8 +6,9 @@
 #  See LICENSES/README.md for more information.
 #
 
-from six.moves.urllib.parse import parse_qs
 import sys
+
+from six.moves.urllib.parse import parse_qs
 
 from lib import context
 from lib.utils import log
@@ -26,7 +27,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     options = parse_qs(args)
-    if not OPTION_ACTION in options:
+    if OPTION_ACTION not in options:
         log('Emby Media Import Context called with missing "action" argument')
         sys.exit(1)
 

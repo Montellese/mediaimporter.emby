@@ -11,6 +11,7 @@ from emby.request import Request
 
 from lib.utils import Url
 
+
 class User:
     def __init__(self, name, identifier):
         self.name = name
@@ -28,7 +29,7 @@ class User:
 
         for userObj in resultObj:
             # make sure the 'Name' and 'Id' properties are available
-            if not constants.PROPERTY_USER_NAME in userObj or not constants.PROPERTY_USER_ID in userObj:
+            if constants.PROPERTY_USER_NAME not in userObj or constants.PROPERTY_USER_ID not in userObj:
                 continue
 
             # make sure the name and id properties are valid

@@ -8,9 +8,10 @@
 
 import hashlib
 import json
+
 from six import ensure_binary
 
-import xbmcmediaimport
+import xbmcmediaimport  # pylint: disable=import-error
 
 from emby.constants import \
     SETTING_PROVIDER_SYNCHRONIZATION_USE_KODI_COMPANION, \
@@ -20,6 +21,7 @@ from emby.constants import \
     SETTING_IMPORT_VIEWS_SPECIFIC, \
     SETTING_IMPORT_IMPORT_COLLECTIONS, \
     SETTING_IMPORT_SYNC_SETTINGS_HASH
+
 
 class ImportSettings:
     @staticmethod
@@ -31,6 +33,7 @@ class ImportSettings:
             return []
 
         return importSettings.getStringList(SETTING_IMPORT_VIEWS_SPECIFIC)
+
 
 class SynchronizationSettings:
     @staticmethod
@@ -87,8 +90,8 @@ class SynchronizationSettings:
         hashString = json.dumps(hashObject)
 
         # hash the JSON serialized object
-        hash = hashlib.sha1(ensure_binary(hashString))
-        hashHex = hash.hexdigest()
+        sha1Hash = hashlib.sha1(ensure_binary(hashString))  # nosec
+        hashHex = sha1Hash.hexdigest()
 
         if save:
             SynchronizationSettings.SaveHash(importSettings, hashHex)

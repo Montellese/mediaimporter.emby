@@ -6,13 +6,11 @@
 #  See LICENSES/README.md for more information.
 #
 
-import json
-from six import iteritems
 import socket
 
-import xbmc
-import xbmcaddon
-import xbmcmediaimport
+from six import iteritems
+
+import xbmcmediaimport  # pylint: disable=import-error
 
 import emby
 from emby.server import Server
@@ -20,6 +18,7 @@ from emby.server import Server
 from lib import kodi
 from lib.monitor import Monitor
 from lib.utils import log
+
 
 class DiscoveryService:
     DiscoveryAddress = '255.255.255.255'
@@ -36,7 +35,8 @@ class DiscoveryService:
 
     def _discover(self):
         # broadcast the discovery message
-        self._sock.sendto(DiscoveryService.DiscoveryMessage, (DiscoveryService.DiscoveryAddress, DiscoveryService.DiscoveryPort))
+        self._sock.sendto(DiscoveryService.DiscoveryMessage,
+                          (DiscoveryService.DiscoveryAddress, DiscoveryService.DiscoveryPort))
 
         # try to receive an answer
         data = None
@@ -50,19 +50,20 @@ class DiscoveryService:
             return
 
         server = emby.api.server.Server.Discovery.fromString(data)
-        if not server is None:
+        if server is not None:
             self._addServer(server)
 
     def _addServer(self, server):
         registerServer = False
 
         # check if the server is already known
-        if not server.id in self._servers:
+        if server.id not in self._servers:
             self._servers[server.id] = server
             registerServer = True
         else:
             # check if the server has already been registered or if some of its properties have changed
-            if not self._servers[server.id].registered or self._servers[server.id].name != server.name or self._servers[server.id].address != server.address:
+            if not self._servers[server.id].registered or self._servers[server.id].name != server.name or \
+               self._servers[server.id].address != server.address:
                 self._servers[server.id] = server
                 registerServer = True
             else:
@@ -75,7 +76,8 @@ class DiscoveryService:
 
         providerId = Server.BuildProviderId(server.id)
         providerIconUrl = Server.BuildIconUrl(server.address)
-        mediaProvider = xbmcmediaimport.MediaProvider(providerId, server.address, server.name, providerIconUrl, emby.constants.SUPPORTED_MEDIA_TYPES)
+        mediaProvider = xbmcmediaimport.MediaProvider(providerId, server.address, server.name, providerIconUrl,
+                                                      emby.constants.SUPPORTED_MEDIA_TYPES)
         mediaProvider.setIconUrl(kodi.Api.downloadIcon(mediaProvider))
 
         if xbmcmediaimport.addAndActivateProvider(mediaProvider):

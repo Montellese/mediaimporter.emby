@@ -6,10 +6,10 @@
 #  See LICENSES/README.md for more information.
 #
 
-from . import authentication
-from . import library
-from . import playback
-from . import plugin
-from . import server
-from . import user
-from . import userdata
+from . import authentication  # noqa: F401
+from . import library  # noqa: F401
+from . import playback  # noqa: F401
+from . import plugin  # noqa: F401
+from . import server  # noqa: F401
+from . import user  # noqa: F401
+from . import userdata  # noqa: F401

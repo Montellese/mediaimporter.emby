@@ -6,6 +6,7 @@
 #  See LICENSES/README.md for more information.
 #
 
+
 class Plugin:
     class Serialization:
         PROPERTY_ID = 'Id'
@@ -14,6 +15,7 @@ class Plugin:
         PROPERTY_VERSION = 'Version'
         PROPERTY_IMAGE_TAG = 'ImageTag'
 
+    # pylint: disable=too-many-arguments
     def __init__(self, identifier, name, description=None, version=None, imageTag=None):
         self.id = identifier
         self.name = name
@@ -33,10 +35,10 @@ class Plugin:
 
         plugins = []
         for pluginObj in pluginsObj:
-            if not Plugin.Serialization.PROPERTY_ID in pluginObj or \
-                not Plugin.Serialization.PROPERTY_NAME in pluginObj:
+            if Plugin.Serialization.PROPERTY_ID not in pluginObj or \
+               Plugin.Serialization.PROPERTY_NAME not in pluginObj:
                 continue
-            
+
             identifier = pluginObj[Plugin.Serialization.PROPERTY_ID]
             name = pluginObj[Plugin.Serialization.PROPERTY_NAME]
             description = None
