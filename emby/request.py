@@ -93,7 +93,7 @@ class Request:
     def _get(url, headers=None, timeout=None):
         Request._logRequest('GET', url, headers)
         try:
-            return requests.get(url, headers=headers, timeout=timeout, verify=False)
+            return requests.get(url, headers=headers, timeout=timeout, verify=False)  # nosec
         except requests.exceptions.RequestException as err:
             log('error retrieving response from GET {}: {}'.format(url, err), xbmc.LOGERROR)
 
@@ -106,7 +106,7 @@ class Request:
 
         Request._logRequest('POST', url, headers, body or json)
         try:
-            return requests.post(url, headers=headers, timeout=timeout, data=body, json=json, verify=False)
+            return requests.post(url, headers=headers, timeout=timeout, data=body, json=json, verify=False)  # nosec
         except requests.exceptions.RequestException as err:
             log('error retrieving response from POST {}: {}'.format(url, err), xbmc.LOGERROR)
 
@@ -116,7 +116,7 @@ class Request:
     def _delete(url, headers=None, timeout=None):
         Request._logRequest('DELETE', url, headers)
         try:
-            return requests.delete(url, headers=headers, timeout=timeout, verify=False)
+            return requests.delete(url, headers=headers, timeout=timeout, verify=False)  # nosec
         except requests.exceptions.RequestException as err:
             log('error retrieving response from DELETE {}: {}'.format(url, err), xbmc.LOGERROR)
 
