@@ -28,12 +28,13 @@ from lib.utils import __addon__, log, mediaProvider2str, Url
 # mapping of Kodi and Emby media types
 EMBY_MEDIATYPE_BOXSET = 'BoxSet'
 EMBY_MEDIATYPES = [
-    (xbmcmediaimport.MediaTypeMovie, 'Movie', 32002),
-    (xbmcmediaimport.MediaTypeVideoCollection, EMBY_MEDIATYPE_BOXSET, 32007),
-    (xbmcmediaimport.MediaTypeTvShow, 'Series', 32003),
-    (xbmcmediaimport.MediaTypeSeason, 'Season', 32004),
-    (xbmcmediaimport.MediaTypeEpisode, 'Episode', 32005),
-    (xbmcmediaimport.MediaTypeMusicVideo, 'MusicVideo', 32006)
+    # Kodi media type, Emby media type, include mixed, label
+    (xbmcmediaimport.MediaTypeMovie, 'Movie', True, 32002),
+    (xbmcmediaimport.MediaTypeVideoCollection, EMBY_MEDIATYPE_BOXSET, True, 32007),
+    (xbmcmediaimport.MediaTypeTvShow, 'Series', True, 32003),
+    (xbmcmediaimport.MediaTypeSeason, 'Season', True, 32004),
+    (xbmcmediaimport.MediaTypeEpisode, 'Episode', True, 32005),
+    (xbmcmediaimport.MediaTypeMusicVideo, 'MusicVideo', False, 32006)
 ]
 
 

@@ -740,7 +740,7 @@ def execImport(handle, options):
         if not mappedMediaType:
             log('cannot import unsupported media type "{}"'.format(mediaType), xbmc.LOGERROR)
             continue
-        (_, embyMediaType, localizedMediaType) = mappedMediaType
+        (_, embyMediaType, _, localizedMediaType) = mappedMediaType
 
         xbmcmediaimport.setProgressStatus(
             handle, __addon__.getLocalizedString(32001).format(__addon__.getLocalizedString(localizedMediaType)))
