@@ -24,7 +24,7 @@ class Library:
             view = Library.View(
                 viewObj[constants.PROPERTY_VIEW_ID],
                 viewObj[constants.PROPERTY_VIEW_NAME],
-                viewObj[constants.PROPERTY_VIEW_COLLECTION_TYPE])
+                viewObj.get(constants.PROPERTY_VIEW_COLLECTION_TYPE, 'mixed'))
 
             if not view.id or not view.name or not view.mediaType:
                 return None
@@ -32,7 +32,7 @@ class Library:
             return view
 
     @staticmethod
-    def GetViews(embyServer, mediaTypes):
+    def GetViews(embyServer, mediaTypes, includeMixed=False):
         if not embyServer:
             raise ValueError('invalid embyServer')
         if not mediaTypes:
@@ -47,17 +47,22 @@ class Library:
         libraryViews = []
         for viewObj in viewsObj:
             if constants.PROPERTY_VIEW_ID not in viewObj or \
-               constants.PROPERTY_VIEW_NAME not in viewObj or \
-               constants.PROPERTY_VIEW_COLLECTION_TYPE not in viewObj:
+               constants.PROPERTY_VIEW_NAME not in viewObj:
                 continue
 
-            mediaType = viewObj[constants.PROPERTY_VIEW_COLLECTION_TYPE]
-            if not mediaType:
+            # mixed libraries don't have a CollectionType attribute
+            mixedView = constants.PROPERTY_VIEW_COLLECTION_TYPE not in viewObj
+            if mixedView and not includeMixed:
                 continue
 
-            matchingMediaTypes = [type for type in mediaTypes if mediaType in (type, type + 's')]
-            if not matchingMediaTypes:
-                continue
+            if not mixedView:
+                mediaType = viewObj[constants.PROPERTY_VIEW_COLLECTION_TYPE]
+                if not mediaType:
+                    continue
+
+                matchingMediaTypes = [type for type in mediaTypes if mediaType in (type, type + 's')]
+                if not matchingMediaTypes:
+                    continue
 
             libraryView = Library.View.fromObject(viewObj)
             if not libraryView:
