@@ -74,14 +74,24 @@ def mediaTypesFromOptions(options):
 
     return mediaTypes
 
-
-def getMatchingLibraryViews(embyServer, mediaTypes, selectedViews):
+def getLibraryViews(embyServer, mediaTypes):
     if not embyServer:
         raise ValueError('invalid emby server')
     if not mediaTypes:
         raise ValueError('invalid mediaTypes')
 
-    libraryViews = Library.GetViews(embyServer, mediaTypes)
+    # check whether to include mixed libraries
+    includeMixed = False
+    for mediaType in mediaTypes:
+        (_, _, mixed, _) = kodi.Api.getEmbyMediaType(mediaType)
+        if mixed:
+            includeMixed = True
+            break
+
+    return Library.GetViews(embyServer, mediaTypes, includeMixed=includeMixed)
+
+def getMatchingLibraryViews(embyServer, mediaTypes, selectedViews):
+    libraryViews = getLibraryViews(embyServer, mediaTypes)
 
     matchingLibraryViews = []
     if not selectedViews:
@@ -380,9 +390,12 @@ def settingOptionsFillerViews(handle, _):
         log('cannot prepare media provider settings', xbmc.LOGERROR)
         return
 
-    embyServer = Server(mediaProvider)
+    try:
+        embyServer = Server(mediaProvider)
+    except:
+        return
 
-    libraryViews = Library.GetViews(embyServer, mediaImport.getMediaTypes())
+    libraryViews = getLibraryViews(embyServer, mediaImport.getMediaTypes())
     views = []
     for libraryView in libraryViews:
         views.append((libraryView.name, libraryView.id))

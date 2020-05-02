@@ -4,6 +4,7 @@
 - import thumbnail for actors
 - don't set playcount value if item is unwatched but in progress (fixes #24)
 - don't set the custom "emby" unique ID as the default (fixes #13)
+- support importing movies and tvshows from mixed libraries (closes #31)
 
 [B]Version 0.0.8[/B]
 -  don't attach the container type to direct stream URLs
