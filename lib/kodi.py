@@ -387,7 +387,7 @@ class Api:
             'mpaa': Api._mapMpaa(itemObj.get(constants.PROPERTY_ITEM_OFFICIAL_RATING, '')),
             'duration': Api.ticksToSeconds(itemObj.get(constants.PROPERTY_ITEM_RUN_TIME_TICKS, 0)),
             'playcount': userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAY_COUNT, 0)
-                if userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAYED, False) else 0,
+                         if userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAYED, False) else 0,
             'lastplayed': Api.convertDateTimeToDbDateTime(
                 userdata.get(constants.PROPERTY_ITEM_USER_DATA_LAST_PLAYED_DATE, '')),
             'director': [],
