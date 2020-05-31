@@ -487,10 +487,10 @@ class Api:
         # handle unique / provider IDs
         uniqueIds = \
             {key.lower(): value for key, value in iteritems(itemObj.get(constants.PROPERTY_ITEM_PROVIDER_IDS, {}))}
-        defaultUniqueId = Api._mapDefaultUniqueId(uniqueIds, mediaType)
+        # TODO: defaultUniqueId = Api._mapDefaultUniqueId(uniqueIds, mediaType)
         # add the item's ID as a unique ID belonging to Emby
         uniqueIds[constants.EMBY_PROTOCOL] = itemId
-        item.getVideoInfoTag().setUniqueIDs(uniqueIds, EMBY_PROTOCOL)
+        item.getVideoInfoTag().setUniqueIDs(uniqueIds, constants.EMBY_PROTOCOL)
 
         # handle critic rating as rotten tomato rating
         if constants.PROPERTY_ITEM_CRITIC_RATING in itemObj:
