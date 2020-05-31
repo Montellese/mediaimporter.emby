@@ -490,7 +490,7 @@ class Api:
         defaultUniqueId = Api._mapDefaultUniqueId(uniqueIds, mediaType)
         # add the item's ID as a unique ID belonging to Emby
         uniqueIds[constants.EMBY_PROTOCOL] = itemId
-        item.getVideoInfoTag().setUniqueIDs(uniqueIds, defaultUniqueId)
+        item.getVideoInfoTag().setUniqueIDs(uniqueIds, EMBY_PROTOCOL)
 
         # handle critic rating as rotten tomato rating
         if constants.PROPERTY_ITEM_CRITIC_RATING in itemObj:

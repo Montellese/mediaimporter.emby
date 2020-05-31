@@ -1,5 +1,4 @@
 [B]Version 0.0.9[/B]
-- don't set the custom "emby" unique ID as the default (fixes #13)
 - properly import tags from "TagItems" instead of "Tags" (fixes #19)
 - map "primary" artwork to "thumb" for episodes and musicvideos (fixes #16)
 - import thumbnail for actors
