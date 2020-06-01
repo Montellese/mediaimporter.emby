@@ -142,15 +142,60 @@ class Api:
         return Api.getEmbyItemIdFromVideoInfoTag(videoInfoTag)
 
     @staticmethod
+    # pylint: disable=too-many-return-statements
     def getEmbyItemIdFromVideoInfoTag(videoInfoTag):
         if not videoInfoTag:
             raise ValueError('invalid videoInfoTag')
 
         embyItemId = videoInfoTag.getUniqueID(constants.EMBY_PROTOCOL)
-        if not embyItemId:
+        if embyItemId:
+            return embyItemId
+
+        # try to get the database Identifier
+        dbId = videoInfoTag.getDbId()
+        if not dbId:
             return None
 
-        return embyItemId
+        mediaType = videoInfoTag.getMediaType()
+        if mediaType == xbmcmediaimport.MediaTypeMovie:
+            method = 'Movie'
+        elif mediaType == xbmcmediaimport.MediaTypeTvShow:
+            method = 'TVShow'
+        elif mediaType == xbmcmediaimport.MediaTypeEpisode:
+            method = 'Episode'
+        elif mediaType == xbmcmediaimport.MediaTypeMusicVideo:
+            method = 'MusicVideo'
+        else:
+            return None
+
+        # use JSON-RPC to retrieve all unique IDs
+        jsonResponse = json.loads(xbmc.executeJSONRPC(json.dumps(
+            {
+                'jsonrpc': '2.0',
+                'method': 'VideoLibrary.Get{}Details'.format(method),
+                'params': {
+                    '{}id'.format(mediaType): dbId,
+                    'properties': ['uniqueid'],
+                },
+                'id': 0
+            })))
+        if not jsonResponse or 'result' not in jsonResponse:
+            return None
+
+        jsonResult = jsonResponse['result']
+        detailsKey = '{}details'.format(mediaType)
+        if detailsKey not in jsonResult:
+            return None
+
+        jsonDetails = jsonResult[detailsKey]
+        if 'uniqueid' not in jsonDetails:
+            return None
+
+        jsonUniqueIDs = jsonDetails['uniqueid']
+        if constants.EMBY_PROTOCOL not in jsonUniqueIDs:
+            return None
+
+        return jsonUniqueIDs[constants.EMBY_PROTOCOL]
 
     @staticmethod
     def matchImportedItemIdsToLocalItems(localItems, *importedItemIdLists):
@@ -487,10 +532,10 @@ class Api:
         # handle unique / provider IDs
         uniqueIds = \
             {key.lower(): value for key, value in iteritems(itemObj.get(constants.PROPERTY_ITEM_PROVIDER_IDS, {}))}
-        # TODO: defaultUniqueId = Api._mapDefaultUniqueId(uniqueIds, mediaType)
+        defaultUniqueId = Api._mapDefaultUniqueId(uniqueIds, mediaType)
         # add the item's ID as a unique ID belonging to Emby
         uniqueIds[constants.EMBY_PROTOCOL] = itemId
-        item.getVideoInfoTag().setUniqueIDs(uniqueIds, constants.EMBY_PROTOCOL)
+        item.getVideoInfoTag().setUniqueIDs(uniqueIds, defaultUniqueId)
 
         # handle critic rating as rotten tomato rating
         if constants.PROPERTY_ITEM_CRITIC_RATING in itemObj:
