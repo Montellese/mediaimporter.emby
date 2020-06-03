@@ -1,0 +1,239 @@
+# Kodi Media Center language file
+# Addon Name: Emby Media Importer
+# Addon id: mediaimporter.emby
+# Addon Provider: Montellese
+msgid ""
+msgstr ""
+"Project-Id-Version: XBMC Addons\n"
+"Report-Msgid-Bugs-To: alanwww1@xbmc.org\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Wanilton Campos (campos.wanilton@gmail.com)\n"
+"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/xbmc-addons/language/pt_br/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "#32001"
+msgid "Retrieving {}..."
+msgstr "Recuperando {}..."
+
+msgctxt "#32002"
+msgid "movies"
+msgstr "filmes"
+
+msgctxt "#32003"
+msgid "TV shows"
+msgstr "seriados"
+
+msgctxt "#32004"
+msgid "seasons"
+msgstr "temporadas"
+
+msgctxt "#32005"
+msgid "episodes"
+msgstr "episódios"
+
+msgctxt "#32006"
+msgid "music videos"
+msgstr "shows"
+
+msgctxt "#32007"
+msgid "collections"
+msgstr "coleções"
+
+msgctxt "#32010"
+msgid "Emby"
+msgstr "Emby"
+
+msgctxt "#32011"
+msgid "Access"
+msgstr "Acesso"
+
+msgctxt "#32012"
+msgid "User"
+msgstr "Usuário"
+
+msgctxt "#32013"
+msgid "Username"
+msgstr "Nome do Usuário"
+
+msgctxt "#32014"
+msgid "Password"
+msgstr "Senha"
+
+msgctxt "#32015"
+msgid "Manual"
+msgstr "Manual"
+
+msgctxt "#32016"
+msgid "Test authentication"
+msgstr "Testar autenticação"
+
+msgctxt "#32017"
+msgid "Authentication succeeded"
+msgstr "Autenticação efetuada com sucesso"
+
+msgctxt "#32018"
+msgid "Authentication failed"
+msgstr "Autenticação falhou"
+
+msgctxt "#32020"
+msgid "Import media libraries"
+msgstr "Importar coleção de mídia"
+
+msgctxt "#32021"
+msgid "All"
+msgstr "Todos"
+
+msgctxt "#32022"
+msgid "Choose"
+msgstr "Escolha"
+
+msgctxt "#32023"
+msgid "Choose media libraries"
+msgstr "Escolha coleção de mídia"
+
+msgctxt "#32024"
+msgid "Library"
+msgstr "Coleção"
+
+msgctxt "#32025"
+msgid "Import collections"
+msgstr "Importar coleções"
+
+msgctxt "#32030"
+msgid "Playback"
+msgstr "Reprodução"
+
+msgctxt "#32031"
+msgid "Allow using Direct Play"
+msgstr "Permitir usar Direct Play"
+
+msgctxt "#32032"
+msgid "Enable external subtitles"
+msgstr "Ativer legendas extenas"
+
+msgctxt "#32033"
+msgid "Interface"
+msgstr "Interface"
+
+msgctxt "#32034"
+msgid "Show server messages as notifications"
+msgstr "Mostrar mensagens do servidor como notificações"
+
+msgctxt "#32035"
+msgid "Authentication"
+msgstr "Autenticação"
+
+msgctxt "#32036"
+msgid "Local"
+msgstr "Local"
+
+msgctxt "#32037"
+msgid "Emby Connect"
+msgstr "Emby Connect"
+
+msgctxt "#32038"
+msgid "Link to Emby Connect"
+msgstr "Link para Emby Connect"
+
+msgctxt "#32040"
+msgid "Synchronization"
+msgstr "Sincronização"
+
+msgctxt "#32041"
+msgid "Use Kodi Companion server plugin"
+msgstr "Usar o plugin Kodi Companion server"
+
+msgctxt "#32042"
+msgid "Force full synchronization"
+msgstr "Forçar sincronização total"
+
+#. Titel of the dialog to enter the base URI of the Emby server to lookup
+msgctxt "#32050"
+msgid "Emby server base URI"
+msgstr "URI base do servidor Emby "
+
+#. Text of the notification when an Emby server is shutting down
+msgctxt "#32051"
+msgid "{} is shutting down."
+msgstr "{} esta sendo desligado."
+
+#. Text of the notification when an Emby server is restarting
+msgctxt "#32052"
+msgid "{} is restarting."
+msgstr "{} esta reiniciando."
+
+#. Text of the dialog asking the user if he really wants to force sync
+msgctxt "#32053"
+msgid "Do you really want to force a full synchronization?"
+msgstr "Deseja realmente forçar uma sincronização total?"
+
+#. Titel of the dialog to select the authentication method
+msgctxt "#32053"
+msgid "Emby Server authentication method"
+msgstr "Método de autenticação no servidor do Emby"
+
+msgctxt "#32054"
+msgid "Falha ao recuperar o PIN para vincular ao Emby Connect! "ailed to retrieve PIN to link to Emby Connect!"
+msgstr "Falha ao recuperar o PIN para vincular ao Emby Connect! ""
+
+msgctxt "#32055"
+msgid "Visit [COLOR FF52B54B]https://emby.media/pin[/COLOR] and enter the following PIN:"
+msgstr "Visite [COLOR FF52B54B]https://emby.media/pin[/COLOR] e entre com o seguinte PIN:"
+
+msgctxt "#32056"
+msgid "Linking to Emby Connect has expired!"
+msgstr "Link para o Emby Connect expirou!"
+
+msgctxt "#32057"
+msgid "Choose an Emby server"
+msgstr "Escolha um servidor Emby"
+
+msgctxt "#32058"
+msgid "Emby server access"
+msgstr "Acesso ao servidor Emby"
+
+msgctxt "#32059"
+msgid "Is the Emby server \"{}\" accessible on the local network?"
+msgstr "Esta o servidor do Emby \"{}\" acessível na rede local?"
+
+msgctxt "#32060"
+msgid "Failed to connect to Emby server \"{}\"."
+msgstr "Falha ao conectar ao servidoor do Emby \"{}\"."
+
+msgctxt "#32061"
+msgid "Linking to Emby Connect failed!"
+msgstr "Link ao Emby Connect falhou!"
+
+msgctxt "#32062"
+msgid "Successfully linked to Emby Connect."
+msgstr "lincado com sucesso ao Emby Connect."
+
+#. Label of the play context menu item
+msgctxt "#32100"
+msgid "Play ..."
+msgstr "Reproduzir ..."
+
+#. Label of the play context menu item for Direct Play
+msgctxt "#32101"
+msgid "Direct Play"
+msgstr "Direct Play"
+
+#. Label of the play context menu item for Direct Stream
+msgctxt "#32102"
+msgid "Direct Stream"
+msgstr "Stream Direto"
+
+#. Label of the synchronise context menu item
+msgctxt "#32103"
+msgid "Synchronise"
+msgstr "Sincronize"
+
+#. Label of the refresh metadata context menu item
+msgctxt "#32104"
+msgid "Refresh metadata"
+msgstr "Atualizar metadata"
