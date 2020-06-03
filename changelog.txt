@@ -1,3 +1,6 @@
+[B]Version 0.0.10[/B]
+-
+
 [B]Version 0.0.9[/B]
 - properly import tags from "TagItems" instead of "Tags" (fixes #19)
 - map "primary" artwork to "thumb" for episodes and musicvideos (fixes #16)

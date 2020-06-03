@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="mediaimporter.emby" name="Emby Media Importer" version="0.0.9" provider-name="Montellese">
+<addon id="mediaimporter.emby" name="Emby Media Importer" version="0.0.10" provider-name="Montellese">
     <requires>
         <import addon="xbmc.python" version="3.0.0"/>
         <import addon="script.module.dateutil" />
