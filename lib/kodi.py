@@ -761,7 +761,7 @@ class Api:
             return Api.UNIQUE_ID_TMDB
 
         # last but not least fall back to the first key
-        return uniqueIdKeys[0]
+        return next(iter(uniqueIdKeys))
 
     @staticmethod
     def _mapVideoStream(stream, container=None):
