@@ -23,6 +23,7 @@ from emby.api.library import Library
 from emby import constants
 from emby.server import Server
 
+from lib.settings import ProviderSettings
 from lib.utils import log, mediaProvider2str, Url
 
 # mapping of Kodi and Emby media types
@@ -46,9 +47,6 @@ class Api:
             return False
 
         if lhs.getIdentifier() != rhs.getIdentifier():
-            return False
-
-        if lhs.getBasePath() != rhs.getBasePath():
             return False
 
         if lhs.getFriendlyName() != rhs.getFriendlyName():

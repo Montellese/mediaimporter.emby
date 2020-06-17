@@ -359,7 +359,7 @@ class ProviderObserver:
             return False
 
         # analyze the media provider's URL
-        urlParts = urlparse(self._mediaProvider.getBasePath())
+        urlParts = urlparse(self._server.Url())
         # determine the proper scheme (ws:// or wss://) and whether or not to verify the HTTPS certificate
         websocketScheme = 'wss' if urlParts.scheme == 'https' else 'ws'
         # put the urL back together

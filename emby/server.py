@@ -11,6 +11,7 @@ from six.moves.urllib.parse import urlparse
 from emby import constants
 from emby.authenticator import AuthenticatorFactory
 from emby.request import NotAuthenticatedError, Request
+from lib.settings import ProviderSettings
 
 from lib.utils import log, splitall, Url
 
@@ -21,13 +22,14 @@ class Server:
         if not provider:
             raise ValueError('Invalid provider')
 
-        self._baseUrl = provider.getBasePath()
-        self._url = Server._buildBaseUrl(self._baseUrl)
         self._id = provider.getIdentifier()
 
         self._settings = provider.getSettings()
         if not self._settings:
             raise ValueError('Invalid provider without settings')
+
+        self._baseUrl = ProviderSettings.GetUrl(self._settings)
+        self._url = Server._buildBaseUrl(self._baseUrl)
 
         self._devideId = self._settings.getString(constants.SETTING_PROVIDER_DEVICEID)
 
@@ -153,7 +155,7 @@ class Server:
         if not url:
             return False
 
-        parsedBaseUrl = urlparse(mediaProvider.getBasePath())
+        parsedBaseUrl = urlparse(ProviderSettings.GetUrl(mediaProvider))
         parsedUrl = urlparse(url)
         # compare the protocol, hostname and port against the media provider's base URL
         if parsedBaseUrl.scheme != parsedUrl.scheme or \

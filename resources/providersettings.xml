@@ -3,6 +3,14 @@
   <section id="emby" label="32010">
     <category id="access" label="32011">
       <group id="1">
+        <setting id="emby.url" type="string">
+          <visible>false</visible>
+          <level>4</level>
+          <default></default>
+          <constraints>
+            <allowempty>true</allowempty>
+          </constraints>
+        </setting>
         <setting id="emby.authentication" type="string" label="32035">
           <level>0</level>
           <default>local</default>

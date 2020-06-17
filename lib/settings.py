@@ -14,6 +14,7 @@ from six import ensure_binary
 import xbmcmediaimport  # pylint: disable=import-error
 
 from emby.constants import \
+    SETTING_PROVIDER_URL, \
     SETTING_PROVIDER_SYNCHRONIZATION_USE_KODI_COMPANION, \
     SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY, \
     SETTING_IMPORT_VIEWS, \
@@ -21,6 +22,41 @@ from emby.constants import \
     SETTING_IMPORT_VIEWS_SPECIFIC, \
     SETTING_IMPORT_IMPORT_COLLECTIONS, \
     SETTING_IMPORT_SYNC_SETTINGS_HASH
+
+class ProviderSettings:
+    @staticmethod
+    def GetUrl(obj):
+        providerSettings = ProviderSettings._getProviderSettings(obj)
+
+        url = providerSettings.getString(SETTING_PROVIDER_URL)
+        if not url:
+            raise RuntimeError('invalid provider without URL')
+
+        return url
+
+    @staticmethod
+    def SetUrl(obj, url):
+        if not obj:
+            raise ValueError('invalid media provider or media provider settings')
+        if not url:
+            raise ValueError('invalid url')
+
+        providerSettings = ProviderSettings._getProviderSettings(obj)
+
+        providerSettings.setString(SETTING_PROVIDER_URL, url)
+
+    @staticmethod
+    def _getProviderSettings(obj):
+        if not obj:
+            raise ValueError('invalid media provider or media provider settings')
+
+        if isinstance(obj, xbmcmediaimport.MediaProvider):
+            providerSettings = obj.getSettings()
+            if not providerSettings:
+                raise ValueError('invalid provider without settings')
+            return providerSettings
+
+        return obj
 
 
 class ImportSettings:
