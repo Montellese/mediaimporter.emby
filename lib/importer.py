@@ -653,10 +653,6 @@ def canUpdateResumePositionOnProvider(handle, options):  # pylint: disable=unuse
 
 # noqa pylint: disable=too-many-locals, too-many-statements, too-many-nested-blocks, too-many-branches, too-many-return-statements
 def execImport(handle, options):
-    if 'path' not in options:
-        log('cannot execute "import" without path', xbmc.LOGERROR)
-        return
-
     # parse all necessary options
     mediaTypes = mediaTypesFromOptions(options)
     if not mediaTypes:

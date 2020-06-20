@@ -64,7 +64,7 @@ def mediaImport2str(mediaImport):
     if not mediaImport:
         return 'unknown media import'
 
-    return '{} ({})'.format(mediaImport.getPath(), mediaImport.getMediaTypes())
+    return '{} {}'.format(mediaProvider2str(mediaImport.getProvider()), mediaImport.getMediaTypes())
 
 
 # https://www.oreilly.com/library/view/python-cookbook/0596001673/ch04s16.html

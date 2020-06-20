@@ -91,8 +91,9 @@ class ProviderObserver:
         if not mediaImport:
             raise ValueError('invalid mediaImport')
 
-        return [i for i, x in enumerate(self._imports)
-                if x.getPath() == mediaImport.getPath() and x.getMediaTypes() == mediaImport.getMediaTypes()]
+        return [i for i, localImport in enumerate(self._imports)
+                if localImport.getProvider().getIdentifier() == mediaImport.getProvider().getIdentifier() and \
+                   localImport.getMediaTypes() == mediaImport.getMediaTypes()]
 
     def _ProcessActions(self):
         for (action, data) in self._actions:
