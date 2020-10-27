@@ -594,7 +594,12 @@ class Api:
         if constants.PROPERTY_ITEM_REMOTE_TRAILERS in itemObj:
             remoteTrailers = itemObj.get(constants.PROPERTY_ITEM_REMOTE_TRAILERS)
             if remoteTrailers:
-                return remoteTrailers[0].get(constants.PROPERTY_ITEM_REMOTE_TRAILERS_URL, None)
+                remoteTrailerUrl = remoteTrailers[0].get(constants.PROPERTY_ITEM_REMOTE_TRAILERS_URL, None)
+                try:
+                    remoteTrailerId = remoteTrailerUrl.rsplit('=', 1)[1]
+                    return 'plugin://plugin.video.youtube/play/?video_id={}'.format(remoteTrailerId)
+                except:
+                    return remoteTrailers[0].get(constants.PROPERTY_ITEM_REMOTE_TRAILERS_URL, None)
 
         return None
 
