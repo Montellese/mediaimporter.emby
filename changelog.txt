@@ -1,5 +1,6 @@
 [B]Version 0.0.10[/B]
--
+- add Portuguese (Brazil) translation
+- fix mapping default unique ID
 
 [B]Version 0.0.9[/B]
 - properly import tags from "TagItems" instead of "Tags" (fixes #19)
