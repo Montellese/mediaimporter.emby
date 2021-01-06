@@ -17,7 +17,7 @@ from emby.server import Server
 
 from lib import kodi
 from lib.monitor import Monitor
-from lib.utils import log
+from lib.utils import getIcon, log
 
 
 class DiscoveryService:
@@ -75,10 +75,9 @@ class DiscoveryService:
             return
 
         providerId = Server.BuildProviderId(server.id)
-        providerIconUrl = Server.BuildIconUrl(server.address)
+        providerIconUrl = getIcon()
         mediaProvider = xbmcmediaimport.MediaProvider(providerId, server.address, server.name, providerIconUrl,
                                                       emby.constants.SUPPORTED_MEDIA_TYPES)
-        mediaProvider.setIconUrl(kodi.Api.downloadIcon(mediaProvider))
 
         if xbmcmediaimport.addAndActivateProvider(mediaProvider):
             self._servers[server.id].registered = True

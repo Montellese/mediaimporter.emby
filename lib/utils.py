@@ -84,6 +84,15 @@ def splitall(path):
 
     return allparts
 
+def getIcon():
+    iconPath = xbmc.translatePath(__addon__.getAddonInfo('icon'))
+    try:
+        iconPath = iconPath.decode('utf-8')
+    except AttributeError:
+        pass
+
+    return iconPath
+
 
 class Url:
     @staticmethod

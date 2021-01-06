@@ -23,7 +23,7 @@ from emby.api.library import Library
 from emby import constants
 from emby.server import Server
 
-from lib.utils import __addon__, log, mediaProvider2str, Url
+from lib.utils import log, mediaProvider2str, Url
 
 # mapping of Kodi and Emby media types
 EMBY_MEDIATYPE_BOXSET = 'BoxSet'
@@ -613,39 +613,6 @@ class Api:
         item.setInfo('video', {
             'set': collectionName
         })
-
-    @staticmethod
-    def downloadIcon(mediaProvider):
-        if not mediaProvider:
-            raise ValueError('invalid mediaProvider')
-
-        try:
-            basePath = xbmc.translatePath(__addon__.getAddonInfo('profile')).decode('utf-8')
-        except AttributeError:
-            basePath = xbmc.translatePath(__addon__.getAddonInfo('profile'))
-
-        # determine the icon's URL on the media provider
-        iconUrl = Server.BuildIconUrl(mediaProvider.getBasePath())
-
-        # make sure the addon data directory exists
-        if not xbmcvfs.exists(basePath):
-            if not Api._makeDir(basePath):
-                log('failed to create addon data directory at {}'.format(basePath), xbmc.LOGWARNING)
-                return iconUrl
-
-        # generate the icon's local path
-        serverId = Server.GetServerId(mediaProvider.getIdentifier())
-        iconPath = os.path.join(basePath, '{}.png'.format(serverId))
-
-        # try to download the icon (since Emby's webserver doesn't support HEAD requests)
-        try:
-            urlretrieve(iconUrl, iconPath)  # nosec
-        except IOError as err:
-            log('failed to download icon for {} from {}: {}'.format(mediaProvider2str(mediaProvider), iconUrl, err),
-                xbmc.LOGWARNING)
-            return iconUrl
-
-        return iconPath
 
     @staticmethod
     def _makeDir(path):

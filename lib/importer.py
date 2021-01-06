@@ -29,7 +29,7 @@ from emby.server import Server
 
 from lib import kodi
 from lib.settings import ImportSettings, SynchronizationSettings
-from lib.utils import __addon__, localise, log, mediaProvider2str, Url, utc
+from lib.utils import __addon__, getIcon, localise, log, mediaProvider2str, Url, utc
 
 # list of fields to retrieve
 EMBY_ITEM_FIELDS = [
@@ -116,10 +116,9 @@ def discoverProviderLocally(handle, options):  # pylint: disable=unused-argument
         return None
 
     providerId = Server.BuildProviderId(serverInfo.id)
-    providerIconUrl = Server.BuildIconUrl(baseUrl)
+    providerIconUrl = getIcon()
     provider = xbmcmediaimport.MediaProvider(providerId, baseUrl, serverInfo.name, providerIconUrl,
                                              emby.constants.SUPPORTED_MEDIA_TYPES)
-    provider.setIconUrl(kodi.Api.downloadIcon(provider))
 
     # store local authentication in settings
     providerSettings = provider.prepareSettings()
@@ -288,10 +287,9 @@ def discoverProviderWithEmbyConnect(handle, options):  # pylint: disable=unused-
         return None
 
     providerId = Server.BuildProviderId(server.systemId)
-    providerIconUrl = Server.BuildIconUrl(baseUrl)
+    providerIconUrl = getIcon()
     provider = xbmcmediaimport.MediaProvider(providerId, baseUrl, server.name, providerIconUrl,
                                              emby.constants.SUPPORTED_MEDIA_TYPES)
-    provider.setIconUrl(kodi.Api.downloadIcon(provider))
 
     # store Emby connect authentication in settings
     providerSettings = provider.prepareSettings()

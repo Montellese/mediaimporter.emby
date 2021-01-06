@@ -43,5 +43,8 @@
         <website>http://kodi.tv</website>
         <email>montellese@kodi.tv</email>
         <source>https://github.com/Montellese/mediaimporter.emby</source>
+        <assets>
+            <icon>resources/icon.png</icon>
+        </assets>
     </extension>
 </addon>

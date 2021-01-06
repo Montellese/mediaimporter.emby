@@ -284,13 +284,6 @@ class Server:
                           constants.URL_SYSTEM_INFO_PUBLIC)
 
     @staticmethod
-    def BuildIconUrl(baseUrl):
-        if not baseUrl:
-            raise ValueError('Invalid baseUrl')
-
-        return Url.append(Server._buildBaseUrl(baseUrl), 'web', 'touchicon144.png')
-
-    @staticmethod
     def BuildConnectExchangeUrl(baseUrl, userId):
         if not baseUrl:
             raise ValueError('Invalid baseUrl')

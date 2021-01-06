@@ -2,6 +2,7 @@
 - add Portuguese (Brazil) translation
 - fix mapping default unique ID
 - map trailers from youtube to plugin.video.youtube
+- use add-on's icon instead of trying to get it from the Emby server
 
 [B]Version 0.0.9[/B]
 - properly import tags from "TagItems" instead of "Tags" (fixes #19)
