@@ -29,7 +29,7 @@ from emby.server import Server
 
 from lib import kodi
 from lib.settings import ImportSettings, SynchronizationSettings
-from lib.utils import __addon__, getIcon, localise, log, mediaProvider2str, Url, utc
+from lib.utils import getIcon, localise, log, mediaProvider2str, Url, utc
 
 # list of fields to retrieve
 EMBY_ITEM_FIELDS = [
@@ -361,7 +361,7 @@ def settingOptionsFillerUsers(handle, _):
     # get the provider's settings
     settings = mediaProvider.getSettings()
 
-    users = [(__addon__.getLocalizedString(32015), emby.constants.SETTING_PROVIDER_USER_OPTION_MANUAL)]
+    users = [(localise(32015), emby.constants.SETTING_PROVIDER_USER_OPTION_MANUAL)]
     publicUsers = User.GetPublicUsers(mediaProvider.getBasePath(),
                                       deviceId=settings.getString(emby.constants.SETTING_PROVIDER_DEVICEID))
     users.extend([(user.name, user.id) for user in publicUsers])
@@ -754,7 +754,7 @@ def execImport(handle, options):
         (_, embyMediaType, _, localizedMediaType) = mappedMediaType
 
         xbmcmediaimport.setProgressStatus(
-            handle, __addon__.getLocalizedString(32001).format(__addon__.getLocalizedString(localizedMediaType)))
+            handle, localise(32001).format(localise(localizedMediaType)))
 
         urlOptions = syncUrlOptions.copy()
         urlOptions.update({
