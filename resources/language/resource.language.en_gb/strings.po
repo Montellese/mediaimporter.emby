@@ -181,7 +181,7 @@ msgid "Failed to retrieve PIN to link to Emby Connect!"
 msgstr ""
 
 msgctxt "#32055"
-msgid "Visit [COLOR FF52B54B]https://emby.media/pin[/COLOR] and enter the following PIN:"
+msgid "Visit [COLOR FF52B54B]https://emby.media/pin[/COLOR] and enter the following PIN: [COLOR FF52B54B]{}[/COLOR]"
 msgstr ""
 
 msgctxt "#32056"

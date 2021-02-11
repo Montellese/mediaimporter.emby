@@ -1,5 +1,5 @@
 [B]Version 0.0.10[/B]
--
+- fix exception when showing PIN for Emby Connect
 
 [B]Version 0.0.10[/B]
 - add Portuguese (Brazil) translation

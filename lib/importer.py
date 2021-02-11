@@ -152,7 +152,7 @@ def linkToEmbyConnect(deviceId):
         return None
 
     # show the user the pin
-    dialog.ok(localise(32038), localise(32055), '[COLOR FF52B54B]{}[/COLOR]'.format(pinLogin.pin))
+    dialog.ok(localise(32038), localise(32055).format(pinLogin.pin))
 
     # check the status of the authentication
     while not pinLogin.finished:
