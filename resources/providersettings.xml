@@ -138,6 +138,12 @@
           </constraints>
         </setting>
       </group>
+      <group id="2" label="32043">
+        <setting id="emby.resetdeviceid" type="action" label="32044">
+          <level>0</level>
+          <control type="button" format="action" />
+        </setting>
+      </group>
     </category>
     <category id="synchronization" label="32040">
       <group id="1">

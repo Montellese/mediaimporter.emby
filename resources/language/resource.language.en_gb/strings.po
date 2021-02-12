@@ -152,6 +152,14 @@ msgctxt "#32042"
 msgid "Force full synchronisation"
 msgstr ""
 
+msgctxt "#32043"
+msgid "Advanced"
+msgstr ""
+
+msgctxt "#32044"
+msgid "Generate a new device ID"
+msgstr ""
+
 #. Titel of the dialog to enter the base URI of the Emby server to lookup
 msgctxt "#32050"
 msgid "Emby server base URI"
@@ -210,6 +218,10 @@ msgstr ""
 
 msgctxt "#32062"
 msgid "Successfully linked to Emby Connect."
+msgstr ""
+
+msgctxt "#32063"
+msgid "A new device ID has been successfully generated.\n\nPlease save the settings and restart Kodi."
 msgstr ""
 
 #. Label of the play context menu item

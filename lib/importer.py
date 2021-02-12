@@ -361,6 +361,26 @@ def forceSync(handle, _):
     SynchronizationSettings.ResetHash(importSettings, save=False)
 
 
+def resetDeviceId(handle, _):
+    # retrieve the media provider
+    mediaProvider = xbmcmediaimport.getProvider(handle)
+    if not mediaProvider:
+        log('cannot retrieve media provider', xbmc.LOGERROR)
+        return
+
+    # get the media provider settings
+    providerSettings = mediaProvider.prepareSettings()
+    if not providerSettings:
+        return
+
+    deviceId = Request.GenerateDeviceId()
+    log('created a new device identifier for {}: {}'.format(mediaProvider2str(mediaProvider), deviceId))
+
+    providerSettings.setString(emby.constants.SETTING_PROVIDER_DEVICEID, deviceId)
+
+    xbmcgui.Dialog().ok(mediaProvider.getFriendlyName(), localise(32063))
+
+
 def settingOptionsFillerUsers(handle, _):
     # retrieve the media provider
     mediaProvider = xbmcmediaimport.getProvider(handle)
@@ -603,6 +623,7 @@ def loadProviderSettings(handle, _):
 
     settings.registerActionCallback(emby.constants.SETTING_PROVIDER_LINK_EMBY_CONNECT, 'linkembyconnect')
     settings.registerActionCallback(emby.constants.SETTING_PROVIDER_TEST_AUTHENTICATION, 'testauthentication')
+    settings.registerActionCallback(emby.constants.SETTING_PROVIDER_ADVANCED_RESET_DEVICE_ID, 'resetdeviceid')
 
     # register a setting options filler for the list of users
     settings.registerOptionsFillerCallback(emby.constants.SETTING_PROVIDER_USER, 'settingoptionsfillerusers')
@@ -970,6 +991,7 @@ ACTIONS = {
     'linkembyconnect': linkEmbyConnect,
     'testauthentication': testAuthentication,
     'forcesync': forceSync,
+    'resetdeviceid': resetDeviceId,
 
     # custom setting options fillers
     'settingoptionsfillerusers': settingOptionsFillerUsers,

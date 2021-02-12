@@ -1,6 +1,7 @@
 [B]Version 0.0.10[/B]
 - fix exception when showing PIN for Emby Connect
 - don't require a password for logging in (closes #40)
+- add an option to generate a new device ID (closes #39)
 
 [B]Version 0.0.10[/B]
 - add Portuguese (Brazil) translation

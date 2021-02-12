@@ -269,6 +269,8 @@ SETTING_PROVIDER_PLAYBACK_ENABLE_EXTERNAL_SUBTITLES = 'emby.enableexternalsubtit
 
 SETTING_PROVIDER_INTERFACE_SHOW_SERVER_MESSAGES = 'emby.showservermessages'
 
+SETTING_PROVIDER_ADVANCED_RESET_DEVICE_ID = 'emby.resetdeviceid'
+
 # media import setting identifiers and values
 SETTING_IMPORT_FORCE_SYNC = 'emby.forcesync'
 SETTING_IMPORT_VIEWS = 'emby.importviews'
