@@ -299,18 +299,14 @@ def discoverProviderWithEmbyConnect(handle, options):  # pylint: disable=unused-
     provider = xbmcmediaimport.MediaProvider(providerId, server.name, providerIconUrl,
                                              emby.constants.SUPPORTED_MEDIA_TYPES)
 
-    settings = provider.prepareSettings()
-    if not settings:
+    providerSettings = provider.prepareSettings()
+    if not providerSettings:
         log('cannot prepare media provider settings', xbmc.LOGERROR)
         return
 
-    ProviderSettings.SetUrl(settings, baseUrl)
+    ProviderSettings.SetUrl(providerSettings, baseUrl)
 
     # store Emby connect authentication in settings
-    providerSettings = provider.prepareSettings()
-    if not providerSettings:
-        return None
-
     providerSettings.setString(emby.constants.SETTING_PROVIDER_AUTHENTICATION,
                                emby.constants.SETTING_PROVIDER_AUTHENTICATION_OPTION_EMBY_CONNECT)
     providerSettings.setString(emby.constants.SETTING_PROVIDER_EMBY_CONNECT_USER_ID, embyConnect.userId)
