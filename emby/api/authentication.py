@@ -28,9 +28,6 @@ class Authentication:
     @staticmethod
     # pylint: disable=too-many-arguments
     def Authenticate(baseUrl, authenticationMethod, username=None, userId=None, password=None, deviceId=None):
-        if not password:
-            raise ValueError('invalid password')
-
         # prepare the authentication URL
         authUrl = baseUrl
         authUrl = Url.append(authUrl, constants.URL_USERS)
