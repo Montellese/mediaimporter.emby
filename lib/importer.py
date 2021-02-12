@@ -333,11 +333,10 @@ def testAuthentication(handle, _):
     except:
         pass
 
-    title = mediaProvider.getFriendlyName()
     line = 32018
     if success:
         line = 32017
-    xbmcgui.Dialog().ok(title, localise(line))
+    xbmcgui.Dialog().ok(mediaProvider.getFriendlyName(), localise(line))
 
 
 def forceSync(handle, _):
