@@ -599,7 +599,7 @@ def loadProviderSettings(handle, _):
 
     # make sure we have a device identifier
     if not settings.getString(emby.constants.SETTING_PROVIDER_DEVICEID):
-        settings.setString(emby.constants.SETTING_PROVIDER_DEVICEID, str(uuid.uuid4()))
+        settings.setString(emby.constants.SETTING_PROVIDER_DEVICEID, Request.GenerateDeviceId())
 
     settings.registerActionCallback(emby.constants.SETTING_PROVIDER_LINK_EMBY_CONNECT, 'linkembyconnect')
     settings.registerActionCallback(emby.constants.SETTING_PROVIDER_TEST_AUTHENTICATION, 'testauthentication')
