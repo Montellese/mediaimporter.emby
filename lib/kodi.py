@@ -11,7 +11,6 @@ import os
 
 from dateutil import parser
 from six import iteritems
-from six.moves.urllib.request import urlretrieve
 from six.moves.urllib.parse import urlparse, urlunparse
 
 import xbmc  # pylint: disable=import-error
@@ -21,10 +20,8 @@ import xbmcvfs  # pylint: disable=import-error
 
 from emby.api.library import Library
 from emby import constants
-from emby.server import Server
 
-from lib.settings import ProviderSettings
-from lib.utils import log, mediaProvider2str, Url
+from lib.utils import log, Url
 
 # mapping of Kodi and Emby media types
 EMBY_MEDIATYPE_BOXSET = 'BoxSet'

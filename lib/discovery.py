@@ -16,7 +16,6 @@ import xbmcmediaimport  # pylint: disable=import-error
 import emby
 from emby.server import Server
 
-from lib import kodi
 from lib.monitor import Monitor
 from lib.settings import ProviderSettings
 from lib.utils import getIcon, log
