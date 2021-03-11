@@ -178,8 +178,8 @@ msgid "Emby Server authentication method"
 msgstr "Método de autenticação no servidor do Emby"
 
 msgctxt "#32054"
-msgid "Falha ao recuperar o PIN para vincular ao Emby Connect! "ailed to retrieve PIN to link to Emby Connect!"
-msgstr "Falha ao recuperar o PIN para vincular ao Emby Connect! ""
+msgid "Failed to retrieve PIN to link to Emby Connect!"
+msgstr "Falha ao recuperar o PIN para vincular ao Emby Connect!"
 
 msgctxt "#32055"
 msgid "Visit [COLOR FF52B54B]https://emby.media/pin[/COLOR] and enter the following PIN:"
