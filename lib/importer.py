@@ -360,6 +360,9 @@ def forceSync(handle, _):
     # reset the synchronization hash setting to force a full synchronization
     SynchronizationSettings.ResetHash(importSettings, save=False)
 
+    # tell the user that he needs to save the settings
+    xbmcgui.Dialog().ok(localise(32042), localise(32065))
+
 
 def resetDeviceId(handle, _):
     # retrieve the media provider

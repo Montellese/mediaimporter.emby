@@ -224,6 +224,11 @@ msgctxt "#32064"
 msgid "Do you really want to force a full synchronisation?"
 msgstr ""
 
+#. Text of the dialog tell the user to save the settings after using force sync
+msgctxt "#32065"
+msgid "Please save the settings to start the full synchronisation."
+msgstr ""
+
 #. Label of the play context menu item
 msgctxt "#32100"
 msgid "Play ..."
