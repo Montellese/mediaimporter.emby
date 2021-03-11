@@ -174,11 +174,6 @@ msgstr ""
 msgctxt "#32052"
 msgid "{} is restarting."
 
-#. Text of the dialog asking the user if he really wants to force sync
-msgctxt "#32053"
-msgid "Do you really want to force a full synchronisation?"
-msgstr ""
-
 #. Titel of the dialog to select the authentication method
 msgctxt "#32053"
 msgid "Emby Server authentication method"
@@ -222,6 +217,11 @@ msgstr ""
 
 msgctxt "#32063"
 msgid "A new device ID has been successfully generated.\n\nPlease save the settings and restart Kodi."
+msgstr ""
+
+#. Text of the dialog asking the user if he really wants to force sync
+msgctxt "#32064"
+msgid "Do you really want to force a full synchronisation?"
 msgstr ""
 
 #. Label of the play context menu item

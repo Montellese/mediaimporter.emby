@@ -167,11 +167,6 @@ msgctxt "#32052"
 msgid "{} is restarting."
 msgstr "{} esta reiniciando."
 
-#. Text of the dialog asking the user if he really wants to force sync
-msgctxt "#32053"
-msgid "Do you really want to force a full synchronization?"
-msgstr "Deseja realmente forçar uma sincronização total?"
-
 #. Titel of the dialog to select the authentication method
 msgctxt "#32053"
 msgid "Emby Server authentication method"
@@ -212,6 +207,11 @@ msgstr "Link ao Emby Connect falhou!"
 msgctxt "#32062"
 msgid "Successfully linked to Emby Connect."
 msgstr "lincado com sucesso ao Emby Connect."
+
+#. Text of the dialog asking the user if he really wants to force sync
+msgctxt "#32064"
+msgid "Do you really want to force a full synchronization?"
+msgstr "Deseja realmente forçar uma sincronização total?"
 
 #. Label of the play context menu item
 msgctxt "#32100"

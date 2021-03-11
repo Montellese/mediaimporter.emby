@@ -341,7 +341,7 @@ def testAuthentication(handle, _):
 
 def forceSync(handle, _):
     # ask the user whether he is sure
-    force = xbmcgui.Dialog().yesno(localise(32042), localise(32053))
+    force = xbmcgui.Dialog().yesno(localise(32042), localise(32064))
     if not force:
         return
 
