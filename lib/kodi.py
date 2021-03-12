@@ -260,7 +260,8 @@ class Api:
 
         item = ListItem(
             path=itemPath,
-            label=itemObj.get(constants.PROPERTY_ITEM_NAME))
+            label=itemObj.get(constants.PROPERTY_ITEM_NAME),
+            offscreen=True)
         item.setIsFolder(itemObj.get(constants.PROPERTY_ITEM_IS_FOLDER))
 
         # handle date
