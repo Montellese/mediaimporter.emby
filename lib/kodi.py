@@ -615,7 +615,7 @@ class Api:
         # make sure the path ends with a slash
         path = Url.addTrailingSlash(path)
 
-        path = xbmc.translatePath(path)
+        path = xbmcvfs.translatePath(path)
         if xbmcvfs.exists(path):
             return True
 
