@@ -427,7 +427,7 @@ class Api:
             'year': itemObj.get(constants.PROPERTY_ITEM_PRODUCTION_YEAR, 0),
             'rating': itemObj.get(constants.PROPERTY_ITEM_COMMUNITY_RATING, 0.0),
             'mpaa': Api._mapMpaa(itemObj.get(constants.PROPERTY_ITEM_OFFICIAL_RATING, '')),
-            'duration': Api.ticksToSeconds(itemObj.get(constants.PROPERTY_ITEM_RUN_TIME_TICKS, 0)),
+            'duration': int(Api.ticksToSeconds(itemObj.get(constants.PROPERTY_ITEM_RUN_TIME_TICKS, 0))),
             'playcount': userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAY_COUNT, 0)
                          if userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAYED, False) else 0,
             'lastplayed': Api.convertDateTimeToDbDateTime(
@@ -523,8 +523,82 @@ class Api:
             elif castType == constants.PROPERTY_ITEM_PEOPLE_TYPE_DIRECTOR:
                 info['director'].append(name)
 
-        item.setInfo('video', info)
-        item.setCast(cast)
+        # stream details
+        streams = {
+            'video': [],
+            'audio': [],
+            'subtitle': [],
+        }
+        for stream in itemObj.get(constants.PROPERTY_ITEM_MEDIA_STREAMS, []):
+            streamType = stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_TYPE, '')
+            if streamType == 'Video':
+                streams['video'].append(Api._mapVideoStream({
+                    'codec': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_CODEC, ''),
+                    'profile': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_PROFILE, ''),
+                    'language': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
+                    'width': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_WIDTH, 0),
+                    'height': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_HEIGHT, 0),
+                    'aspect': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_ASPECT_RATIO, '0'),
+                    'stereomode': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_VIDEO_3D_FORMAT, 'mono'),
+                    'duration': info['duration']
+                    }))
+            elif streamType == 'Audio':
+                streams['audio'].append(Api._mapAudioStream({
+                    'codec': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_CODEC, ''),
+                    'profile': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_PROFILE, ''),
+                    'language': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
+                    'channels': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_CHANNELS, 2)
+                    }))
+            elif streamType == 'Subtitle':
+                streams['subtitle'].append({
+                    'language': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, '')
+                    })
+
+        import cProfile, pstats
+        ITERATIONS = 1000
+
+        # profile combination of setInfo() and setCast()
+        profiler = cProfile.Profile()
+        profiler.enable()
+
+        for _ in range(0, ITERATIONS):
+            tempItem = ListItem(offscreen=True)
+            tempItem.setInfo('video', info)
+            tempItem.setCast(cast)
+            for streamType, streamDetails in streams.items():
+                for streamDetail in streamDetails:
+                    item.addStreamInfo(streamType, streamDetail)
+
+        profiler.disable()
+        stats = pstats.Stats(profiler).sort_stats('tottime')
+        stats.print_stats()
+
+        # profile combined setInfoFromJson()
+        info['cast'] = cast
+        info['streaminfo'] = streams
+
+        profiler = cProfile.Profile()
+        profiler.enable()
+
+        for _ in range(0, ITERATIONS):
+            tempItem = ListItem(offscreen=True)
+            tempItem.setInfoFromJson('video', json.dumps(info, check_circular=False, separators=(',', ':')))
+
+        profiler.disable()
+        stats = pstats.Stats(profiler).sort_stats('tottime')
+        stats.print_stats()
+
+        # profile combined setInfoFromDict()
+        profiler = cProfile.Profile()
+        profiler.enable()
+
+        for _ in range(0, ITERATIONS):
+            tempItem = ListItem(offscreen=True)
+            tempItem.setInfoFromDict('video', info)
+
+        profiler.disable()
+        stats = pstats.Stats(profiler).sort_stats('tottime')
+        stats.print_stats()
 
         # handle unique / provider IDs
         uniqueIds = \
