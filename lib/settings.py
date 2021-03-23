@@ -99,6 +99,7 @@ class SynchronizationSettings:
             raise ValueError('invalid importSettings')
 
         # provider specific settings
+        url = ProviderSettings.GetUrl(providerSettings)
         useKodiCompanion = providerSettings.getBool(SETTING_PROVIDER_SYNCHRONIZATION_USE_KODI_COMPANION)
         allowDirectPlay = providerSettings.getBool(SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY)
 
@@ -107,6 +108,7 @@ class SynchronizationSettings:
 
         hashObject = {
             # provider specific settings
+            SETTING_PROVIDER_URL: url,
             SETTING_PROVIDER_SYNCHRONIZATION_USE_KODI_COMPANION: useKodiCompanion,
             SETTING_PROVIDER_PLAYBACK_ALLOW_DIRECT_PLAY: allowDirectPlay,
 

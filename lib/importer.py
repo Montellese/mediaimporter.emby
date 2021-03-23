@@ -384,6 +384,50 @@ def resetDeviceId(handle, _):
     xbmcgui.Dialog().ok(mediaProvider.getFriendlyName(), localise(32063))
 
 
+def changeUrl(handle, _):
+    # retrieve the media provider
+    mediaProvider = xbmcmediaimport.getProvider(handle)
+    if not mediaProvider:
+        log('cannot retrieve media provider', xbmc.LOGERROR)
+        return
+
+    # get the media provider settings
+    providerSettings = mediaProvider.prepareSettings()
+    if not providerSettings:
+        return
+
+    urlCurrent = ProviderSettings.GetUrl(providerSettings)
+    if not urlCurrent:
+        log("cannot retrieve current URL from provider settings", xbmc.LOGERROR)
+        return
+
+    # ask the user for a new URL
+    urlNew = xbmcgui.Dialog().input(localise(32045), urlCurrent)
+    if not urlNew:
+        return
+
+    # store the new URL in the settings
+    ProviderSettings.SetUrl(providerSettings, urlNew)
+
+    # try to connect and authenticate with the new URL
+    success = False
+    try:
+        success = Server(mediaProvider).Authenticate(force=True)
+    except:
+        pass
+
+    dialog = xbmcgui.Dialog()
+    title = mediaProvider.getFriendlyName()
+    if success:
+        dialog.ok(title, localise(32017))
+    else:
+        # ask the user whether to change the URL anyway
+        changeUrlAnyway = dialog.yesno(title, localise(32066))
+        if not changeUrlAnyway:
+            # revert the settings to the previous / old URL
+            ProviderSettings.SetUrl(providerSettings, urlCurrent)
+
+
 def settingOptionsFillerUsers(handle, _):
     # retrieve the media provider
     mediaProvider = xbmcmediaimport.getProvider(handle)
@@ -636,6 +680,7 @@ def loadProviderSettings(handle, _):
     settings.registerActionCallback(emby.constants.SETTING_PROVIDER_LINK_EMBY_CONNECT, 'linkembyconnect')
     settings.registerActionCallback(emby.constants.SETTING_PROVIDER_TEST_AUTHENTICATION, 'testauthentication')
     settings.registerActionCallback(emby.constants.SETTING_PROVIDER_ADVANCED_RESET_DEVICE_ID, 'resetdeviceid')
+    settings.registerActionCallback(emby.constants.SETTING_PROVIDER_ADVANCED_CHANGE_URL, 'changeurl')
 
     # register a setting options filler for the list of users
     settings.registerOptionsFillerCallback(emby.constants.SETTING_PROVIDER_USER, 'settingoptionsfillerusers')
@@ -1004,6 +1049,7 @@ ACTIONS = {
     'testauthentication': testAuthentication,
     'forcesync': forceSync,
     'resetdeviceid': resetDeviceId,
+    'changeurl': changeUrl,
 
     # custom setting options fillers
     'settingoptionsfillerusers': settingOptionsFillerUsers,

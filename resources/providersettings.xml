@@ -143,6 +143,10 @@
           <level>0</level>
           <control type="button" format="action" />
         </setting>
+        <setting id="emby.changeurl" type="action" label="32045">
+          <level>0</level>
+          <control type="button" format="action" />
+        </setting>
       </group>
     </category>
     <category id="synchronization" label="32040">

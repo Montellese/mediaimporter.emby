@@ -1,5 +1,6 @@
 [B]Version 0.0.12[/B]
 - show hint after using force full synchronization
+- add advanced option to change the URL of a media provider
 
 [B]Version 0.0.11[/B]
 - fix exception when showing PIN for Emby Connect

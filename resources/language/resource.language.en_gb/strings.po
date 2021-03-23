@@ -160,6 +160,10 @@ msgctxt "#32044"
 msgid "Generate a new device ID"
 msgstr ""
 
+msgctxt "#32045"
+msgid "Change server address"
+msgstr ""
+
 #. Titel of the dialog to enter the base URI of the Emby server to lookup
 msgctxt "#32050"
 msgid "Emby server base URI"
@@ -227,6 +231,11 @@ msgstr ""
 #. Text of the dialog tell the user to save the settings after using force sync
 msgctxt "#32065"
 msgid "Please save the settings to start the full synchronisation."
+msgstr ""
+
+#. Text of the dialog telling the user that the changed address didn't work
+msgctxt "#32066"
+msgid "Authentication failed!\nChange the server address anyway?"
 msgstr ""
 
 #. Label of the play context menu item
