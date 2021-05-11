@@ -2,6 +2,7 @@
 - show hint after using force full synchronization
 - add advanced option to change the URL of a media provider
 - fix selecting one of multiple servers linked to an Emby Connect account
+- use explicit setters in InfoTagVideo instead of ListItem.setInfo()
 
 [B]Version 0.0.11[/B]
 - fix exception when showing PIN for Emby Connect

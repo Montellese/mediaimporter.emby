@@ -258,20 +258,11 @@ class Api:
         if not itemPath:
             return None
 
-        item = ListItem(
-            path=itemPath,
-            label=itemObj.get(constants.PROPERTY_ITEM_NAME),
-            offscreen=True)
-        item.setIsFolder(itemObj.get(constants.PROPERTY_ITEM_IS_FOLDER))
-
-        # handle date
-        premiereDate = itemObj.get(constants.PROPERTY_ITEM_PREMIERE_DATE)
-        if premiereDate:
-            item.setDateTime(premiereDate)
-
-        # fill video details
-        Api.fillVideoInfos(embyServer, itemId, itemObj, mediaType, item,
-                           libraryView=libraryView, allowDirectPlay=allowDirectPlay)
+        # create item with video info
+        item = Api.createVideoInfoItemWithVideoSetters(
+            embyServer, itemId, itemPath, itemObj, mediaType,
+            libraryView=libraryView, allowDirectPlay=allowDirectPlay
+            )
 
         # handle artwork
         artwork = Api._mapArtwork(embyServer, itemId, itemObj, mediaType)
@@ -410,121 +401,58 @@ class Api:
 
     @staticmethod
      # noqa # pylint: disable=too-many-arguments, too-many-locals, too-many-branches, too-many-statements, too-many-return-statements
-    def fillVideoInfos(embyServer, itemId, itemObj, mediaType, item, libraryView='', allowDirectPlay=True):
+    def createVideoInfoItemWithVideoSetters(embyServer, itemId, itemPath, itemObj, mediaType, libraryView='',
+        allowDirectPlay=True):
+
+        item = ListItem(
+            path=itemPath,
+            label=itemObj.get(constants.PROPERTY_ITEM_NAME, ''),
+            offscreen=True)
+        item.setIsFolder(itemObj.get(constants.PROPERTY_ITEM_IS_FOLDER, False))
+
+        # handle date
+        premiereDate = itemObj.get(constants.PROPERTY_ITEM_PREMIERE_DATE)
+        if premiereDate:
+            item.setDateTime(premiereDate)
+
+        videoInfoTag = item.getVideoInfoTag()
+
         userdata = {}
         if constants.PROPERTY_ITEM_USER_DATA in itemObj:
             userdata = itemObj[constants.PROPERTY_ITEM_USER_DATA]
-        info = {
-            'mediatype': mediaType,
-            'path': itemObj.get(constants.PROPERTY_ITEM_PATH, ''),
-            'filenameandpath': item.getPath(),
-            'title': item.getLabel() or '',
-            'sorttitle': itemObj.get(constants.PROPERTY_ITEM_SORT_NAME, ''),
-            'originaltitle': itemObj.get(constants.PROPERTY_ITEM_ORIGINAL_TITLE, ''),
-            'plot': Api._mapOverview(itemObj.get(constants.PROPERTY_ITEM_OVERVIEW, '')),
-            'plotoutline': itemObj.get(constants.PROPERTY_ITEM_SHORT_OVERVIEW, ''),
-            'dateadded': Api.convertDateTimeToDbDateTime(itemObj.get(constants.PROPERTY_ITEM_DATE_CREATED, '')),
-            'year': itemObj.get(constants.PROPERTY_ITEM_PRODUCTION_YEAR, 0),
-            'rating': itemObj.get(constants.PROPERTY_ITEM_COMMUNITY_RATING, 0.0),
-            'mpaa': Api._mapMpaa(itemObj.get(constants.PROPERTY_ITEM_OFFICIAL_RATING, '')),
-            'duration': Api.ticksToSeconds(itemObj.get(constants.PROPERTY_ITEM_RUN_TIME_TICKS, 0)),
-            'playcount': userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAY_COUNT, 0)
-                         if userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAYED, False) else 0,
-            'lastplayed': Api.convertDateTimeToDbDateTime(
-                userdata.get(constants.PROPERTY_ITEM_USER_DATA_LAST_PLAYED_DATE, '')),
-            'director': [],
-            'writer': [],
-            'artist': itemObj.get(constants.PROPERTY_ITEM_ARTISTS, []),
-            'album': itemObj.get(constants.PROPERTY_ITEM_ALBUM, ''),
-            'genre': itemObj.get(constants.PROPERTY_ITEM_GENRES, []),
-            'country': itemObj.get(constants.PROPERTY_ITEM_PRODUCTION_LOCATIONS, []),
-            'tag': [],
-        }
 
-        # process tags
-        if constants.PROPERTY_ITEM_TAG_ITEMS in itemObj:
-            info['tag'] = [
-                tag.get(constants.PROPERTY_ITEM_TAG_ITEMS_NAME)
-                for tag in itemObj.get(constants.PROPERTY_ITEM_TAG_ITEMS)
-                if constants.PROPERTY_ITEM_TAG_ITEMS_NAME in tag
-                ]
+        duration = int(Api.ticksToSeconds(itemObj.get(constants.PROPERTY_ITEM_RUN_TIME_TICKS, 0)))
 
-        # add the library view as a tag
-        if libraryView:
-            info['tag'].append(libraryView)
+        videoInfoTag.setMediaType(mediaType)
+        videoInfoTag.setPath(itemObj.get(constants.PROPERTY_ITEM_PATH, ''))
+        videoInfoTag.setFilenameAndPath(item.getPath())
+        videoInfoTag.setTitle(item.getLabel() or '')
+        videoInfoTag.setSortTitle(itemObj.get(constants.PROPERTY_ITEM_SORT_NAME, ''))
+        videoInfoTag.setOriginalTitle(itemObj.get(constants.PROPERTY_ITEM_ORIGINAL_TITLE, ''))
+        videoInfoTag.setPlot(Api._mapOverview(itemObj.get(constants.PROPERTY_ITEM_OVERVIEW, '')))
+        videoInfoTag.setPlotOutline(itemObj.get(constants.PROPERTY_ITEM_SHORT_OVERVIEW, ''))
+        videoInfoTag.setDateAdded(
+            Api.convertDateTimeToDbDateTime(itemObj.get(constants.PROPERTY_ITEM_DATE_CREATED, '')))
+        videoInfoTag.setYear(itemObj.get(constants.PROPERTY_ITEM_PRODUCTION_YEAR, 0))
+        videoInfoTag.setMpaa(Api._mapMpaa(itemObj.get(constants.PROPERTY_ITEM_OFFICIAL_RATING, '')))
+        videoInfoTag.setDuration(duration)
+        videoInfoTag.setPlaycount(userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAY_COUNT, 0)
+                                  if userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAYED, False) else 0)
+        videoInfoTag.setLastPlayed(Api.convertDateTimeToDbDateTime(
+                userdata.get(constants.PROPERTY_ITEM_USER_DATA_LAST_PLAYED_DATE, '')))
+        videoInfoTag.setArtists(itemObj.get(constants.PROPERTY_ITEM_ARTISTS, []))
+        videoInfoTag.setAlbum(itemObj.get(constants.PROPERTY_ITEM_ALBUM, ''))
+        videoInfoTag.setGenres(itemObj.get(constants.PROPERTY_ITEM_GENRES, []))
+        videoInfoTag.setCountries(itemObj.get(constants.PROPERTY_ITEM_PRODUCTION_LOCATIONS, []))
 
-        # handle aired / premiered
-        date = item.getDateTime()
-        if date:
-            pos = date.find('T')
-            if pos >= 0:
-                date = date[:pos]
-
-            if mediaType == xbmcmediaimport.MediaTypeEpisode:
-                info['aired'] = date
-            else:
-                info['premiered'] = date
-
-        # handle trailers
-        trailerUrl = Api.getTrailer(embyServer, itemId, itemObj, allowDirectPlay=allowDirectPlay)
-        if trailerUrl:
-            info['trailer'] = trailerUrl
-
-        # handle taglines
-        tagline = ''
-        embyTaglines = itemObj.get(constants.PROPERTY_ITEM_TAGLINES, [])
-        if embyTaglines:
-            tagline = embyTaglines[0]
-        info['tagline'] = tagline
-
-        # handle studios
-        studios = []
-        for studio in itemObj.get(constants.PROPERTY_ITEM_STUDIOS, []):
-            studios.append(Api._mapStudio(studio['Name']))
-        info['studio'] = studios
-
-        # handle tvshow, season and episode specific properties
-        if mediaType == xbmcmediaimport.MediaTypeTvShow:
-            info['tvshowtitle'] = item.getLabel()
-            info['status'] = itemObj.get(constants.PROPERTY_ITEM_STATUS, '')
-        elif mediaType in (xbmcmediaimport.MediaTypeSeason, xbmcmediaimport.MediaTypeEpisode):
-            info['tvshowtitle'] = itemObj.get(constants.PROPERTY_ITEM_SERIES_NAME, '')
-            index = itemObj.get(constants.PROPERTY_ITEM_INDEX_NUMBER, 0)
-            if mediaType == xbmcmediaimport.MediaTypeSeason:
-                info['season'] = index
-
-                # ATTENTION
-                # something is wrong with the SortName property for seasons which interfers with Kodi
-                # abusing sorttitle for custom season titles
-                del info['sorttitle']
-            else:
-                info['season'] = itemObj.get(constants.PROPERTY_ITEM_PARENT_INDEX_NUMBER, 0)
-                info['episode'] = index
-
-        # handle actors / cast
-        cast = []
-        for index, person in enumerate(itemObj.get(constants.PROPERTY_ITEM_PEOPLE, [])):
-            name = person.get(constants.PROPERTY_ITEM_PEOPLE_NAME, '')
-            castType = person.get(constants.PROPERTY_ITEM_PEOPLE_TYPE, '')
-            if castType == constants.PROPERTY_ITEM_PEOPLE_TYPE_ACTOR:
-                actor = {
-                    'name': name,
-                    'role': person.get(constants.PROPERTY_ITEM_PEOPLE_ROLE, ''),
-                    'order': index
-                }
-                personId = person.get(constants.PROPERTY_ITEM_PEOPLE_ID, None)
-                primaryImageTag = person.get(constants.PROPERTY_ITEM_PEOPLE_PRIMARY_IMAGE_TAG, '')
-                if personId and primaryImageTag:
-                    actor['thumbnail'] = \
-                        embyServer.BuildImageUrl(personId, constants.PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, primaryImageTag)
-                cast.append(actor)
-            elif castType == constants.PROPERTY_ITEM_PEOPLE_TYPE_WRITER:
-                info['writer'].append(name)
-            elif castType == constants.PROPERTY_ITEM_PEOPLE_TYPE_DIRECTOR:
-                info['director'].append(name)
-
-        item.setInfo('video', info)
-        item.setCast(cast)
+        # process ratings
+        if constants.PROPERTY_ITEM_COMMUNITY_RATING in itemObj:
+            defaultRating = itemObj.get(constants.PROPERTY_ITEM_COMMUNITY_RATING)
+            videoInfoTag.setRating(defaultRating, isDefault=True)
+        # handle critic rating as rotten tomato rating
+        if constants.PROPERTY_ITEM_CRITIC_RATING in itemObj:
+            criticRating = float(itemObj.get(constants.PROPERTY_ITEM_CRITIC_RATING)) / 10.0
+            videoInfoTag.setRating(criticRating, type='tomatometerallcritics')
 
         # handle unique / provider IDs
         uniqueIds = \
@@ -532,26 +460,104 @@ class Api:
         defaultUniqueId = Api._mapDefaultUniqueId(uniqueIds, mediaType)
         # add the item's ID as a unique ID belonging to Emby
         uniqueIds[constants.EMBY_PROTOCOL] = itemId
-        item.getVideoInfoTag().setUniqueIDs(uniqueIds, defaultUniqueId)
+        videoInfoTag.setUniqueIDs(uniqueIds, defaultUniqueId)
 
-        # handle critic rating as rotten tomato rating
-        if constants.PROPERTY_ITEM_CRITIC_RATING in itemObj:
-            criticRating = float(itemObj.get(constants.PROPERTY_ITEM_CRITIC_RATING)) / 10.0
-            item.setRating('tomatometerallcritics', criticRating)
+        # process tags
+        tags = []
+        if constants.PROPERTY_ITEM_TAG_ITEMS in itemObj:
+            tags = [
+                tag.get(constants.PROPERTY_ITEM_TAG_ITEMS_NAME)
+                for tag in itemObj.get(constants.PROPERTY_ITEM_TAG_ITEMS)
+                if constants.PROPERTY_ITEM_TAG_ITEMS_NAME in tag
+                ]
+        # add the library view as a tag
+        if libraryView:
+            tags.append(libraryView)
+        videoInfoTag.setTags(tags)
+
+        # handle aired / premiered
+        if premiereDate:
+            pos = premiereDate.find('T')
+            if pos >= 0:
+                premiereDate = premiereDate[:pos]
+
+            if mediaType == xbmcmediaimport.MediaTypeEpisode:
+                videoInfoTag.setFirstAired(premiereDate)
+            else:
+                videoInfoTag.setPremiered(premiereDate)
+
+        # handle trailers
+        trailerUrl = Api.getTrailer(embyServer, itemId, itemObj, allowDirectPlay=allowDirectPlay)
+        if trailerUrl:
+            videoInfoTag.setTrailer(trailerUrl)
+
+        # handle taglines
+        embyTaglines = itemObj.get(constants.PROPERTY_ITEM_TAGLINES, [])
+        if embyTaglines:
+            videoInfoTag.setTagLine(embyTaglines[0])
+
+        # handle studios
+        studios = []
+        for studio in itemObj.get(constants.PROPERTY_ITEM_STUDIOS, []):
+            studios.append(Api._mapStudio(studio['Name']))
+        videoInfoTag.setStudios(studios)
+
+        # handle tvshow, season and episode specific properties
+        if mediaType == xbmcmediaimport.MediaTypeTvShow:
+            videoInfoTag.setTvShowTitle(videoInfoTag.getTitle())
+            videoInfoTag.setTvShowStatus(itemObj.get(constants.PROPERTY_ITEM_STATUS, ''))
+        elif mediaType in (xbmcmediaimport.MediaTypeSeason, xbmcmediaimport.MediaTypeEpisode):
+            videoInfoTag.setTvShowTitle(itemObj.get(constants.PROPERTY_ITEM_SERIES_NAME, ''))
+            index = itemObj.get(constants.PROPERTY_ITEM_INDEX_NUMBER, 0)
+            if mediaType == xbmcmediaimport.MediaTypeSeason:
+                videoInfoTag.setSeason(index)
+
+                # ATTENTION
+                # something is wrong with the SortName property for seasons which interfers with Kodi
+                # abusing sorttitle for custom season titles
+                videoInfoTag.setSortTitle('')
+            else:
+                videoInfoTag.setSeason(itemObj.get(constants.PROPERTY_ITEM_PARENT_INDEX_NUMBER, 0))
+                videoInfoTag.setEpisode(index)
 
         # handle resume point
-        resumePoint = {
-            'totaltime': info['duration'],
-            'resumetime':
-                Api.ticksToSeconds(userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAYBACK_POSITION_TICKS, 0))
-        }
-        item.setProperties(resumePoint)
+        videoInfoTag.setResumePoint(
+            Api.ticksToSeconds(userdata.get(constants.PROPERTY_ITEM_USER_DATA_PLAYBACK_POSITION_TICKS, 0)),
+            duration
+            )
+
+        # handle actors / cast
+        cast = []
+        writers = []
+        directors = []
+        for index, person in enumerate(itemObj.get(constants.PROPERTY_ITEM_PEOPLE, [])):
+            name = person.get(constants.PROPERTY_ITEM_PEOPLE_NAME, '')
+            castType = person.get(constants.PROPERTY_ITEM_PEOPLE_TYPE, '')
+            if castType == constants.PROPERTY_ITEM_PEOPLE_TYPE_ACTOR:
+                role = person.get(constants.PROPERTY_ITEM_PEOPLE_ROLE, '')
+                # determine the thumbnail (if available)
+                thumbnail = ''
+                personId = person.get(constants.PROPERTY_ITEM_PEOPLE_ID, None)
+                primaryImageTag = person.get(constants.PROPERTY_ITEM_PEOPLE_PRIMARY_IMAGE_TAG, '')
+                if personId and primaryImageTag:
+                    thumbnail = \
+                        embyServer.BuildImageUrl(personId, constants.PROPERTY_ITEM_IMAGE_TAGS_PRIMARY, primaryImageTag)
+
+                cast.append(xbmc.Actor(name, role, index, thumbnail))
+            elif castType == constants.PROPERTY_ITEM_PEOPLE_TYPE_WRITER:
+                writers.append(name)
+            elif castType == constants.PROPERTY_ITEM_PEOPLE_TYPE_DIRECTOR:
+                directors.append(name)
+
+        videoInfoTag.setCast(cast)
+        videoInfoTag.setWriters(writers)
+        videoInfoTag.setDirectors(directors)
 
         # stream details
         for stream in itemObj.get(constants.PROPERTY_ITEM_MEDIA_STREAMS, []):
             streamType = stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_TYPE, '')
-            if streamType == 'Video':
-                item.addStreamInfo('video', Api._mapVideoStream({
+            if streamType == 'video':
+                details = Api._mapVideoStream({
                     'codec': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_CODEC, ''),
                     'profile': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_PROFILE, ''),
                     'language': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
@@ -559,19 +565,35 @@ class Api:
                     'height': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_HEIGHT, 0),
                     'aspect': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_ASPECT_RATIO, '0'),
                     'stereomode': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_VIDEO_3D_FORMAT, 'mono'),
-                    'duration': info['duration']
-                    }))
-            elif streamType == 'Audio':
-                item.addStreamInfo('audio', Api._mapAudioStream({
+                    'duration': duration
+                    })
+                videoInfoTag.addVideoStream(xbmc.VideoStreamDetail(
+                    width=details['width'],
+                    height=details['height'],
+                    aspect=details['aspect'],
+                    duration=details['duration'],
+                    codec=details['codec'],
+                    stereoMode=details['stereomode'],
+                    language=details['language'],
+                ))
+            elif streamType == 'audio':
+                details = Api._mapAudioStream({
                     'codec': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_CODEC, ''),
                     'profile': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_PROFILE, ''),
                     'language': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
                     'channels': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_CHANNELS, 2)
-                    }))
-            elif streamType == 'Subtitle':
-                item.addStreamInfo('subtitle', {
-                    'language': stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, '')
                     })
+                videoInfoTag.addAudioStream(xbmc.AudioStreamDetail(
+                    channels=details['channels'],
+                    codec=details['codec'],
+                    language=details['language'],
+                ))
+            elif streamType == 'subtitle':
+                videoInfoTag.addSubtitleStream(xbmc.SubtitleStreamDetail(
+                    language=stream.get(constants.PROPERTY_ITEM_MEDIA_STREAM_LANGUAGE, ''),
+                ))
+
+        return item
 
     @staticmethod
     def getTrailer(embyServer, itemId, itemObj, allowDirectPlay=True):
@@ -606,9 +628,7 @@ class Api:
         if not collectionName:
             raise ValueError('invalid collectionName')
 
-        item.setInfo('video', {
-            'set': collectionName
-        })
+        item.getVideoInfoTag().setSet(collectionName)
 
     @staticmethod
     def _makeDir(path):
