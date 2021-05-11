@@ -31,6 +31,8 @@ from lib import kodi
 from lib.settings import ImportSettings, ProviderSettings, SynchronizationSettings
 from lib.utils import getIcon, localise, log, mediaProvider2str, Url
 
+DEBUG_CACHING = False
+
 # list of fields to retrieve
 EMBY_ITEM_FIELDS = [
     emby.constants.PROPERTY_ITEM_PREMIERE_DATE,
@@ -483,11 +485,25 @@ def settingOptionsFillerViews(handle, _):
 
 # pylint: disable=too-many-locals, too-many-arguments
 def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, viewName=None, raw=False,
-                allowDirectPlay=True):
+                allowDirectPlay=True, importSettings=None):
     items = []
 
     viewUrl = url
     viewUrl = Url.addOptions(viewUrl, {emby.constants.URL_QUERY_ITEMS_PARENT_ID: viewId})
+
+    cacheName = '{}_{}_{}'.format(mediaType, viewId, SynchronizationSettings.GetHash(importSettings))
+    cacheLoaded = False
+    cachedResponses = []
+    cachedResponsesIndex = 0
+
+    if DEBUG_CACHING:
+        from lib.utils import Cache  # pylint: disable=import-outside-toplevel
+        cachedResponses = Cache.load(cacheName)
+        if cachedResponses:
+            log('{} cached responses for {} loaded from {}'.format(len(cachedResponses), mediaType, cacheName))
+            cacheLoaded = True
+        else:
+            cachedResponses = []
 
     # retrieve all items matching the current media type
     totalCount = 0
@@ -496,16 +512,31 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
         if xbmcmediaimport.shouldCancel(handle, startIndex, max(totalCount, 1)):
             return None
 
-        # put together a paged URL
-        pagedUrlOptions = {
-            emby.constants.URL_QUERY_ITEMS_START_INDEX: startIndex
-        }
-        pagedUrl = Url.addOptions(viewUrl, pagedUrlOptions)
-        resultObj = embyServer.ApiGet(pagedUrl)
+        resultObj = None
+        if DEBUG_CACHING and cacheLoaded:
+            # try to load the responses from the cache
+            if cachedResponsesIndex >= len(cachedResponses):
+                raise RuntimeError( \
+                    "expecting more responses than cached ({}): {} of {}" \
+                        .format(len(cachedResponses), startIndex, totalCount))
+
+            resultObj = cachedResponses[cachedResponsesIndex]
+            cachedResponsesIndex = cachedResponsesIndex + 1
+        else:
+            # put together a paged URL
+            pagedUrlOptions = {
+                emby.constants.URL_QUERY_ITEMS_START_INDEX: startIndex
+            }
+            pagedUrl = Url.addOptions(viewUrl, pagedUrlOptions)
+            resultObj = embyServer.ApiGet(pagedUrl)
+
         if not resultObj or emby.constants.PROPERTY_ITEM_ITEMS not in resultObj or \
            emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT not in resultObj:
             log('invalid response for items of media type "{}" from {}'.format(mediaType, pagedUrl), xbmc.LOGERROR)
             return None
+
+        if DEBUG_CACHING:
+            cachedResponses.append(resultObj)
 
         # retrieve the total number of items
         totalCount = int(resultObj[emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT])
@@ -530,6 +561,10 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
         # check if we have retrieved all available items
         if startIndex >= totalCount:
             break
+
+    if DEBUG_CACHING and not cacheLoaded:
+        Cache.store(cacheName, cachedResponses)
+        log('{} {} items written to cache at {}'.format(len(items), mediaType, cacheName))
 
     return items
 
@@ -863,12 +898,13 @@ def execImport(handle, options):
             log('importing {} items from "{}" view from {}...'
                 .format(mediaType, view.name, mediaProvider2str(mediaProvider)))
             items.extend(importItems(handle, embyServer, url, mediaType, view.id, embyMediaType=embyMediaType,
-                                     viewName=view.name, allowDirectPlay=allowDirectPlay))
+                                     viewName=view.name, allowDirectPlay=allowDirectPlay,
+                                     importSettings=importSettings))
 
             if importCollections and items and mediaType == xbmcmediaimport.MediaTypeMovie:
                 # retrieve all BoxSets / collections matching the current media type
                 boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view.id, raw=True,
-                                         allowDirectPlay=allowDirectPlay)
+                                         allowDirectPlay=allowDirectPlay, importSettings=importSettings)
                 for boxsetObj in boxsetObjs:
                     if emby.constants.PROPERTY_ITEM_ID not in boxsetObj or \
                        emby.constants.PROPERTY_ITEM_NAME not in boxsetObj:
@@ -883,7 +919,8 @@ def execImport(handle, options):
             for (boxsetId, boxsetName) in iteritems(boxsets):
                 # get all items belonging to the BoxSet
                 boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId, embyMediaType=embyMediaType,
-                                          viewName=boxsetName, allowDirectPlay=allowDirectPlay)
+                                          viewName=boxsetName, allowDirectPlay=allowDirectPlay,
+                                          importSettings=importSettings)
                 for boxsetItem in boxsetItems:
                     # find the matching retrieved item
                     for index, item in enumerate(items):
