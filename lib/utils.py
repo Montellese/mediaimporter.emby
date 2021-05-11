@@ -7,6 +7,7 @@
 #
 
 import os
+import pickle
 
 from six import PY3
 from six.moves.urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
@@ -130,6 +131,109 @@ class Url:
             raise ValueError('invalid url')
 
         return os.path.join(url, '')
+
+
+class Cache:
+    CACHE_DIRECTORY = 'cache'
+
+    @staticmethod
+    def store(name: str, obj: object) -> bool:
+        if not name:
+            raise ValueError("invalid name")
+        if not obj:
+            raise ValueError("invalid object")
+
+        cacheDir = Cache._getCachePath()
+
+        # make sure the cache directory exists
+        if not Cache._makeDir(cacheDir):
+            log(f"failed to create cache directory at {cacheDir}", xbmc.LOGWARNING)
+            return False
+
+        cacheFilePath = Cache._getCacheFile(name)
+
+        # remove a previously cached object if it exists
+        if xbmcvfs.exists(cacheFilePath):
+            xbmcvfs.deleteFile(cacheFilePath)
+
+        with open(cacheFilePath, 'wb') as cacheFile:
+            pickle.dump(obj, cacheFile, pickle.HIGHEST_PROTOCOL)
+
+        return True
+
+    @staticmethod
+    def load(name: str) -> object:
+        if not name:
+            raise ValueError("invalid name")
+
+        cacheFilePath = Cache._getCacheFile(name)
+
+        if not xbmcvfs.exists(cacheFilePath):
+            return None
+
+        with open(cacheFilePath, 'rb') as cacheFile:
+            return pickle.load(cacheFile)
+
+
+    @staticmethod
+    def _getBasePath():
+        try:
+            basePath = xbmcvfs.translatePath(__addon__.getAddonInfo('profile')).decode('utf-8')
+        except AttributeError:
+            basePath = xbmcvfs.translatePath(__addon__.getAddonInfo('profile'))
+
+        return basePath
+
+
+    @staticmethod
+    def _getCachePath():
+        return os.path.join(Cache._getBasePath(), Cache.CACHE_DIRECTORY)
+
+
+    @staticmethod
+    def _getCacheFilename(name: str) -> str:
+        if not name:
+            raise ValueError("invalid name")
+
+        return name + ".pkl"
+
+
+    @staticmethod
+    def _getCacheFile(name:str) -> str:
+        if not name:
+            raise ValueError("invalid name")
+
+        cacheDir = Cache._getCachePath()
+        cacheFilename = Cache._getCacheFilename(name)
+        return xbmcvfs.makeLegalFilename(os.path.join(cacheDir, cacheFilename))
+
+
+    @staticmethod
+    def _makeDir(path: str):
+        if not path:
+            raise ValueError("invalid path")
+
+        # make sure the path ends with a slash
+        path = os.path.join(path, '')
+
+        path = xbmcvfs.translatePath(path)
+        if xbmcvfs.exists(path):
+            return True
+
+        try:
+            _ = xbmcvfs.mkdirs(path)
+        except:
+            pass
+
+        if xbmcvfs.exists(path):
+            return True
+
+        try:
+            os.makedirs(path)
+        except:
+            pass
+
+        return xbmcvfs.exists(path)
 
 
 try:
