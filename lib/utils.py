@@ -13,6 +13,7 @@ from six.moves.urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import xbmc  # pylint: disable=import-error
 import xbmcaddon  # pylint: disable=import-error
+import xbmcvfs  # pylint: disable=import-error
 
 __addon__ = xbmcaddon.Addon()
 __addonid__ = __addon__.getAddonInfo('id')
@@ -85,7 +86,7 @@ def splitall(path):
     return allparts
 
 def getIcon():
-    iconPath = xbmc.translatePath(__addon__.getAddonInfo('icon'))
+    iconPath = xbmcvfs.translatePath(__addon__.getAddonInfo('icon'))
     try:
         iconPath = iconPath.decode('utf-8')
     except AttributeError:
