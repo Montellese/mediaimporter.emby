@@ -9,7 +9,6 @@
 from datetime import timezone
 import sys
 import time
-import uuid
 
 from dateutil import parser
 from six import iteritems
