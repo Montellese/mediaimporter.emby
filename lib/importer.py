@@ -11,7 +11,6 @@ import sys
 import time
 
 from dateutil import parser
-from six import iteritems
 from six.moves.urllib.parse import parse_qs, unquote, urlparse
 
 import xbmc  # pylint: disable=import-error
@@ -916,41 +915,53 @@ def execImport(handle, options):
         boxsetUrl = Url.addOptions(baseUrl, boxsetUrlOptions)
 
         items = []
-        boxsets = {}
 
         # handle library views
         for view in views:
+            # retrieve BoxSets if configured
+            boxsetMapping = {}
+            if importCollections and mediaType == xbmcmediaimport.MediaTypeMovie:
+                # get the number of media items in the view
+                totalItemCount = getTotalItems(embyServer, url, mediaType, view.id)
+
+                # only load BoxSets from views with media items
+                if totalItemCount:
+                    # retrieve all BoxSets / collections matching the current media type
+                    boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view.id, raw=True,
+                                             showProgress=False, allowDirectPlay=allowDirectPlay)
+                    for boxsetObj in boxsetObjs:
+                        if emby.constants.PROPERTY_ITEM_ID not in boxsetObj or \
+                            emby.constants.PROPERTY_ITEM_NAME not in boxsetObj:
+                            continue
+
+                        boxsetId = boxsetObj[emby.constants.PROPERTY_ITEM_ID]
+                        boxsetName = boxsetObj[emby.constants.PROPERTY_ITEM_NAME]
+
+                        # get all items belonging to the BoxSet
+                        boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId,
+                                                  embyMediaType=embyMediaType, viewName=boxsetName,
+                                                  showProgress=False, allowDirectPlay=allowDirectPlay)
+
+                        for boxsetItem in boxsetItems:
+                            # reorder to map item paths to BoxSet names
+                            boxsetMapping[boxsetItem.getPath()] = boxsetName
+
+            # retrieve the actual media items
             log('importing {} items from "{}" view from {}...'
                 .format(mediaType, view.name, mediaProvider2str(mediaProvider)))
-            items.extend(importItems(handle, embyServer, url, mediaType, view.id, embyMediaType=embyMediaType,
-                                     viewName=view.name, allowDirectPlay=allowDirectPlay))
+            importedItems = importItems(handle, embyServer, url, mediaType, view.id, embyMediaType=embyMediaType,
+                                        viewName=view.name, allowDirectPlay=allowDirectPlay)
 
-            if importCollections and items and mediaType == xbmcmediaimport.MediaTypeMovie:
-                # retrieve all BoxSets / collections matching the current media type
-                boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view.id, raw=True,
-                                         showProgress=False, allowDirectPlay=allowDirectPlay)
-                for boxsetObj in boxsetObjs:
-                    if emby.constants.PROPERTY_ITEM_ID not in boxsetObj or \
-                       emby.constants.PROPERTY_ITEM_NAME not in boxsetObj:
-                        continue
+            # assign BoxSets / collections to the retrieved items
+            if boxsetMapping and importedItems:
+                for index, item in enumerate(importedItems):
+                    boxsetName = boxsetMapping.get(item.getPath(), None)
+                    if boxsetName:
+                        # set the BoxSet / collection
+                        kodi.Api.setCollection(item, boxsetName)
+                        importedItems[index] = item
 
-                    boxsetId = boxsetObj[emby.constants.PROPERTY_ITEM_ID]
-                    boxsetName = boxsetObj[emby.constants.PROPERTY_ITEM_NAME]
-                    boxsets[boxsetId] = boxsetName
-
-        # handle BoxSets / collections
-        if importCollections and items:
-            for (boxsetId, boxsetName) in iteritems(boxsets):
-                # get all items belonging to the BoxSet
-                boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId, embyMediaType=embyMediaType,
-                                          viewName=boxsetName, showProgress=False, allowDirectPlay=allowDirectPlay)
-                for boxsetItem in boxsetItems:
-                    # find the matching retrieved item
-                    for index, item in enumerate(items):
-                        if boxsetItem.getPath() == item.getPath():
-                            # set the BoxSet / collection
-                            kodi.Api.setCollection(item, boxsetName)
-                            items[index] = item
+            items.extend(importedItems)
 
         # in a fast sync we need to get the removed items from Kodi companion
         if fastSync:
