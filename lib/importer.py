@@ -518,6 +518,15 @@ def getRawItemsChunked(embyServer, url, mediaType, viewId, startIndex, count):
 
     return (totalCount, itemsObj)
 
+def getTotalItems(embyServer, url, mediaType, viewId):
+    try:
+        totalCount, _ = getRawItemsChunked(embyServer, url, mediaType, viewId, 0, 0)
+        return totalCount
+
+    except RuntimeError as e:
+        log(str(e), xbmc.LOGERROR)
+        return None
+
 
 # pylint: disable=too-many-arguments
 def importItemsChunked(handle, embyServer, url, mediaType, viewId, startIndex, count, embyMediaType=None,
