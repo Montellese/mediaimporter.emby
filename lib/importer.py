@@ -481,6 +481,18 @@ def settingOptionsFillerViews(handle, _):
     settings.setStringOptions(emby.constants.SETTING_IMPORT_VIEWS_SPECIFIC, views)
 
 
+def shouldCancel(handle, progress=0, total=1, showProgress=True):
+    if showProgress:
+        # make sure total is at least 1
+        total = max(total, 1)
+    else:
+        # don't report any progress by setting progress / total to zero
+        progress = 0
+        total = 0
+
+    return xbmcmediaimport.shouldCancel(handle, progress, total)
+
+
 # pylint: disable=too-many-locals, too-many-arguments
 def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, viewName=None, raw=False,
                 allowDirectPlay=True):
@@ -493,7 +505,7 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
     totalCount = 0
     startIndex = 0
     while True:
-        if xbmcmediaimport.shouldCancel(handle, startIndex, max(totalCount, 1)):
+        if shouldCancel(handle, progress=startIndex, total=totalCount):
             return None
 
         # put together a paged URL
@@ -514,7 +526,7 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
         itemsObj = resultObj[emby.constants.PROPERTY_ITEM_ITEMS]
         for itemObj in itemsObj:
             startIndex = startIndex + 1
-            if xbmcmediaimport.shouldCancel(handle, startIndex, totalCount):
+            if shouldCancel(handle, progress=startIndex, total=totalCount):
                 return None
 
             if raw:
@@ -824,7 +836,7 @@ def execImport(handle, options):
     progress = 0
     progressTotal = len(mediaTypes)
     for mediaType in mediaTypes:
-        if xbmcmediaimport.shouldCancel(handle, progress, progressTotal):
+        if shouldCancel(handle, progress=progress, total=progressTotal):
             return
         progress += 1
 
