@@ -493,55 +493,98 @@ def shouldCancel(handle, progress=0, total=1, showProgress=True):
     return xbmcmediaimport.shouldCancel(handle, progress, total)
 
 
-# pylint: disable=too-many-locals, too-many-arguments
-def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, viewName=None, raw=False,
-                showProgress=True, allowDirectPlay=True):
-    items = []
-
+def getRawItemsChunked(embyServer, url, mediaType, viewId, startIndex, count):
     viewUrl = url
     viewUrl = Url.addOptions(viewUrl, {emby.constants.URL_QUERY_ITEMS_PARENT_ID: viewId})
 
+    # put together a paged URL
+    pagedUrlOptions = {
+        emby.constants.URL_QUERY_ITEMS_LIMIT: count,
+        emby.constants.URL_QUERY_ITEMS_START_INDEX: startIndex
+    }
+    pagedUrl = Url.addOptions(viewUrl, pagedUrlOptions)
+
     # retrieve all items matching the current media type
+    resultObj = embyServer.ApiGet(pagedUrl)
+    if not resultObj or emby.constants.PROPERTY_ITEM_ITEMS not in resultObj or \
+        emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT not in resultObj:
+        raise RuntimeError('invalid response for items of media type "{}" from {}'.format(mediaType, pagedUrl))
+
+    # retrieve the total number of items
+    totalCount = int(resultObj[emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT])
+
+    # parse all items
+    itemsObj = resultObj[emby.constants.PROPERTY_ITEM_ITEMS]
+
+    return (totalCount, itemsObj)
+
+
+# pylint: disable=too-many-arguments
+def importItemsChunked(handle, embyServer, url, mediaType, viewId, startIndex, count, embyMediaType=None,
+                       viewName=None, raw=False, showProgress=True, allowDirectPlay=True):
+    # get the total count and raw items
+    totalCount, rawItems = getRawItemsChunked(embyServer, url, mediaType, viewId, startIndex, count)
+
+    items = []
+
+    # parse all items
+    for rawItem in rawItems:
+        startIndex = startIndex + 1
+        if shouldCancel(handle, progress=startIndex, total=totalCount, showProgress=showProgress):
+            return None
+
+        if raw:
+            items.append(rawItem)
+        else:
+            item = kodi.Api.toFileItem(embyServer, rawItem, mediaType, embyMediaType, viewName,
+                                       allowDirectPlay=allowDirectPlay)
+            if not item:
+                continue
+
+            items.append(item)
+
+    return (totalCount, len(rawItems), items)
+
+
+# pylint: disable=too-many-arguments
+def importItemsGenerator(handle, embyServer, url, mediaType, viewId, embyMediaType=None, viewName=None, raw=False,
+                         showProgress=True, allowDirectPlay=True):
     totalCount = 0
     startIndex = 0
     while True:
         if shouldCancel(handle, progress=startIndex, total=totalCount, showProgress=showProgress):
             return None
 
-        # put together a paged URL
-        pagedUrlOptions = {
-            emby.constants.URL_QUERY_ITEMS_START_INDEX: startIndex
-        }
-        pagedUrl = Url.addOptions(viewUrl, pagedUrlOptions)
-        resultObj = embyServer.ApiGet(pagedUrl)
-        if not resultObj or emby.constants.PROPERTY_ITEM_ITEMS not in resultObj or \
-           emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT not in resultObj:
-            log('invalid response for items of media type "{}" from {}'.format(mediaType, pagedUrl), xbmc.LOGERROR)
+        try:
+            # retrieve all items matching the current media type
+            totalCount, importedItemsCount, importedItems = \
+                importItemsChunked(handle, embyServer, url, mediaType, viewId, startIndex, ITEM_REQUEST_LIMIT,
+                                   embyMediaType=embyMediaType, viewName=viewName, raw=raw,
+                                   showProgress=showProgress, allowDirectPlay=allowDirectPlay)
+
+            yield importedItems
+
+            # check if we have retrieved all available items
+            startIndex += importedItemsCount
+            if startIndex >= totalCount:
+                break
+
+        except RuntimeError as e:
+            log(str(e), xbmc.LOGERROR)
             return None
 
-        # retrieve the total number of items
-        totalCount = int(resultObj[emby.constants.PROPERTY_ITEM_TOTAL_RECORD_COUNT])
 
-        # parse all items
-        itemsObj = resultObj[emby.constants.PROPERTY_ITEM_ITEMS]
-        for itemObj in itemsObj:
-            startIndex = startIndex + 1
-            if shouldCancel(handle, progress=startIndex, total=totalCount, showProgress=showProgress):
-                return None
+# pylint: disable=too-many-arguments
+def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, viewName=None, raw=False,
+                showProgress=True, allowDirectPlay=True):
+    items = []
 
-            if raw:
-                items.append(itemObj)
-            else:
-                item = kodi.Api.toFileItem(embyServer, itemObj, mediaType, embyMediaType, viewName,
-                                           allowDirectPlay=allowDirectPlay)
-                if not item:
-                    continue
+    # get the import items generator
+    gen = importItemsGenerator(handle, embyServer, url, mediaType, viewId, embyMediaType=embyMediaType,
+                               viewName=viewName, raw=raw, showProgress=showProgress, allowDirectPlay=allowDirectPlay)
 
-                items.append(item)
-
-        # check if we have retrieved all available items
-        if startIndex >= totalCount:
-            break
+    for importedItems in gen:
+        items.extend(importedItems)
 
     return items
 
@@ -777,8 +820,7 @@ def execImport(handle, options):
     baseUrlOptions = {
         emby.constants.URL_QUERY_ITEMS_RECURSIVE: 'true',
         emby.constants.URL_QUERY_ITEMS_FIELDS: ','.join(EMBY_ITEM_FIELDS),
-        emby.constants.URL_QUERY_ITEMS_EXCLUDE_LOCATION_TYPES: 'Virtual,Offline',
-        emby.constants.URL_QUERY_ITEMS_LIMIT: ITEM_REQUEST_LIMIT
+        emby.constants.URL_QUERY_ITEMS_EXCLUDE_LOCATION_TYPES: 'Virtual,Offline'
     }
     baseUrl = Url.addOptions(baseUrl, baseUrlOptions)
 
