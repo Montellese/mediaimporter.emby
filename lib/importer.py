@@ -261,7 +261,7 @@ def discoverProviderWithEmbyConnect(handle, options):  # pylint: disable=unused-
         if serverChoice < 0 or serverChoice >= len(serverChoices):
             return None
 
-        server = server[serverChoice]
+        server = servers[serverChoice]
 
     if not server:
         return None
