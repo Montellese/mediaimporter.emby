@@ -833,12 +833,9 @@ def execImport(handle, options):
                     .format(mediaTypes, mediaProvider2str(mediaProvider)), xbmc.LOGWARNING)
 
     # loop over all media types to be imported
-    progress = 0
-    progressTotal = len(mediaTypes)
     for mediaType in mediaTypes:
-        if shouldCancel(handle, progress=progress, total=progressTotal):
+        if shouldCancel(handle, showProgress=False):
             return
-        progress += 1
 
         if mediaType == xbmcmediaimport.MediaTypeVideoCollection and not importCollections:
             log('importing {} items from {} is disabled'.format(mediaType, mediaProvider2str(mediaProvider)),
