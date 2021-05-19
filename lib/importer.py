@@ -495,7 +495,7 @@ def shouldCancel(handle, progress=0, total=1, showProgress=True):
 
 # pylint: disable=too-many-locals, too-many-arguments
 def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, viewName=None, raw=False,
-                allowDirectPlay=True):
+                showProgress=True, allowDirectPlay=True):
     items = []
 
     viewUrl = url
@@ -505,7 +505,7 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
     totalCount = 0
     startIndex = 0
     while True:
-        if shouldCancel(handle, progress=startIndex, total=totalCount):
+        if shouldCancel(handle, progress=startIndex, total=totalCount, showProgress=showProgress):
             return None
 
         # put together a paged URL
@@ -526,7 +526,7 @@ def importItems(handle, embyServer, url, mediaType, viewId, embyMediaType=None, 
         itemsObj = resultObj[emby.constants.PROPERTY_ITEM_ITEMS]
         for itemObj in itemsObj:
             startIndex = startIndex + 1
-            if shouldCancel(handle, progress=startIndex, total=totalCount):
+            if shouldCancel(handle, progress=startIndex, total=totalCount, showProgress=showProgress):
                 return None
 
             if raw:
