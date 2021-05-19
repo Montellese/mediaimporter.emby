@@ -877,7 +877,7 @@ def execImport(handle, options):
             if importCollections and items and mediaType == xbmcmediaimport.MediaTypeMovie:
                 # retrieve all BoxSets / collections matching the current media type
                 boxsetObjs = importItems(handle, embyServer, boxsetUrl, mediaType, view.id, raw=True,
-                                         allowDirectPlay=allowDirectPlay)
+                                         showProgress=False, allowDirectPlay=allowDirectPlay)
                 for boxsetObj in boxsetObjs:
                     if emby.constants.PROPERTY_ITEM_ID not in boxsetObj or \
                        emby.constants.PROPERTY_ITEM_NAME not in boxsetObj:
@@ -892,7 +892,7 @@ def execImport(handle, options):
             for (boxsetId, boxsetName) in iteritems(boxsets):
                 # get all items belonging to the BoxSet
                 boxsetItems = importItems(handle, embyServer, url, mediaType, boxsetId, embyMediaType=embyMediaType,
-                                          viewName=boxsetName, allowDirectPlay=allowDirectPlay)
+                                          viewName=boxsetName, showProgress=False, allowDirectPlay=allowDirectPlay)
                 for boxsetItem in boxsetItems:
                     # find the matching retrieved item
                     for index, item in enumerate(items):
