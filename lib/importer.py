@@ -914,7 +914,7 @@ def execImport(handle, options):
         }
         boxsetUrl = Url.addOptions(baseUrl, boxsetUrlOptions)
 
-        items = []
+        totalItems = 0
 
         # handle library views
         for view in views:
@@ -949,25 +949,31 @@ def execImport(handle, options):
             # retrieve the actual media items
             log('importing {} items from "{}" view from {}...'
                 .format(mediaType, view.name, mediaProvider2str(mediaProvider)))
-            importedItems = importItems(handle, embyServer, url, mediaType, view.id, embyMediaType=embyMediaType,
-                                        viewName=view.name, allowDirectPlay=allowDirectPlay)
 
-            # assign BoxSets / collections to the retrieved items
-            if boxsetMapping and importedItems:
-                for index, item in enumerate(importedItems):
-                    boxsetName = boxsetMapping.get(item.getPath(), None)
-                    if boxsetName:
-                        # set the BoxSet / collection
-                        kodi.Api.setCollection(item, boxsetName)
-                        importedItems[index] = item
+            importItemsGen = importItemsGenerator(handle, embyServer, url, mediaType, view.id,
+                                                  embyMediaType=embyMediaType, viewName=view.name,
+                                                  allowDirectPlay=allowDirectPlay)
 
-            items.extend(importedItems)
+            for importedItems in importItemsGen:
+                totalItems += len(importedItems)
+
+                # assign BoxSets / collections to the retrieved items
+                if boxsetMapping:
+                    for index, item in enumerate(importedItems):
+                        boxsetName = boxsetMapping.get(item.getPath(), None)
+                        if boxsetName:
+                            # set the BoxSet / collection
+                            kodi.Api.setCollection(item, boxsetName)
+                            importedItems[index] = item
+
+                # pass the imported items back to Kodi
+                xbmcmediaimport.addImportItems(handle, importedItems, mediaType)
 
         # in a fast sync we need to get the removed items from Kodi companion
         if fastSync:
-            if items:
+            if totalItems:
                 log('{} changed {} items imported from {}'
-                    .format(len(items), mediaType, mediaProvider2str(mediaProvider)))
+                    .format(totalItems, mediaType, mediaProvider2str(mediaProvider)))
 
             # handle removed items through Kodi companion's sync queue
             if syncQueue.itemsRemoved:
@@ -988,11 +994,7 @@ def execImport(handle, options):
                     xbmcmediaimport.addImportItems(handle, removedItems, mediaType,
                                                    xbmcmediaimport.MediaImportChangesetTypeRemoved)
         else:
-            log('{} {} items imported from {}'.format(len(items), mediaType, mediaProvider2str(mediaProvider)))
-
-        # pass the imported items back to Kodi
-        if items:
-            xbmcmediaimport.addImportItems(handle, items, mediaType)
+            log('{} {} items imported from {}'.format(totalItems, mediaType, mediaProvider2str(mediaProvider)))
 
     xbmcmediaimport.finishImport(handle, fastSync)
 
