@@ -129,6 +129,10 @@ class ProviderObserver:
             except websocket.WebSocketTimeoutException:
                 break
             except Exception as error:
+                # TODO(Montellese): remove workaround for Kodi Python 3 issue
+                if error.args and error.args[0] == 'timed out':
+                    break
+
                 ProviderObserver.log('unknown exception when receiving data from {}: {}'
                                      .format(mediaProvider2str(self._mediaProvider), error.args[0]), xbmc.LOGWARNING)
                 break

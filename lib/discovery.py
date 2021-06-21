@@ -44,8 +44,15 @@ class DiscoveryService:
         try:
             self._sock.settimeout(DiscoveryService.DiscoveryTimeoutS)
             (data, _) = self._sock.recvfrom(1024)
+
         except socket.timeout:
             return
+        except Exception as e:
+            # TODO(Montellese): remove workaround for Kodi Python 3 issue
+            if e.args and e.args[0] == 'timed out':
+                return
+
+            raise e
 
         if not data or data == DiscoveryService.DiscoveryMessage:
             return
