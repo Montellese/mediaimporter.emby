@@ -770,20 +770,8 @@ def loadImportSettings(handle, _):
     settings.setLoaded()
 
 
-def canUpdateMetadataOnProvider(handle, _):
-    xbmcmediaimport.setCanUpdateMetadataOnProvider(handle, True)
-
-
-def canUpdatePlaycountOnProvider(handle, _):
-    xbmcmediaimport.setCanUpdatePlaycountOnProvider(handle, True)
-
-
-def canUpdateLastPlayedOnProvider(handle, _):
-    xbmcmediaimport.setCanUpdateLastPlayedOnProvider(handle, True)
-
-
-def canUpdateResumePositionOnProvider(handle, _):
-    xbmcmediaimport.setCanUpdateResumePositionOnProvider(handle, True)
+def canUpdatePlaybackMetadataOnProvider(handle, _):
+    xbmcmediaimport.setCanUpdatePlaybackMetadataOnProvider(handle, True)
 
 
 # noqa pylint: disable=too-many-locals, too-many-statements, too-many-nested-blocks, too-many-branches, too-many-return-statements
@@ -1109,10 +1097,7 @@ ACTIONS = {
     'isimportready': isImportReady,
     'loadprovidersettings': loadProviderSettings,
     'loadimportsettings': loadImportSettings,
-    'canupdatemetadataonprovider': canUpdateMetadataOnProvider,
-    'canupdateplaycountonprovider': canUpdatePlaycountOnProvider,
-    'canupdatelastplayedonprovider': canUpdateLastPlayedOnProvider,
-    'canupdateresumepositiononprovider': canUpdateResumePositionOnProvider,
+    'canupdateplaybackmetadataonprovider': canUpdatePlaybackMetadataOnProvider,
     'import': execImport,
     'updateonprovider': updateOnProvider,
 
