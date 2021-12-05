@@ -533,6 +533,10 @@ class Api:
         for index, person in enumerate(itemObj.get(constants.PROPERTY_ITEM_PEOPLE, [])):
             name = person.get(constants.PROPERTY_ITEM_PEOPLE_NAME, '')
             castType = person.get(constants.PROPERTY_ITEM_PEOPLE_TYPE, '')
+            if not name:
+                log('ignoring person ({}) with missing name for "{}"'.format(castType, item.getLabel()))
+                continue
+
             if castType == constants.PROPERTY_ITEM_PEOPLE_TYPE_ACTOR:
                 role = person.get(constants.PROPERTY_ITEM_PEOPLE_ROLE, '')
                 # determine the thumbnail (if available)
