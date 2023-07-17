@@ -448,7 +448,7 @@ class Api:
         # process ratings
         if constants.PROPERTY_ITEM_COMMUNITY_RATING in itemObj:
             defaultRating = itemObj.get(constants.PROPERTY_ITEM_COMMUNITY_RATING)
-            videoInfoTag.setRating(defaultRating, isDefault=True)
+            videoInfoTag.setRating(defaultRating, isdefault=True)
         # handle critic rating as rotten tomato rating
         if constants.PROPERTY_ITEM_CRITIC_RATING in itemObj:
             criticRating = float(itemObj.get(constants.PROPERTY_ITEM_CRITIC_RATING)) / 10.0
